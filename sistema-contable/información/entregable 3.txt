@@ -1,0 +1,449 @@
+Gestión de Clientes: 
+HU-1.1: Consultar
+Usuario: Gerente
+Descripción: Como gerente quiero consultar por los clientes para ver su información.
+Prioridad: Alta
+Criterios de aceptación
+En el módulo de clientes, el sistema debe cargar los datos paginados de los clientes registrados.
+El sistema debe permitir filtrar por cédula, nombre, apellidos y correo.
+El sistema debe debe ordenar alfabéticamente la lista de clientes al cargarlos.
+HU-1.2: Crear
+Usuario: Gerente
+Descripción: Como gerente quiero crear clientes para llevar su contabilidad.
+Prioridad: Alta
+Criterios de aceptación
+El gerente debe registrar datos personales y contactos del cliente, como nombre, apellidos, tipo de identificación, identificación, correo, teléfono, dirección, tipo de cliente, estado y observaciones.
+El sistema no debe permitir registrar campos en blanco (muestra un mensaje indicando qué campo está en blanco  que debe llenarlo).
+Si el cliente ya existe, se debe mostrar un mensaje informando que el cliente existe.
+Si el cliente no existe, se debe registrar y mostrar un mensaje informando que el registro fue exitoso.
+HU-1.3: Modificar
+Usuario: Gerente
+Descripción: Como gerente quiero modificar datos de los clientes, para mantener actualizada su información.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe precargar nombre, apellidos, tipo de identificación, identificación, correo, teléfono, dirección, tipo de cliente, estado y observaciones del cliente en el formulario.
+El formulario debe permitir modificar el nombre, apellidos, tipo de identificación, identificación, correo, teléfono, dirección, tipo de cliente, estado y observaciones del cliente.
+El sistema no debe permitir registrar campos en blanco (muestra un mensaje indicando qué campo está en blanco y que debe llenarlo).
+El sistema debe mostrar una alerta de confirmación al actualizar la información del cliente.
+El sistema debe validar que no haya otro cliente con la misma identificación, y en dicho caso, se muestra un mensaje indicando que la identificación se repite.
+El sistema debe validar que no haya otro cliente con el mismo correo, y en dicho caso, se muestra un mensaje indicando que el correo se repite.
+El sistema registra y notifica que la modificación de la información del cliente fue exitosa.
+HU-1.4: Eliminar
+Usuario: Gerente
+Descripción: Como gerente quiero desactivar clientes cuando ya no sea necesario tener su información, para reducir la carga de información en el sistema.
+Prioridad: Baja
+Criterios de aceptación
+El sistema debe mostrar una alerta de confirmación antes de proceder a desactivar un cliente.
+El sistema desactiva un cliente con su identificación.
+El sistema desactiva al cliente y muestra un mensaje informando que la desactivación fue exitosa.
+
+Gestión de usuarios: 
+HU-2.1: Registro de usuarios
+Usuario: Gerente
+Descripción: Como gerente quiero crear usuarios para que ayuden en la contabilidad y otras tareas, dependiendo de su rol en el sistema.
+Prioridad: Media
+Criterios de aceptación
+El gerente ingresa el correo, contraseña, nombre, identificación (luego el usuario puede modificar sus datos personales) y un rol.
+El sistema no permite espacios en blanco para correo, contraseña, nombre, identificación y rol (muestra un mensaje indicando qué campo está en blanco y que debe llenarlo).
+En caso de que el sistema verifique y encuentre otro usuario con el mismo correo e identificación ya registrado, se muestra un mensaje indicando que el usuario ya existe.
+En caso de que el usuario no exista, se registra el usuario y se muestra un mensaje informando que el registro se completó exitosamente.
+El sistema redirige a la lista de usuarios del sistema.
+HU-2.2: Consultar usuarios
+Usuario: Gerente
+Descripción: Como gerente quiero consultar por los usuarios del sistema, para acceder a su información de manera sencilla.
+Prioridad: Media
+Criterios de aceptación
+El sistema carga en una lista paginada la información de los usuarios existentes.
+El sistema debe permitir filtrar por nombre, apellidos y correo electrónico.
+El sistema debe ordenar la lista de usuarios alfabéticamente.
+HU-2.3: Modificar usuarios
+Usuario: Gerente
+Descripción: Como gerente quiero modificar información de los usuarios, para mantener su información actualizada o modificar sus tareas.
+Prioridad: Media
+Criterios de aceptación
+El sistema precarga el nombre, apellidos, identificación, correo, estado y rol en el formulario.
+El sistema debe permitir modificar todos los campos del formulario.
+El sistema no debe permitir espacios en blanco en el nombre, identificación, correo, estado y rol asignado.
+En caso de que el sistema verifique y encuentre otro usuario con el mismo correo e identificación ya registrado (a excepción del mismo), se muestra un mensaje indicando que el usuario ya existe.
+En caso de que el usuario no exista, se registra el usuario y se muestra un mensaje informando que el registro se completó exitosamente.
+El sistema redirige a la lista de usuarios del sistema.
+HU-2.4: Desactivar usuarios
+Usuario: Gerente
+Descripción: Como gerente quiero desactivar usuarios cuando estos terminen su labor de ayudantes, para que no puedan seguir teniendo acceso al sistema.
+Prioridad: Alta
+Criterios de aceptación
+Cuando el sistema consulta por los usuarios del sistema, brinda una opción para desactivar un usuario.
+El sistema muestra una alerta de confirmación, antes de proceder con la eliminación del usuario.
+El sistema desactiva y muestra un mensaje informando que la desactivación fue exitosa.
+
+Gestión de proveedores:
+HU-3.1: Consultar proveedores
+Usuario: Gerente
+Descripción: Como gerente quiero consultar por los proveedores registrados en el sistema, para visualizar su información y su relación con los clientes.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe mostrar una lista paginada de los proveedores registrados.
+El sistema debe permitir filtrar por proveedores por nombre, identificación, correo electrónico o cliente asociado (identificación del cliente asociado).
+El sistema debe ordenar la lista de proveedores alfabéticamente.
+El sistema debe mostrar el estado del proveedor (Activo / Inactivo)
+El sistema debe permitir acceder a detalles del proveedor seleccionado.
+HU-3.2: Crear proveedor
+Usuario: Gerente
+Descripción: Como gerente quiero registrar proveedores para asociarlos a clientes y gestionar correctamente las cuentas por pagar.
+Prioridad: Alta
+Criterios de aceptación
+El gerente debe ingresar los datos del proveedor: tipo de proveedor (Persona / Empresa), nombre o razón social, identificación, correo, teléfono, estado.
+El sistema debe permitir asociar uno o varios clientes al proveedor.
+El sistema no debe permitir registrar campos obligatorios en blanco (muestra un mensaje indicando qué campos deben completarse).
+El sistema debe validar que no exista otro proveedor con la misma identificación.
+Si el proveedor ya existe, el sistema muestra un mensaje indicando que el proveedor ya está registrado.
+Si el proveedor no existe, el sistema registra la información y muestra un mensaje indicando que el registro fue exitoso.
+HU-3.3: Modificar proveedor
+Usuario: Gerente
+Descripción: Como gerente quiero modificar la información de los proveedores, para mantener actualizados sus datos y asociaciones con clientes.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe precargar en el formulario los datos actuales del proveedor: tipo, nombre o razón social, identificación, correo electrónico, teléfono, estado y clientes asociados.
+El formulario debe permitir modificar todos los campos del proveedor.
+El sistema debe permitir agregar o quitar clientes asociados al proveedor.
+El sistema no debe permitir guardar campos obligatorios en blanco.
+El sistema debe validar que no exista otro proveedor con la misma identificación (exceptuando el proveedor que se está editando).
+El sistema debe mostrar una alerta de confirmación antes de actualizar la información.
+El sistema debe mostrar un mensaje indicando que la modificación fue exitosa.
+HU-3.4: Eliminar proveedor
+Usuario: Gerente
+Descripción: Como gerente quiero eliminar proveedores que ya no se utilicen, para mantener organizada la información del sistema.
+Prioridad: Baja
+Criterios de aceptación
+El sistema debe mostrar una alerta de confirmación antes de proceder a la eliminación del proveedor.
+El sistema debe validar si el proveedor tiene cuentas por pagar asociadas.
+Si el proveedor tiene movimientos asociados, el sistema no debe eliminarlo y debe mostrar un mensaje indicando el motivo.
+Si el proveedor no tiene movimientos asociados, el sistema procede a su eliminación y muestra un mensaje indicando que la eliminación fue exitosa.
+HU-3.5: Asociar proveedores a clientes
+Usuario: Gerente
+Descripción: Como gerente quiero asociar proveedores a uno o a muchos clientes, para reflejar correctamente la relación comercial entre ellos.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe permitir seleccionar uno o varios clientes para asociarlos a un proveedor.
+El sistema debe permitir modificar las asociaciones existentes
+Los cambios deben reflejarse inmediatamente en los módulos de: cuentas por pagar e inventarios.
+El sistema debe mostrar un mensaje indicando que la asociación fue exitosa.
+
+
+
+Gestión de cuentas por cobrar:
+HU-4.1: Registrar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero registrar cuentas por cobrar asociadas a un cliente para llevar el control del monto total, pagos realizados y saldo pendiente de cada factura.
+Prioridad: Alta
+Criterios de aceptación
+El contador puede registrar una cuenta por cobrar mediante un formulario.
+El formulario incluye los siguientes campos obligatorios: clientes, factura, fecha de emisión, fecha de vencimiento, descripción y monto total.
+El sistema inicializa automáticamente el monto pagado en ₡0.
+El sistema calcula automáticamente el saldo pendiente con base en el monto total y el monto pagado.
+El sistema registra la cuenta por cobrar con estado “Pendiente”.
+El sistema muestra un mensaje confirmando que la cuenta por cobrar fue registrada exitosamente.
+HU-4.2: Consultar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero consultar las cuentas por cobrar registradas para conocer el estado y saldo pendiente de cada cliente.
+Prioridad: Alta
+Criterios de aceptación
+El contador puede consultar cuentas por cobrar por cliente o por estado.
+El sistema muestra la información de cada cuenta por cobrar, incluyendo: cliente, factura, fecha de emisión, fecha de vencimiento, monto total, monto pagado, saldo pendiente y estado.
+Si no existen cuentas por cobrar registradas, el sistema muestra un mensaje informativo.
+HU-4.3: Actualizar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero actualizar una cuenta por cobrar para reflejar pagos realizados y mantener actualizado el saldo pendiente y el estado de la cuenta.
+Prioridad: Media
+Criterios de aceptación
+El contador puede seleccionar una cuenta por cobrar registrada
+El sistema permite actualizar el monto pagado.
+El sistema recalcula automáticamente el saldo pendiente.
+El sistema actualiza el estado de la cuenta según el saldo pendiente: pendiente (sin pagos), parcial (pagos parciales) y cancelada (saldo pendiente igual a cero).
+El sistema muestra un mensaje confirmando la actualización realizada.
+La actualización del monto pagado se realiza únicamente mediante el módulo de cobros.
+HU-4.4: Anular cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero anular una cuenta por cobrar para corregir registros ingresados por error sin perder la trazabilidad contable.
+Prioridad: Baja
+Criterios de aceptación
+El contador puede anular una cuenta por cobrar registrada.
+El sistema solicita confirmación antes de anular la cuenta.
+El estado de la cuenta cambia a “Anulada”.
+La cuenta anulada no puede ser modificada ni utilizada para cálculos contables.
+
+Gestión de cuentas por pagar:
+HU-5.1: Registrar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero registrar cuentas por pagar asociadas a proveedores para controlar las obligaciones financieras, montos, pagos realizados y saldos pendientes.
+Prioridad: Alta
+Criterios de aceptación
+El contador puede registrar una cuenta por pagar mediante un formulario.
+El formulario incluye los siguientes campos obligatorios: proveedor, documento, fecha de emisión, condición de pago (Contado / Crédito), plazo de pago, fecha de vencimiento, tipo, monto total.
+El sistema inicializa el monto pagado en ₡0.
+El sistema calcula automáticamente el saldo pendiente.
+El sistema registra la cuenta por pagar con estado “Pendiente”.
+El sistema confirma el registro exitoso de la cuenta por pagar.
+HU-5.2: Consultar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero consultar las cuentas por pagar para conocer las obligaciones pendientes con los proveedores y su estado actual.
+Prioridad: Alta
+Criterios de aceptación
+El contador puede consultar cuentas por pagar por proveedor, estado o fecha de vencimiento.
+El sistema muestra la información de cada cuenta por pagar, incluyendo: proveedor, documento, fecha de emisión, fecha de vencimiento, monto total, monto pagado, saldo pendiente, estado.
+Si no existen registros, el sistema muestra un mensaje informativo.
+HU-5.3: Actualizar cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero actualizar una cuenta por pagar para registrar pagos realizados y mantener actualizado el saldo pendiente y el estado de la obligación.
+Prioridad: Media
+Criterios de aceptación
+El contador puede registrar pagos parciales o totales.
+El sistema actualiza automáticamente el monto pagado y el saldo pendiente.
+El sistema actualiza el estado de la cuenta según el saldo: Pendiente, Parcial y Pagada.
+El sistema registra la fecha del pago realizado.
+El sistema confirma la actualización realizada.
+Una cuenta pagada no puede ser modificada.
+HU-5.4: Anular cuentas por cobrar
+Usuario: Contador
+Descripción: Como contador quiero anular una cuenta por pagar para corregir errores de registro manteniendo el historial contable.
+Prioridad: Baja
+Criterios de aceptación
+El contador puede anular una cuenta por pagar registrada.
+El sistema solicita confirmación antes de la anulación.
+El estado cambia a “Anulada” (no afecta estados financieros).
+La cuenta anulada no puede recibir pagos ni ser modificada.
+
+Gestión de cuentas contables:
+HU-6.1: Consultar cuentas contables
+Usuario: Gerente
+Descripción: Como gerente quiero consultar el catálogo de cuentas contables para visualizar su información y utilizarlas en los asientos contables.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe mostrar una lista de las cuentas contables registradas.
+La lista debe cargarse de forma paginada.
+El sistema debe permitir filtrar las cuentas contables por: código de la cuenta, nombre de la cuenta, tipo de cuenta (Activo, Pasivo, Patrimonio, Ingreso, Gasto) y estado.
+El sistema debe ordenar las cuentas contables por código contable de forma ascendente.
+El sistema debe permitir visualizar el detalle de una cuenta contable seleccionada.
+HU-6.2: Crear cuenta contable
+Usuario: Gerente
+Descripción: Como gerente quiero crear cuentas contables para ser utilizadas en contabilidad general y llevar la contabilidad .
+Prioridad: Alta
+Criterios de aceptación
+El gerente debe ingresar los siguientes datos obligatorios: código de la cuenta, nombre de la cuenta, tipo de cuenta (Activo, Pasivo, Patrimonio, Ingreso, Gasto) y estado.
+El sistema no debe permitir registrar campos obligatorios en blanco.
+El sistema debe validar que el código de la cuenta contable sea único.
+El sistema debe validar que no exista otra cuenta con el mismo código.
+Si la cuenta contable ya existe, el sistema debe mostrar un mensaje indicando que la cuenta ya está registrada.
+Si la cuenta no existe, el sistema debe registrar la cuenta y mostrar un mensaje indicando que el registro fue exitoso.
+La cuenta creada debe quedar disponible inmediatamente para su uso en contabilidad general.
+HU-6.3: Modificar
+Usuario: Gerente
+Descripción: Como gerente quiero modificar datos de los clientes, para mantener actualizada su información.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe permitir seleccionar una cuenta contable existente.
+El sistema debe precargar los datos actuales de la cuenta contable: código, nombre, tipo, estado.
+El sistema debe permitir modificar: nombre de la cuenta, estado de la cuenta.
+El sistema no debe permitir modificar el código de la cuenta contable si la cuenta ya ha sido utilizada en asientos contables.
+El sistema debe validar que los campos obligatorios no queden en blanco.
+El sistema debe mostrar una alerta de confirmación antes de guardar los cambios.
+El sistema debe mostrar un mensaje indicando que la modificación fue realizada exitosamente.
+HU-6.4: Desactivar
+Usuario: Gerente
+Descripción: Como gerente quiero desactivar clientes cuando ya no sea necesario tener su información, para reducir la carga de información en el sistema.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe permitir cambiar el estado de una cuenta contable a Inactiva.
+El sistema debe mostrar una alerta de confirmación antes de desactivar la cuenta.
+Una cuenta contable inactiva no debe ser utilizada en nuevos asientos contables.
+Una cuenta contable inactiva debe mantenerse visible para consultar y para reportes.
+El sistema no debe permitir desactivar una cuenta contable si está asociada a asientos contables del período actual.
+El sistema debe mostrar un mensaje indicando que la cuenta fue desactivada correctamente.
+  
+Gestión de inventarios:
+HU-7.1: Registrar productos en inventario
+Usuario: Contador
+Descripción: Como contador quiero registrar productos en el inventario para llevar el control de las existencias disponibles y su relación con los proveedores.
+Prioridad: Alta
+Criterios de aceptación
+El contador debe poder registrar un producto mediante un formulario.
+El formulario debe incluir los siguientes campos obligatorios: proveedor, nombre del producto, descripción, stock, categoría.
+El sistema debe validar que los campos obligatorios no estén en blanco.
+El sistema debe validar que el stock inicial sea un valor numérico mayor o igual a cero.
+El sistema debe registrar el producto con su existencia inicial.
+El sistema debe mostrar un mensaje confirmando que el producto fue registrado exitosamente.
+El producto registrado debe quedar disponible inmediatamente para consultas y movimientos de inventario.
+HU-7.2: Consultar inventario
+Usuario: Contador
+Descripción: Como contador quiero consultar el inventario para conocer las existencias actuales de cada producto y su proveedor asociado.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe mostrar una lista paginada de los productos registrados en el inventario.
+El sistema debe mostrar para cada producto: proveedor, nombre del producto, categoría, stock.
+El sistema debe permitir filtrar productos por: nombre, proveedor, categoría.
+El sistema debe ordenar los productos alfabéticamente por nombre.
+Si no existen productos registrados, el sistema debe mostrar un mensaje informativo.
+HU-7.3: Actualizar inventario (entrada y salida)
+Usuario: Contador
+Descripción: Como contador quiero registrar entradas y salidas de inventario para mantener actualizadas las existencias de los productos.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe permitir registrar movimientos de inventario de tipo: Entrada, Salida.
+El sistema debe solicitar los siguientes datos del movimiento: tipo de movimiento, cantidad, motivo (Compra, Venta, Ajuste), fecha del movimiento.
+El sistema debe validar que la cantidad sea un valor numérico mayor a cero.
+En movimientos de salida, el sistema debe validar que la cantidad no supere la existencia actual.
+El sistema debe actualizar automáticamente la existencia actual del producto.
+El sistema debe mostrar un mensaje confirmando que el movimiento fue registrado exitosamente.
+HU-7.4: Modificar productos de inventario
+Usuario: Contador
+Descripción: Como contador quiero modificar la información básica de los productos del inventario para mantener actualizados sus datos.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe precargar los datos actuales del producto: proveedor, nombre, categoría, descripción.
+El sistema debe permitir modificar únicamente los datos descriptivos del producto.
+El sistema no debe permitir modificar directamente el stock.
+El sistema debe validar que los campos obligatorios no estén en blanco.
+El sistema debe mostrar una alerta de confirmación antes de guardar los cambios.
+El sistema debe mostrar un mensaje indicando que la modificación fue exitosa.
+HU-7.5: Eliminar productos de inventario
+Usuario: Contador
+Descripción: Como contador quiero eliminar productos del inventario que ya no se utilicen, para mantener organizada la información del sistema.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe mostrar una alerta de confirmación antes de proceder con la eliminación del producto.
+El sistema debe validar si el producto tiene movimientos de inventario asociados.
+Si el producto tiene movimientos registrados, el sistema no debe eliminarlo y debe mostrar un mensaje indicando el motivo.
+Si el producto no tiene movimientos asociados, el sistema debe proceder con la eliminación.
+El sistema debe mostrar un mensaje indicando que la eliminación fue exitosa.
+
+Gestión de contabilidad general:
+HU-8.1: Registrar asientos contables
+Usuario: Contador
+Descripción: Como contador quiero registrar asientos contables para reflejar correctamente los movimientos financieros de la empresa.
+Prioridad: Alta
+Criterios de aceptación
+El contador debe poder registrar un asiento contable mediante un formulario
+El formulario debe incluir los siguientes campos obligatorios: fecha de asiento, tipo de asiento (Ingreso, Egreso, Ajuste y General) y descripción.
+El sistema debe permitir agregar una o varias líneas al asiento.
+Cada línea del asiento debe incluir: cuenta contable, descripción, debe, haber.
+El sistema debe validar que el total del debe sea igual al total del haber.
+El sistema no debe permitir guardar asientos desbalanceados.
+El sistema debe registrar el asiento contable exitosamente y mostrar un mensaje de confirmación.
+HU-8.2: Consultar asientos contables
+Usuario: Contador
+Descripción: Como contador quiero consultar el libro diario para revisar los asientos contables registrados.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe mostrar una lista paginada de los asientos contables registrados.
+El sistema debe permitir filtrar los asientos por: rango de fechas, tipo de asiento, cuenta contable.
+El sistema debe mostrar la información básica del asiento: fecha, tipo, descripción.
+El sistema debe permitir visualizar el detalle completo de un asiento seleccionado.
+HU-8.3: Modificar asientos contables
+Usuario: Contador
+Descripción: Como contador quiero modificar asientos contables para corregir errores, siempre que se cumplan las restricciones contables definidas.
+Prioridad: Baja
+Criterios de aceptación
+El sistema debe permitir modificar únicamente asientos del período contable abierto.
+El sistema debe precargar la información del asiento seleccionado.
+El sistema debe validar nuevamente el equilibrio entre debe y haber.
+El sistema debe mostrar una alerta de confirmación antes de guardar los cambios.
+El sistema debe registrar la modificación realizada.
+HU-8.4: Eliminar asientos contables
+Usuario: Contador
+Descripción: Como gerente quiero eliminar asientos contables bajo autorización correspondiente, para corregir registros inválidos.
+Prioridad: Baja
+Criterios de aceptación
+El sistema debe solicitar la confirmación antes de eliminar un asiento contable.
+El sistema debe permitir eliminar solo los asientos del período abierto.
+El sistema debe proceder a la eliminación del asiento.
+El asiento eliminado no debe afectar los estados financieros.
+
+
+Gestión de activos fijos:
+HU-9.1: Registrar activos fijos
+Usuario: Contador
+Descripción: Como contador quiero registrar activos fijos para controlar los bienes de la empresa y su estado contable.
+Prioridad: Alta
+Criterios de aceptación
+El contador debe poder registrar un activo fijo mediante un formulario.
+El formulario debe incluir: nombre del activo, valor de adquisición, fecha de adquisición, estado.
+El sistema debe validar que el valor del activo sea mayor a cero.
+El sistema debe registrar el activo fijo y mostrar un mensaje informando que el registro fue exitoso.
+HU-9.2: Consultar activos fijos
+Usuario: Contador
+Descripción: Como contador quiero consultar los activos fijos registrados para conocer su estado actual.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe mostrar una lista paginada de los activos fijos.
+El sistema debe mostrar: nombre del activo, valor, fecha de adquisición, estado.
+El sistema debe permitir consultar el detalle del activo seleccionado.
+HU-9.3: Actualizar activos fijos
+Usuario: Contador
+Descripción: Como contador quiero actualizar la información de los activos fijos para mantener sus datos actualizados.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe permitir modificar los datos del activo fijo.
+El sistema debe mostrar una alerta de confirmación antes de guardar los cambios.
+El sistema debe mostrar un mensaje indicando que la actualización fue exitosa.
+HU-9.4: Dar de baja activos fijos
+Usuario: Contador
+Descripción: Como gerente quiero dar de baja activos fijos para reflejar correctamente su salida del patrimonio de la empresa.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe solicitar: fecha de baja, motivo de la baja.
+El estado del activo debe cambiar a “Dado de baja”.
+El sistema debe registrar la baja del activo.
+El sistema debe mostrar un mensaje confirmando que se dio de baja exitosamente.
+
+Gestión de cobros:
+HU-10.1: Registrar cobros
+Usuario: Contador
+Descripción: Como contador quiero registrar cobros para aplicar pagos a las cuentas por cobrar de los clientes.
+Prioridad: Alta
+Criterios de aceptación
+El contador debe poder seleccionar un cliente con cuentas pendientes.
+El sistema debe mostrar las facturas pendientes del cliente.
+El contador debe ingresar: fecha del cobro, monto pagado, número de comprobante.
+El sistema debe aplicar el pago a la cuenta por cobrar seleccionada.
+El sistema debe recalcular automáticamente el saldo pendiente.
+El sistema debe actualizar el estado de la cuenta por cobrar.
+El sistema debe mostrar un mensaje confirmando el registro del cobro.
+HU-10.2: Consultar cobros
+Usuario: Contador
+Descripción: Como contador quiero consultar el historial de cobros para revisar los pagos recibidos.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe mostrar una lista paginada de los cobros registrados.
+El sistema debe permitir filtrar cobros por: cliente, rango de fechas.
+El sistema debe mostrar: cliente, fecha, monto, comprobante.
+Si no existen cobros, el sistema debe mostrar un mensaje informando que no hay.
+HU-10.3: Actualizar estado de cobros
+Usuario: Contador
+Descripción: Como contador quiero actualizar el estado de un cobro para mantener actualizada la gestión.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe permitir actualizar el estado del cobro.
+El sistema debe registrar la actualización realizada.
+El sistema debe mostrar un mensaje indicando que la actualización ha sido exitosa.
+
+Gestión de estados financieros:
+HU-11.1: Generar estados financieros
+Usuario: Gerente
+Descripción: Como gerente quiero generar estados financieros para analizar la situación económica de la empresa en un período determinado.
+Prioridad: Alta
+Criterios de aceptación
+El sistema debe permitir seleccionar: período contable (mes o un rango de fechas), tipo de estado financiero (Balance General, Estado de Resultados, Flujo de Efectivo, Balance de Comprobación).
+El sistema debe generar automáticamente el estado financiero seleccionado.
+La información debe calcularse a partir de los asientos contables registrados.
+El sistema debe mostrar el estado financiero.
+El sistema debe permitir exportar el estado financiero.
+HU-11.2: Consultar estados financieros
+Usuario: Gerente
+Descripción: Como gerente quiero consultar estados financieros generados anteriormente para comparar períodos y analizar resultados.
+Prioridad: Media
+Criterios de aceptación
+El sistema debe mostrar una lista de estados financieros.
+El sistema debe permitir filtrar por período y tipo de estado.
+El sistema debe permitir visualizar el detalle del estado financiero seleccionado.
+
+
