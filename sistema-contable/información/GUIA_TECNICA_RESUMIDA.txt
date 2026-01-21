@@ -1,0 +1,521 @@
+================================================================================
+DOCUMENTACIÓN TÉCNICA - SISTEMA CONTABLE
+Laravel 12 + Filament + MySQL
+================================================================================
+Cliente: Noemi Camacho Herrera | Fecha: 19/01/2026 | Duración: 2 meses
+
+================================================================================
+1. DESCRIPCIÓN Y TECNOLOGÍAS
+================================================================================
+
+PROPÓSITO: Automatizar procesos contables para una contadora, mejorando 
+eficiencia y control de información financiera.
+
+STACK TÉCNICO:
+- Backend: Laravel 12 + PHP 8.3+ + MySQL 8.0+ + Eloquent ORM
+- Frontend: Filament 3.x (panel admin) + Tailwind CSS + Alpine.js
+- Herramientas: Composer, NPM, Artisan, Vite, Git
+
+ARQUITECTURA: MVC con Filament como capa de presentación
+
+11 MÓDULOS CRUD:
+1. Clientes | 2. Usuarios | 3. Proveedores | 4. Cuentas por Cobrar
+5. Cuentas por Pagar | 6. Cuentas Contables | 7. Inventarios (por cliente)
+8. Asientos Contables | 9. Activos Fijos | 10. Cobros | 11. Estados Financieros
+
+================================================================================
+2. MODELOS Y ESTRUCTURA DE BASE DE DATOS
+================================================================================
+
+TABLA: customers (Clientes)
+- id, nombre, apellidos, tipo_identificacion (enum: cedula/pasaporte/juridica)
+- identificacion (UNIQUE), correo (UNIQUE), telefono, direccion
+- tipo_cliente (enum: persona_fisica/persona_juridica)
+- estado (enum: activo/inactivo), observaciones, timestamps
+Relaciones: hasMany CuentaPorCobrar, Cobro, Producto | belongsToMany Supplier
+
+TABLA: users (Usuarios)
+- id, nombre, apellidos, identificacion (UNIQUE), correo (UNIQUE)
+- password (hashed), rol (enum: gerente/contador/auxiliar)
+- estado (enum: activo/inactivo), email_verified_at, remember_token, timestamps
+Roles: Gerente (acceso total), Contador (operativo), Auxiliar (solo consultas)
+Relaciones: hasMany AsientoContable
+
+TABLA: suppliers (Proveedores)
+- id, tipo_proveedor (enum: persona/empresa), nombre_razon_social
+- identificacion (UNIQUE), correo, telefono, estado, timestamps
+Relaciones: belongsToMany Customer | hasMany CuentaPorPagar, Producto
+
+TABLA PIVOT: customer_supplier
+- id, customer_id (FK), supplier_id (FK), timestamps
+
+TABLA: cuentas_por_cobrar
+- id, customer_id (FK RESTRICT), numero_factura (UNIQUE)
+- fecha_emision, fecha_vencimiento, descripcion
+- monto_total (decimal 15,2), monto_pagado (decimal 15,2)
+- saldo_pendiente (GENERATED: monto_total - monto_pagado)
+- estado (enum: pendiente/parcial/cancelada/anulada), timestamps
+Relaciones: belongsTo Customer | hasMany Cobro
+
+TABLA: cuentas_por_pagar
+- id, supplier_id (FK RESTRICT), numero_documento
+- fecha_emision, condicion_pago (enum: contado/credito), plazo_pago
+- fecha_vencimiento, tipo (enum: factura/recibo/nota_debito/otro)
+- monto_total, monto_pagado, saldo_pendiente (GENERATED), fecha_pago
+- estado (enum: pendiente/parcial/pagada/anulada), timestamps
+Relaciones: belongsTo Supplier
+
+TABLA: cuentas_contables
+- id, codigo_cuenta (UNIQUE, ej: "1.1.01.001"), nombre_cuenta
+- tipo_cuenta (enum: activo/pasivo/patrimonio/ingreso/gasto)
+- estado (enum: activa/inactiva), nivel (calculado), cuenta_padre_id (FK), timestamps
+Estructura jerárquica: 1 > 1.1 > 1.1.01 > 1.1.01.001
+Relaciones: belongsTo CuentaContable (padre) | hasMany CuentaContable (hijas), DetalleAsiento
+
+TABLA: productos (Inventario por Cliente)
+- id, customer_id (FK RESTRICT), supplier_id (FK RESTRICT)
+- nombre_producto, descripcion, categoria
+- stock_inicial, stock_actual, timestamps
+NOTA: Cada cliente tiene su propio inventario independiente
+Relaciones: belongsTo Customer, Supplier | hasMany MovimientoInventario
+
+TABLA: movimientos_inventario
+- id, producto_id (FK CASCADE), tipo_movimiento (enum: entrada/salida)
+- cantidad, motivo (enum: compra/venta/ajuste/devolucion)
+- fecha_movimiento, observaciones, timestamps
+Relaciones: belongsTo Producto
+
+TABLA: asientos_contables
+- id, numero_asiento (UNIQUE, autogenerado "AS-YYYY-NNNNNN")
+- fecha_asiento, tipo_asiento (enum: ingreso/egreso/ajuste/general)
+- descripcion, user_id (FK RESTRICT), periodo_contable (YYYY-MM)
+- estado (enum: borrador/contabilizado/anulado), timestamps
+Relaciones: belongsTo User | hasMany DetalleAsiento
+
+TABLA: detalles_asiento
+- id, asiento_contable_id (FK CASCADE), cuenta_contable_id (FK RESTRICT)
+- descripcion_linea, debe (decimal 15,2), haber (decimal 15,2), orden, timestamps
+CONSTRAINT: (debe > 0 AND haber = 0) OR (haber > 0 AND debe = 0)
+Relaciones: belongsTo AsientoContable, CuentaContable
+
+TABLA: activos_fijos
+- id, nombre_activo, descripcion, valor_adquisicion, fecha_adquisicion
+- vida_util_anos, valor_residual, depreciacion_acumulada
+- valor_neto (GENERATED: valor_adquisicion - depreciacion_acumulada)
+- estado (enum: activo/dado_de_baja), fecha_baja, motivo_baja, timestamps
+
+TABLA: cobros
+- id, cuenta_por_cobrar_id (FK RESTRICT), customer_id (FK RESTRICT)
+- fecha_cobro, monto_cobrado, numero_comprobante
+- metodo_pago (enum: efectivo/transferencia/cheque/tarjeta)
+- observaciones, timestamps
+Relaciones: belongsTo CuentaPorCobrar, Customer
+
+================================================================================
+3. REGLAS DE NEGOCIO CRÍTICAS
+================================================================================
+
+R1. BALANCE CONTABLE: SUM(debe) = SUM(haber) en asientos. NO guardar desbalanceados.
+
+R2. ESTADOS AUTOMÁTICOS (Cuentas por Cobrar/Pagar):
+    - monto_pagado = 0 → 'pendiente'
+    - 0 < monto_pagado < monto_total → 'parcial'
+    - monto_pagado = monto_total → 'cancelada'/'pagada'
+
+R3. STOCK INVENTARIO (POR CLIENTE):
+    - Cada cliente tiene su propio inventario independiente
+    - entrada → stock_actual += cantidad
+    - salida → stock_actual -= cantidad (validar cantidad <= stock_actual)
+    - Los productos de un cliente no afectan el inventario de otros
+
+R4. NO ELIMINAR CON DEPENDENCIAS:
+    - Cliente con cuentas por cobrar o productos en inventario
+    - Proveedor con cuentas por pagar
+    - Cuenta contable con asientos
+    - Producto con movimientos
+    → Cambiar estado a 'inactivo' en su lugar
+
+R5. RESTRICCIONES DE EDICIÓN:
+    - No modificar cuentas 'cancelada'/'pagada'/'anulada'
+    - No modificar asientos de períodos cerrados
+    - No modificar código de cuenta contable si tiene asientos
+
+R6. PERÍODOS CONTABLES (YYYY-MM):
+    - Solo modificar/eliminar asientos del período actual
+    - Períodos anteriores = cerrados
+
+R7. PERMISOS POR ROL:
+    - Gerente: Acceso completo
+    - Contador: Módulos operativos (no gestión de usuarios)
+    - Auxiliar: Solo consultas
+
+R8. VALIDACIONES DE FECHAS:
+    - fecha_vencimiento >= fecha_emision
+    - fecha_asiento no puede ser futura
+
+R9. TRANSACCIONES DB para:
+    - Asiento contable (asiento + detalles)
+    - Cobro (cobro + actualizar cuenta por cobrar)
+    - Movimiento inventario (movimiento + actualizar stock)
+
+R10. INTEGRIDAD REFERENCIAL:
+     - ON DELETE RESTRICT: customer_id, supplier_id, cuenta_contable_id, user_id
+     - ON DELETE CASCADE: asiento_contable_id, producto_id, customer_supplier
+
+R11. NO usar soft deletes. Usar campo 'estado' (activo/inactivo).
+
+================================================================================
+4. CONVENCIONES Y ESTÁNDARES
+================================================================================
+
+NOMENCLATURA:
+- Tablas: plural, snake_case (customers, cuentas_por_cobrar)
+- Modelos: PascalCase, singular (Customer, CuentaPorCobrar)
+- Recursos Filament: PascalCase + "Resource" (CustomerResource)
+- Columnas: snake_case (_id para FK, _at para timestamps)
+
+IDIOMA:
+- Código/funciones: inglés
+- Comentarios/UI: español
+- Tablas/columnas: español snake_case
+
+FORMATOS:
+- Moneda: decimal(15,2), símbolo ₡, visualización: ₡1,234.56
+- Fechas: BD (YYYY-MM-DD), UI (DD/MM/YYYY)
+- Locale: 'es', Timezone: 'America/Costa_Rica'
+
+VALIDACIONES COMUNES:
+- Correo: 'required|email|unique:tabla,campo'
+- Monto: 'required|numeric|min:0'
+- Fecha: 'required|date'
+
+MENSAJES:
+- Error: "El correo electrónico ya está registrado"
+- Éxito: "[Entidad] [acción] exitosamente"
+
+ORDENAMIENTO DEFAULT:
+- Clientes/Proveedores: alfabético por nombre
+- Cuentas/Asientos: fecha DESC
+- Cuentas contables: código ASC
+
+FILTROS: Estado, rango de fechas, búsqueda por texto
+
+PAGINACIÓN: 15 registros (Filament default)
+
+================================================================================
+5. COMANDOS Y CONFIGURACIÓN
+================================================================================
+
+SETUP INICIAL:
+composer create-project laravel/laravel:^12.0 sistema-contable
+cd sistema-contable
+composer require filament/filament:"^3.0"
+php artisan filament:install --panels
+
+# Configurar .env
+DB_CONNECTION=mysql
+DB_DATABASE=sistema_contable
+# Crear BD: CREATE DATABASE sistema_contable CHARACTER SET utf8mb4;
+php artisan migrate
+
+COMANDOS ÚTILES:
+# Modelo + migración + factory + seeder
+php artisan make:model NombreModelo -mfs
+
+# Recurso Filament
+php artisan make:filament-resource NombreModelo --generate
+
+# Migraciones
+php artisan migrate
+php artisan migrate:rollback
+php artisan migrate:fresh
+
+# Caché
+php artisan cache:clear
+php artisan config:clear
+
+# Servidor
+php artisan serve
+npm run dev
+
+ORDEN DE IMPLEMENTACIÓN (8 semanas):
+
+FASE 1 (Semanas 1-2): Autenticación + Users + Clientes + Proveedores
+FASE 2 (Semanas 3-4): Cuentas Contables + Cuentas Cobrar/Pagar + Inventarios
+FASE 3 (Semanas 5-6): Asientos Contables + Activos Fijos + Cobros
+FASE 4 (Semanas 7-8): Estados Financieros + Testing + Documentación
+
+EJEMPLO FILAMENT RESOURCE - Producto (Inventario por Cliente):
+
+protected static ?string $model = Producto::class;
+protected static ?string $navigationLabel = 'Inventarios';
+
+public static function form(Form $form): Form {
+    return $form->schema([
+        Forms\Components\Select::make('customer_id')
+            ->relationship('customer', 'nombre')
+            ->required()
+            ->searchable()
+            ->label('Cliente'),
+        Forms\Components\Select::make('supplier_id')
+            ->relationship('supplier', 'nombre_razon_social')
+            ->required()
+            ->searchable()
+            ->label('Proveedor'),
+        Forms\Components\TextInput::make('nombre_producto')->required(),
+        Forms\Components\Select::make('categoria')->required(),
+        Forms\Components\TextInput::make('stock_inicial')
+            ->numeric()->minValue(0)->required(),
+    ]);
+}
+
+public static function table(Table $table): Table {
+    return $table->columns([
+        Tables\Columns\TextColumn::make('customer.nombre')
+            ->searchable()->label('Cliente'),
+        Tables\Columns\TextColumn::make('nombre_producto')->searchable(),
+        Tables\Columns\TextColumn::make('stock_actual')->label('Stock'),
+    ])->filters([
+        Tables\Filters\SelectFilter::make('customer_id')
+            ->relationship('customer', 'nombre')->label('Cliente'),
+        Tables\Filters\SelectFilter::make('categoria'),
+    ]);
+}
+
+EJEMPLO FILAMENT RESOURCE - Cliente (básico):
+
+protected static ?string $model = Customer::class;
+protected static ?string $navigationLabel = 'Clientes';
+
+public static function form(Form $form): Form {
+    return $form->schema([
+        Forms\Components\TextInput::make('nombre')->required(),
+        Forms\Components\TextInput::make('identificacion')
+            ->unique(ignoreRecord: true)->required(),
+        Forms\Components\Select::make('estado')
+            ->options(['activo' => 'Activo', 'inactivo' => 'Inactivo']),
+    ]);
+}
+
+public static function table(Table $table): Table {
+    return $table->columns([
+        Tables\Columns\TextColumn::make('nombre')->searchable(),
+        Tables\Columns\BadgeColumn::make('estado'),
+    ])->filters([
+        Tables\Filters\SelectFilter::make('estado'),
+    ]);
+}
+
+RELACIONES ELOQUENT (ejemplos clave):
+
+// Customer.php
+public function cuentasPorCobrar() {
+    return $this->hasMany(CuentaPorCobrar::class);
+}
+public function productos() {
+    return $this->hasMany(Producto::class);
+}
+public function suppliers() {
+    return $this->belongsToMany(Supplier::class, 'customer_supplier')
+                ->withTimestamps();
+}
+
+// AsientoContable.php
+public function detalles() {
+    return $this->hasMany(DetalleAsiento::class);
+}
+public function user() {
+    return $this->belongsTo(User::class);
+}
+
+// CuentaContable.php (jerárquica)
+public function cuentaPadre() {
+    return $this->belongsTo(CuentaContable::class, 'cuenta_padre_id');
+}
+public function cuentasHijas() {
+    return $this->hasMany(CuentaContable::class, 'cuenta_padre_id');
+}
+
+ESTADOS FINANCIEROS:
+- Balance General: Activos = Pasivos + Patrimonio (cuentas tipo activo/pasivo/patrimonio)
+- Estado Resultados: Utilidad = Ingresos - Gastos (cuentas tipo ingreso/gasto)
+- Balance Comprobación: Todas las cuentas con debe/haber/saldo
+- Flujo Efectivo: Clasificar en operación/inversión/financiamiento
+
+Paquetes sugeridos: barryvdh/laravel-dompdf, maatwebsite/excel
+
+================================================================================
+6. CONTROL DE ACCESO Y PERMISOS CON FILAMENT
+================================================================================
+
+ENFOQUE DE DESARROLLO RECOMENDADO:
+Durante el desarrollo inicial, puedes trabajar sin autenticación/Policies para
+mayor agilidad:
+1. Comentar ->login() en AdminPanelProvider.php
+2. Comentar Authenticate::class en authMiddleware[]
+3. Desarrollar todos los CRUDs sin restricciones
+4. Al finalizar módulos, descomentar autenticación y crear Policies
+
+Ver: app/Providers/Filament/AdminPanelProvider.php (líneas comentadas)
+
+FILAMENT + POLICIES DE LARAVEL:
+Filament respeta automáticamente las Policies de Laravel para controlar acceso
+por roles. NO se definen rutas manualmente, todo se controla con Policies.
+
+CREAR UNA POLICY POR CADA MODELO:
+php artisan make:policy CustomerPolicy --model=Customer
+php artisan make:policy UserPolicy --model=User
+php artisan make:policy SupplierPolicy --model=Supplier
+# Etc. para cada módulo
+
+ESTRUCTURA ESTÁNDAR DE POLICY:
+
+// app/Policies/CustomerPolicy.php
+class CustomerPolicy
+{
+    // Controla si aparece en menú y puede ver lista
+    public function viewAny(User $user): bool {
+        return true; // Todos pueden ver
+    }
+    
+    // Controla si puede ver detalles
+    public function view(User $user, Customer $customer): bool {
+        return true;
+    }
+    
+    // Controla botón "New"
+    public function create(User $user): bool {
+        return in_array($user->rol, ['gerente', 'contador']);
+    }
+    
+    // Controla botón "Edit"
+    public function update(User $user, Customer $customer): bool {
+        return in_array($user->rol, ['gerente', 'contador']);
+    }
+    
+    // Controla botón "Delete"
+    public function delete(User $user, Customer $customer): bool {
+        return $user->rol === 'gerente'; // Solo gerente
+    }
+}
+
+REGISTRAR POLICIES:
+
+// app/Providers/AuthServiceProvider.php
+protected $policies = [
+    Customer::class => CustomerPolicy::class,
+    User::class => UserPolicy::class,
+    Supplier::class => SupplierPolicy::class,
+    // ... todas las demás
+];
+
+MATRIZ DE PERMISOS DEL PROYECTO:
+
+Módulo                  Gerente    Contador    Auxiliar
+─────────────────────────────────────────────────────────
+Clientes                CRUD       CRUD        R (ver)
+Usuarios                CRUD       -           -
+Proveedores             CRUD       CRUD        R
+Cuentas por Cobrar      CRUD       CRUD        R
+Cuentas por Pagar       CRUD       CRUD        R
+Cuentas Contables       CRUD       CRUD        R
+Inventarios             CRUD       CRUD        R
+Asientos Contables      CRUD*      CRUD*       R
+Activos Fijos           CRUD       CRUD        R
+Cobros                  CRUD       CRUD        R
+Estados Financieros     R          R           -
+
+*Solo período actual (validar en Policy)
+
+POLICIES ESPECIALES:
+
+UserPolicy - Solo gerente gestiona usuarios:
+public function viewAny(User $user): bool {
+    return $user->rol === 'gerente';
+}
+
+AsientoContablePolicy - Validar período actual:
+public function update(User $user, AsientoContable $asiento): bool {
+    $periodoActual = now()->format('Y-m');
+    return in_array($user->rol, ['gerente', 'contador']) 
+        && $asiento->periodo_contable === $periodoActual;
+}
+
+FILAMENT HACE AUTOMÁTICAMENTE:
+✓ Oculta módulos del menú si viewAny() = false
+✓ Oculta botón "New" si create() = false
+✓ Oculta botón "Edit" si update() = false
+✓ Oculta botón "Delete" si delete() = false
+✓ Muestra 403 si usuario intenta acceder sin permiso
+
+NO NECESITAS:
+✗ Definir rutas en web.php
+✗ Agregar middleware manualmente
+✗ Código adicional en Resources
+✗ Ocultar botones manualmente
+
+AUTENTICACIÓN:
+- Rutas /admin/* protegidas automáticamente
+- Crear usuario admin: php artisan make:filament-user
+- Acceder en navegador: http://localhost:8000/admin
+
+FLUJO DE TRABAJO:
+1. Crear modelo + migración
+2. Crear Policy (php artisan make:policy)
+3. Definir permisos según rol
+4. Registrar en AuthServiceProvider
+5. Crear Resource de Filament
+6. Filament controla acceso automáticamente
+
+================================================================================
+7. CONSIDERACIONES FINALES
+================================================================================
+
+RESTRICCIONES:
+- Laravel 12, PHP 8.3+, MySQL 8.0+, Filament 3.x (versiones específicas)
+- 2 meses de desarrollo
+- 11 módulos CRUD definidos (no agregar funcionalidades sin aprobación)
+
+SEGURIDAD:
+- Autenticación robusta, roles y permisos
+- Validar todos los inputs
+- CSRF protection (Laravel default)
+- Hash passwords (bcrypt)
+
+OPTIMIZACIÓN:
+- Eager loading: $cuentas = CuentaPorCobrar::with('customer')->get();
+- Índices en columnas de búsqueda frecuente
+- Cachear datos estáticos
+
+TESTING:
+- Tests para cada módulo
+- Validar reglas de negocio críticas
+- Tests de integración
+
+ANTES DE DESARROLLAR:
+1. Leer este documento + entregables 1, 2, 3
+2. Entender relaciones entre entidades
+3. Comprender reglas de negocio
+4. Familiarizarse con Filament
+
+DURANTE DESARROLLO:
+- Seguir orden de implementación
+- Commits frecuentes descriptivos
+- Crear tests
+- Validar criterios de aceptación
+
+FUERA DE ALCANCE (futuras fases):
+- Conciliación bancaria, presupuestos, nómina
+- Integración con sistemas externos
+- App móvil, API REST
+
+CONTACTO:
+- Scrum Master: Carlos | Frontend: Heidy, Kevin | Backend: Jonathan
+
+RECURSOS:
+- https://laravel.com/docs/12.x
+- https://filamentphp.com/docs
+
+================================================================================
+FIN - Versión 1.0 - 19/01/2026
+================================================================================
