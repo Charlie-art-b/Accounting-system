@@ -19,6 +19,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Cargar la extensión intl si está disponible
+        if (!extension_loaded('intl')) {
+            // Intentar cargar dinámicamente si está disponible
+            @dl('php_intl.dll');
+        }
     }
 }
+
