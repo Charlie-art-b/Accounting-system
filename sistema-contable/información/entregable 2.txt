@@ -1,0 +1,205 @@
+Especificación de Requerimientos Funcionales
+REF
+
+
+Función o subfunción
+Prioridad
+
+
+Gestión de Clientes
+
+
+RF-1.1
+El sistema debe permitir registrar clientes ingresando su información (nombre, identificación, correo, teléfono, dirección, estado)
+Alta
+RF-1.2
+El sistema debe permitir consultar los clientes registrados.
+Alta
+RF-1.3
+El sistema debe permitir buscar clientes por el nombre o identificación.
+Alta
+RF-1.4
+El sistema debe permitir actualizar la información de un cliente existente.
+Media
+RF-1.5
+El sistema debe permitir eliminar clientes del sistema.
+Media
+
+
+Gestión de Cuentas por cobrar
+
+
+RF-2.1
+El sistema debe permitir registrar cuentas por cobrar asociadas a un cliente.
+Alta
+RF-2.2
+El sistema debe permitir consultar las cuentas por cobrar por cliente.
+Alta
+RF-2.3
+El sistema debe permitir actualizar el estado de una cuenta por cobrar.
+Media
+RF-2.4
+El sistema debe permitir eliminar o anular cuentas por cobrar.
+Baja
+
+
+Gestión de Cuentas por pagar
+
+
+RF-3.1
+El sistema debe permitir registrar cuentas por pagar a proveedores.
+Alta
+RF-3.2
+El sistema debe permitir consultar las cuentas por pagar.
+Alta
+RF-3.3
+El sistema debe permitir actualizar una cuenta por pagar.
+Media
+RF-3.4
+El sistema debe permitir eliminar o anular cuentas por pagar.
+Baja
+
+
+Gestión de Inventarios
+
+
+RF-4.1
+El sistema debe permitir registrar productos en el inventario (proveedor, producto, stock inicial, entrada, salida y existencia actual).
+Alta
+RF-4.2
+El sistema debe permitir consultar el inventario.
+Alta
+RF-4.3
+El sistema debe permitir actualizar productos del inventario.
+Alta
+RF-4.4
+El sistema debe permitir eliminar productos del inventario. 
+Media
+
+
+Gestión de Contabilidad General 
+
+
+RF-5.1
+El sistema debe permitir el registro de asientos contables.
+Alta
+RF-5.2
+El sistema debe permitir la búsqueda y filtrado del libro diario de asientos contables.
+Media
+RF-5.3
+El sistema debe permitir la generación de balances contables, tales como balance general y estado de resultados.
+Media
+RF-5.4
+El sistema debe permitir la modificación de asientos contables existentes, siempre que cumplan con las restricciones contables definidas.
+Baja
+RF-5.5
+El sistema debe permitir la eliminación de asientos contables, bajo autorización correspondiente.
+Baja
+
+
+Gestión de Activos fijos
+
+
+RF-6.1
+El sistema debe permitir registrar activos fijos de la organización o cliente.
+Alta
+RF -6.
+2
+El sistema debe permitir actualizar los datos del activo fijo
+Media
+RF-6.
+3
+El sistema debe permitir consultar los activos fijos existentes.
+Alta
+RF-6.3
+El sistema debe permitir dar de baja activos fijos.
+Media
+
+
+ Cobros
+
+
+RF-7.1
+El sistema debe permitir consultar las cuentas por pagar existentes.
+Alta
+RF-7.2
+El sistema debe permitir realizar pagos a cuentas pendientes.
+Alta
+RF-7.3
+El sistema debe permitir programar recordatorios de cobro.
+Baja
+RF-7.4
+El sistema debe permitir actualizar el estado de una gestión de cobro.
+Media
+
+
+Gestión de Usuarios
+
+
+RF-8.1
+El sistema debe permitir la creación de usuarios para administrar el sistema (usuario y contraseña).
+Alta
+RF-8.2
+El sistema debe permitir el inicio de sesión mediante usuario y contraseña.
+Alta
+RF-8.3
+El sistema debe permitir actualizar la información del usuario.
+Alta
+RF-8.4
+El sistema debe permitir eliminar usuarios.
+Media
+RF-8.5
+El sistema debe permitir asignar roles y permisos a los usuarios.
+Alta
+RF-8.6
+El sistema debe permitir cerrar sesión de forma segura.
+Alta
+
+
+Gestión de Proveedores
+
+
+RF-9.1
+El sistema debe permitir registrar proveedores (tipo, identificación, cliente asociado, correo, teléfono, estado)
+Alta
+RF-9.2
+El sistema debe permitir consultar los proveedores.
+Alta
+RF-9.3
+El sistema debe permitir la actualización de los datos de los proveedores.
+Media
+RF-9.4
+El sistema debe permitir eliminar proveedores.
+Baja
+
+
+                                           Gestión de Cuentas Contables
+
+
+RF-10.
+1
+El sistema debe permitir consultar las cuentas contables existentes.
+Alta
+RF-10.
+2
+El sistema debe permitir crear una nueva cuenta contable.
+Alta
+RF-10.
+3
+El sistema debe permitir la actualización de una cuenta contable.
+Media
+RF-10.
+4
+El sistema debe permitir la eliminación de una cuenta contable.
+Baja
+
+
+                                         Estados Financieros 
+
+
+RF-11.
+1
+El sistema deberá permitir la generación automática de estados financieros básicos (Balance General, Estado de Resultados, Flujo de Efectivo y Balance de Comprobación) 
+Alta
+
+
