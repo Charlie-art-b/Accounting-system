@@ -42,8 +42,8 @@ class SupplierResource extends Resource
                         Forms\Components\TextInput::make('nombre_razon_social')
                             ->label('Nombre o Razón Social')
                             ->required('El nombre o razón social es obligatorio')
-                            ->minLength(3, 'El nombre debe tener al menos 3 caracteres')
-                            ->maxLength(255, 'El nombre no puede exceder 255 caracteres')
+                            ->minLength(3)
+                            ->maxLength(255)
                             ->regex('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-\&]+$/', 'El nombre solo puede contener letras, espacios, puntos, guiones y &')
                             ->hint('Mínimo 3 caracteres, máximo 255')
                             ->columnSpanFull(),
@@ -52,9 +52,12 @@ class SupplierResource extends Resource
                             ->label('Identificación (Cédula/RUC/Pasaporte)')
                             ->required('La identificación es obligatoria')
                             ->unique('suppliers', 'identificacion', ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'La identificación ya ha sido registrada. Por favor, verifique que no exista otro proveedor con el mismo número.',
+                            ])
                             ->regex('/^[0-9\-]+$/', 'La identificación solo puede contener números y guiones')
-                            ->minLength(6, 'La identificación debe tener al menos 6 caracteres')
-                            ->maxLength(50, 'La identificación no puede exceder 50 caracteres')
+                            ->minLength(6)
+                            ->maxLength(50)
                             ->hint('Ej: 208-450-123 o 3-101-234567')
                             ->columnSpan(1),
 
@@ -63,7 +66,7 @@ class SupplierResource extends Resource
                             ->email('El correo electrónico debe ser válido')
                             ->required('El correo es obligatorio')
                             ->unique('suppliers', 'correo', ignoreRecord: true)
-                            ->maxLength(255, 'El correo no puede exceder 255 caracteres')
+                            ->maxLength(255)
                             ->hint('Ej: contacto@empresa.cr')
                             ->columnSpan(1),
 
@@ -71,7 +74,7 @@ class SupplierResource extends Resource
                             ->label('Teléfono')
                             ->tel('El teléfono debe ser un número válido')
                             ->regex('/^[0-9\+\-\(\)\s]+$/', 'El teléfono solo puede contener números, +, -, paréntesis y espacios')
-                            ->maxLength(20, 'El teléfono no puede exceder 20 caracteres')
+                            ->maxLength(20)
                             ->hint('Ej: 2234-5678 o +506 2234 5678 (Opcional)')
                             ->columnSpan(1),
 
