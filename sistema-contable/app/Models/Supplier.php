@@ -75,29 +75,63 @@ class Supplier extends Model
     }
 
     /**
-     * Validar que el identificación sea válida
+     * Scope: Obtener proveedores activos
      */
-    public static function validarIdentificacion(string $identificacion): bool
+    public function scopeActivo($query)
     {
-        // Solo números y guiones
-        if (!preg_match('/^[0-9\-]+$/', $identificacion)) {
-            return false;
-        }
-
-        // Mínimo 6 caracteres
-        if (strlen($identificacion) < 6) {
-            return false;
-        }
-
-        return true;
+        return $query->where('estado', 'activo');
     }
 
     /**
-     * Validar correo electrónico
+     * Scope: Obtener proveedores por tipo
      */
-    public static function validarCorreo(string $correo): bool
+    public function scopePorTipo($query, $tipo)
     {
-        return filter_var($correo, FILTER_VALIDATE_EMAIL) !== false;
+        return $query->where('tipo_proveedor', $tipo);
+    }
+
+    /**
+     * Scope: Buscar por identificación
+     */
+    public function scopePorIdentificacion($query, $identificacion)
+    {
+        return $query->where('identificacion', $identificacion);
+    }
+
+    /**
+     * Validar que el identificación sea única
+     */
+    public static function existeIdentificacion(string $identificacion, ?int $excluirId = null): bool
+    {
+        $query = static::where('identificacion', $identificacion);
+        
+        if ($excluirId) {
+            $query->where('id', '!=', $excluirId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Validar que el correo sea único
+     */
+    public static function existeCorreo(string $correo, ?int $excluirId = null): bool
+    {
+        $query = static::where('correo', strtolower($correo));
+        
+        if ($excluirId) {
+            $query->where('id', '!=', $excluirId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Obtener proveedor por identificación
+     */
+    public static function porIdentificacion(string $identificacion): ?static
+    {
+        return static::where('identificacion', $identificacion)->first();
     }
 
     /**
@@ -160,4 +194,7 @@ class Supplier extends Model
     }
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8d7a5c71ddecae10706eaf2b3f6ca68f4c55a251
