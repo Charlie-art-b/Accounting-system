@@ -6,6 +6,8 @@ use App\Models\Supplier;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -19,13 +21,13 @@ class SupplierResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Proveedores';
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static \BackedEnum|string|null $navigationIcon = \Filament\Support\Icons\Heroicon::BuildingOffice2;
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Section::make('Información del Proveedor')
                     ->description('Registra los datos básicos del proveedor')

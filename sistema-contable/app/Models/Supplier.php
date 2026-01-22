@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Supplier extends Model
 {
-<<<<<<< HEAD
     /**
      * Tabla asociada al modelo
      */
@@ -162,17 +161,3 @@ class Supplier extends Model
 }
 
 
-=======
- protected $fillable = [
-        'supplier_type',
-        'identification',
-        'email',
-        'phone',
-        'status',
-    ];
-
-    protected $casts = [
-        'status' => 'boolean',
-    ];
-}
->>>>>>> dev
