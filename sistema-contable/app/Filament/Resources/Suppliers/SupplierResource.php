@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Suppliers;
 
-use App\Filament\Resources\Suppliers\Pages\CreateSupplier;
 use App\Filament\Resources\Suppliers\Pages\EditSupplier;
 use App\Filament\Resources\Suppliers\Pages\ListSuppliers;
 use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
@@ -18,9 +17,15 @@ class SupplierResource extends Resource
 {
     protected static ?string $model = Supplier::class;
 
+    protected static ?string $navigationLabel = 'Proveedores';
+
+    protected static ?string $modelLabel = 'Proveedor';
+
+    protected static ?string $pluralModelLabel = 'Proveedores';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'identificacion';
+    protected static ?string $recordTitleAttribute = 'nombre_razon_social';
 
     public static function form(Schema $schema): Schema
     {
@@ -43,7 +48,6 @@ class SupplierResource extends Resource
     {
         return [
             'index' => ListSuppliers::route('/'),
-            'create' => CreateSupplier::route('/create'),
             'edit' => EditSupplier::route('/{record}/edit'),
         ];
     }
