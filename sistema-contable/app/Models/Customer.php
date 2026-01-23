@@ -24,4 +24,13 @@ class Customer extends Model
         'customer_type' => 'string',
         'status' => 'boolean',
     ];
+
+    /**
+     * Relación: Un cliente puede estar asociado a muchos proveedores
+     */
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'customer_supplier')
+                    ->withTimestamps();
+    }
 }
