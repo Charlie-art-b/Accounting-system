@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\SupplierResource\Pages;
+namespace App\Filament\Resources\Suppliers\Pages;
 
-use App\Filament\Resources\SupplierResource;
-use Filament\Actions;
+use App\Filament\Resources\Suppliers\SupplierResource;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListSuppliers extends ListRecords
@@ -13,7 +13,7 @@ class ListSuppliers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }
