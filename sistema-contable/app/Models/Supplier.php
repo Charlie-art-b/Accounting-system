@@ -194,7 +194,3 @@ class Supplier extends Model
     }
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 8d7a5c71ddecae10706eaf2b3f6ca68f4c55a251
