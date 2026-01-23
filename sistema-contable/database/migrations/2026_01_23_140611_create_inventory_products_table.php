@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('inventory_products', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('inventory_id')
+                  ->constrained()
+                  ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                  ->constrained()
+                  ->cascadeOnDelete();
+
+            $table->integer('stock_initial')->default(0);
+            $table->integer('entries')->default(0);
+            $table->integer('exits')->default(0);
+
+            $table->timestamps();
+
+            $table->unique(['inventory_id', 'product_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('inventory_products');
+    }
+};
