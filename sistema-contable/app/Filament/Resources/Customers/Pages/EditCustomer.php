@@ -6,6 +6,7 @@ use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Actions\Action;
 
 class EditCustomer extends EditRecord
 {
@@ -18,4 +19,25 @@ class EditCustomer extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    //Mensaje de confirmación al editar un cliente
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('save')
+                ->label('Guardar cambios')
+                ->requiresConfirmation()
+                ->modalHeading('Confirmar cambios')
+                ->modalDescription('¿Deseas guardar los cambios de este cliente?')
+                ->modalSubmitActionLabel('Sí, guardar')
+                ->modalCancelActionLabel('Cancelar')
+                ->action(fn () => $this->save()),
+
+            Action::make('cancel')
+                ->label('Cancelar')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
+        ];
+    }
+
 }
