@@ -53,6 +53,12 @@ class CustomerInfolist
                     ->label('Notas')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                TextEntry::make('suppliers')
+                    ->label('Proveedores asociados')
+                    ->badge()
+                    ->getStateUsing(fn ($record) => $record->suppliers->map(fn ($supplier) => "{$supplier->nombre_razon_social} - {$supplier->identificacion}")->toArray())
+                    ->placeholder('Sin proveedores asociados')
+                    ->columnSpanFull(),
                 TextEntry::make('created_at')
                     ->label('Creado en')
                     ->dateTime()

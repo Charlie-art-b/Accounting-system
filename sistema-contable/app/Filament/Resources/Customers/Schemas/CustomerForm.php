@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Customers\Schemas;
 
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use App\Models\Supplier;
 
 class CustomerForm
 {
@@ -87,7 +89,7 @@ class CustomerForm
                     ])
                     ->default('individual')
                     ->required(),
-
+                            
                 Toggle::make('status')
                     ->label('Estado')
                     ->helperText('Indica si el cliente está activo o inactivo.')
@@ -100,6 +102,15 @@ class CustomerForm
                     ->nullable()
                     ->maxLength(2000)
                     ->columnSpanFull(),
+
+                Select::make('suppliers')
+                    ->label(__('Asociar proveedores al cliente'))
+                    ->multiple()
+                    ->relationship('suppliers', 'identificacion')
+                    ->getOptionLabelFromRecordUsing(fn(Supplier $record) => "{$record->nombre_razon_social} - {$record->identificacion}")
+                    ->searchable()
+                    ->preload()
+                    ->helperText(__('Seleccione uno o más proveedores para asociar con este cliente')),
             ]);
     }
 }
