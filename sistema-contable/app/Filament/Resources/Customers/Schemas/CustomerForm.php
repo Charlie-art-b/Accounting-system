@@ -15,52 +15,58 @@ class CustomerForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label(__('Name'))
+                    ->label('Nombre')
                     ->required()
                     ->minLength(2)
                     ->maxLength(100)
                     ->regex('/^[\p{L}\p{N}\s]+$/u'),
 
                 TextInput::make('first_last_name')
-                    ->label(__('First last name'))
+                    ->label('Primer apellido')
                     ->required()
                     ->minLength(2)
                     ->maxLength(50)
                     ->regex('/^[\p{L}\p{N}\s]+$/u'),
 
                 TextInput::make('second_last_name')
-                    ->label(__('Second last name'))
+                    ->label('Segundo apellido')
                     ->minLength(2)
                     ->maxLength(50)
                     ->regex('/^[\p{L}\p{N}\s]+$/u')
                     ->default(null),
 
                 Select::make('id_type')
-                    ->label(__('Identification type'))
+                    ->label('Tipo de identificación')
                     ->options([
-                        'identification' => __('ID'),
-                        'dimex' => __('DIMEX'),
-                        'passport' => __('Passport'),
+                        'identification' => 'Cédula',
+                        'dimex' => 'DIMEX',
+                        'passport' => 'Pasaporte',
                     ])
                     ->default('identification')
                     ->required(),
 
                 TextInput::make('identification')
-                    ->label(__('Identification'))
+                    ->label('Identificación')
                     ->required()
                     ->maxLength(20)
                     ->unique(table: 'customers', column: 'identification', ignoreRecord: true)
-                    ->regex('/^(\d{1}[-\s]?\d{4}[-\s]?\d{4}|\d{11,12}|[A-Z0-9]{6,12})$/i'),
+                    ->regex('/^(\d{1}[-\s]?\d{4}[-\s]?\d{4}|\d{11,12}|[A-Z0-9]{6,12})$/i')
+                    ->validationMessages([
+                        'unique' => 'Esta identificación ya existe en el sistema.',
+                    ]),
 
                 TextInput::make('email')
-                    ->label(__('Email'))
+                    ->label('Correo electrónico')
                     ->email()
                     ->required()
                     ->maxLength(255)
-                    ->unique(table: 'customers', column: 'email', ignoreRecord: true),
+                    ->unique(table: 'customers', column: 'email', ignoreRecord: true)
+                    ->validationMessages([
+                        'unique' => 'Este correo electrónico ya existe en el sistema.',
+                    ]),
 
                 TextInput::make('phone')
-                    ->label(__('Phone number'))
+                    ->label('Teléfono')
                     ->tel()
                     ->nullable()
                     ->minLength(8)
@@ -69,28 +75,28 @@ class CustomerForm
                     ->regex('/^[0-9()+\-\s]+$/'),
 
                 TextInput::make('address')
-                    ->label(__('Address'))
+                    ->label('Dirección')
                     ->nullable()
                     ->maxLength(355),
 
                 Select::make('customer_type')
-                    ->label(__('Customer type'))
+                    ->label('Tipo de cliente')
                     ->options([
-                        'individual' => __('Individual'),
-                        'legal_person' => __('Legal person'),
+                        'individual' => 'Persona física',
+                        'legal_person' => 'Persona jurídica',
                     ])
                     ->default('individual')
                     ->required(),
 
                 Toggle::make('status')
-                    ->label(__('Status'))
-                    ->helperText(__('If deactivated, the customer becomes inactive in the system.'))
+                    ->label('Estado')
+                    ->helperText('Indica si el cliente está activo o inactivo.')
                     ->default(true)
                     ->required(),
 
                 Textarea::make('notes')
-                    ->label(__('Notes'))
-                    ->placeholder(__('Write additional customer information (optional).'))
+                    ->label('Notas')
+                    ->placeholder('Escriba información adicional del cliente (opcional).')
                     ->nullable()
                     ->maxLength(2000)
                     ->columnSpanFull(),
