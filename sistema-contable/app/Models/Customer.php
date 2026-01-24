@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Models\Supplier;
 
 class Customer extends Model
 {
@@ -25,9 +27,13 @@ class Customer extends Model
         'status' => 'boolean',
     ];
 
-    /**
-     * Relación: Un cliente puede estar asociado a muchos proveedores
-     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtolower(trim($value))
+        );
+    }
+
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'customer_supplier')
