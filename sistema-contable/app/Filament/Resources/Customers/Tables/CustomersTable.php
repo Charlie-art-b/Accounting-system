@@ -9,6 +9,8 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 
 class CustomersTable
 {
@@ -21,13 +23,16 @@ class CustomersTable
                     ->label('Nombre')
                     ->sortable()//para ordenar la columna
                     ->searchable(),
+
                 TextColumn::make('first_last_name')
                     ->label('Primer apellido')
                     ->sortable()
                     ->searchable(),
+
                 TextColumn::make('second_last_name')
                     ->label('Segundo apellido')
                     ->searchable(),
+
                 TextColumn::make('id_type')
                     ->label('Tipo de identificación')
                     ->badge()
@@ -38,18 +43,23 @@ class CustomersTable
                         default => $state,
                     })
                     ->searchable(),
+
                 TextColumn::make('identification')
                     ->label('Identificación')
                     ->searchable(),
+
                 TextColumn::make('email')
                     ->label('Correo electrónico')
                     ->searchable(),
+
                 TextColumn::make('phone')
                     ->label('Teléfono')
                     ->searchable(),
+
                 TextColumn::make('address')
                     ->label('Dirección')
                     ->searchable(),
+
                 TextColumn::make('customer_type')
                     ->label('Tipo de cliente')
                     ->badge()
@@ -58,14 +68,25 @@ class CustomersTable
                         'legal_person' => 'Persona jurídica',
                         default => $state,
                     }),
+
                 IconColumn::make('status')
                     ->label('Estado')
                     ->boolean(),
+
+                TextColumn::make('suppliers_count')
+                    ->label('Proveedores')
+                    ->counts('suppliers')
+                    ->badge()
+                    ->color('success')
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('created_at')
                     ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->label('Actualizado en')
                     ->dateTime()
@@ -73,7 +94,17 @@ class CustomersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('customer_type')
+                    ->label('Tipo de cliente')
+                    ->options([
+                        'individual' => 'Persona física',
+                        'legal_person' => 'Persona jurídica',
+                    ]),
+
+                TernaryFilter::make('status')
+                    ->label('Estado')
+                    ->trueLabel('Activo')
+                    ->falseLabel('Inactivo'),
             ])
             ->recordActions([
                 ViewAction::make(),
