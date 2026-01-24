@@ -18,18 +18,18 @@ class CustomersTable
             ->defaultSort('name', 'asc')//orden alfabetico por nombre de cliente
             ->columns([
                 TextColumn::make('name')
-                    ->label(__('name'))
+                    ->label('Nombre')
                     ->sortable()//para ordenar la columna
                     ->searchable(),
                 TextColumn::make('first_last_name')
-                    ->label(__('first_last_name'))
+                    ->label('Primer apellido')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('second_last_name')
-                    ->label(__('second_last_name'))
+                    ->label('Segundo apellido')
                     ->searchable(),
                 TextColumn::make('id_type')
-                    ->label(__('id_type'))
+                    ->label('Tipo de identificación')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'identification' => 'Cédula',
@@ -39,19 +39,19 @@ class CustomersTable
                     })
                     ->searchable(),
                 TextColumn::make('identification')
-                    ->label(__('identification'))
+                    ->label('Identificación')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label(__('email'))
+                    ->label('Correo electrónico')
                     ->searchable(),
                 TextColumn::make('phone')
-                    ->label(__('phone'))
+                    ->label('Teléfono')
                     ->searchable(),
                 TextColumn::make('address')
-                    ->label(__('address'))
+                    ->label('Dirección')
                     ->searchable(),
                 TextColumn::make('customer_type')
-                    ->label(__('customer_type'))
+                    ->label('Tipo de cliente')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'individual' => 'Persona física',
@@ -59,15 +59,15 @@ class CustomersTable
                         default => $state,
                     }),
                 IconColumn::make('status')
-                    ->label(__('status'))
+                    ->label('Estado')
                     ->boolean(),
                 TextColumn::make('created_at')
-                    ->label(__('created_at'))
+                    ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label(__('updated_at'))
+                    ->label('Actualizado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
