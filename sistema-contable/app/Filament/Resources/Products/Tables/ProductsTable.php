@@ -15,7 +15,23 @@ class ProductsTable
     {
         return $table
             ->columns([
-                
+                TextColumn::make('name')
+                    ->label('Nombre')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('supplier.nombre_razon_social')
+                    ->label('Proveedor')
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Creado el')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label('Actualizado el')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
