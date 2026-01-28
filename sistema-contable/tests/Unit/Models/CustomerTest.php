@@ -533,4 +533,271 @@ class CustomerTest extends TestCase
         $freshCustomer = Customer::find($customer->id);
         $this->assertFalse($freshCustomer->status);
     }
+
+    /**
+     * Test: Listar todos los clientes
+     */
+    public function test_listar_todos_los_clientes()
+    {
+        // Crear varios clientes
+        Customer::create([
+            'name' => 'Cliente 1',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '100100100100',
+            'email' => 'cliente1@example.com',
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente 2',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '200200200200',
+            'email' => 'cliente2@example.com',
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente 3',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '300300300300',
+            'email' => 'cliente3@example.com',
+        ]);
+
+        // Obtener todos los clientes
+        $customers = Customer::all();
+
+        // Verificar que existen 3 clientes
+        $this->assertCount(3, $customers);
+        
+        // Verificar que se pueden acceder a los datos de cada cliente
+        $this->assertContains('Cliente 1', $customers->pluck('name'));
+        $this->assertContains('Cliente 2', $customers->pluck('name'));
+        $this->assertContains('Cliente 3', $customers->pluck('name'));
+    }
+
+    /**
+     * Test: Listar clientes con paginación
+     */
+    public function test_listar_clientes_con_paginacion()
+    {
+        // Crear 10 clientes
+        for ($i = 1; $i <= 10; $i++) {
+            Customer::create([
+                'name' => "Cliente {$i}",
+                'first_last_name' => 'Apellido',
+                'id_type' => 'identification',
+                'identification' => str_pad($i, 12, '0', STR_PAD_LEFT),
+                'email' => "cliente{$i}@example.com",
+            ]);
+        }
+
+        // Obtener clientes con paginación de 5 por página
+        $customers = Customer::paginate(5);
+
+        $this->assertCount(5, $customers);
+        $this->assertEquals(10, $customers->total());
+        $this->assertEquals(1, $customers->currentPage());
+    }
+
+    /**
+     * Test: Listar clientes activos
+     */
+    public function test_listar_clientes_activos()
+    {
+        // Crear clientes activos e inactivos
+        Customer::create([
+            'name' => 'Cliente Activo 1',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '111111111111',
+            'email' => 'activo1@example.com',
+            'status' => true,
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente Inactivo',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '222222222222',
+            'email' => 'inactivo@example.com',
+            'status' => false,
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente Activo 2',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '333333333333',
+            'email' => 'activo2@example.com',
+            'status' => true,
+        ]);
+
+        // Obtener solo clientes activos
+        $activeCustomers = Customer::where('status', true)->get();
+
+        $this->assertCount(2, $activeCustomers);
+        $this->assertTrue($activeCustomers->every(fn($customer) => $customer->status === true));
+    }
+
+    /**
+     * Test: Listar clientes inactivos
+     */
+    public function test_listar_clientes_inactivos()
+    {
+        Customer::create([
+            'name' => 'Cliente Activo',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '444444444444',
+            'email' => 'activo@example.com',
+            'status' => true,
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente Inactivo 1',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '555555555555',
+            'email' => 'inactivo1@example.com',
+            'status' => false,
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente Inactivo 2',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '666666666666',
+            'email' => 'inactivo2@example.com',
+            'status' => false,
+        ]);
+
+        // Obtener solo clientes inactivos
+        $inactiveCustomers = Customer::where('status', false)->get();
+
+        $this->assertCount(2, $inactiveCustomers);
+        $this->assertTrue($inactiveCustomers->every(fn($customer) => $customer->status === false));
+    }
+
+    /**
+     * Test: Eliminar un cliente
+     */
+    public function test_eliminar_cliente()
+    {
+        $customer = Customer::create([
+            'name' => 'Cliente a Eliminar',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '777777777777',
+            'email' => 'eliminar@example.com',
+        ]);
+
+        $customerId = $customer->id;
+
+        // Verificar que el cliente existe
+        $this->assertNotNull(Customer::find($customerId));
+
+        // Eliminar el cliente
+        $customer->delete();
+
+        // Verificar que el cliente fue eliminado
+        $this->assertNull(Customer::find($customerId));
+    }
+
+    /**
+     * Test: Eliminar cliente mediante ID
+     */
+    public function test_eliminar_cliente_por_id()
+    {
+        $customer = Customer::create([
+            'name' => 'Cliente a Eliminar por ID',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '888888888888',
+            'email' => 'eliminarid@example.com',
+        ]);
+
+        $customerId = $customer->id;
+
+        // Eliminar el cliente mediante ID
+        Customer::destroy($customerId);
+
+        // Verificar que el cliente fue eliminado
+        $this->assertNull(Customer::find($customerId));
+    }
+
+    /**
+     * Test: Eliminar múltiples clientes a la vez
+     */
+    public function test_eliminar_multiples_clientes()
+    {
+        $customer1 = Customer::create([
+            'name' => 'Cliente 1 Borrar',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '999999999999',
+            'email' => 'borrar1@example.com',
+        ]);
+
+        $customer2 = Customer::create([
+            'name' => 'Cliente 2 Borrar',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '101010101010',
+            'email' => 'borrar2@example.com',
+        ]);
+
+        $customer3 = Customer::create([
+            'name' => 'Cliente 3 Mantener',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '121212121212',
+            'email' => 'mantener@example.com',
+        ]);
+
+        // Eliminar los primeros dos clientes
+        Customer::destroy([$customer1->id, $customer2->id]);
+
+        // Verificar que fueron eliminados
+        $this->assertNull(Customer::find($customer1->id));
+        $this->assertNull(Customer::find($customer2->id));
+
+        // Verificar que el tercero sigue existiendo
+        $this->assertNotNull(Customer::find($customer3->id));
+    }
+
+    /**
+     * Test: Eliminar clientes con condición
+     */
+    public function test_eliminar_clientes_inactivos()
+    {
+        Customer::create([
+            'name' => 'Cliente Activo Permanente',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '131313131313',
+            'email' => 'activo@example.com',
+            'status' => true,
+        ]);
+
+        Customer::create([
+            'name' => 'Cliente Inactivo a Eliminar',
+            'first_last_name' => 'Apellido',
+            'id_type' => 'identification',
+            'identification' => '141414141414',
+            'email' => 'inactivo@example.com',
+            'status' => false,
+        ]);
+
+        // Contar clientes antes de eliminar
+        $countBefore = Customer::count();
+        $this->assertEquals(2, $countBefore);
+
+        // Eliminar solo los clientes inactivos
+        Customer::where('status', false)->delete();
+
+        // Verificar que solo queda el cliente activo
+        $this->assertCount(1, Customer::all());
+        $this->assertEquals('Cliente Activo Permanente', Customer::first()->name);
+    }
 }
