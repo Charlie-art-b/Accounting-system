@@ -20,6 +20,12 @@ class InventoryResource extends Resource
 {
     protected static ?string $model = Inventory::class;
 
+    protected static ?string $navigationLabel = 'Inventarios';
+
+    protected static ?string $modelLabel = 'Inventario';
+
+    protected static ?string $pluralModelLabel = 'Inventarios';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';

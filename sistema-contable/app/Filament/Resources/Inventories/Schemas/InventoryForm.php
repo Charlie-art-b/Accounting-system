@@ -16,11 +16,13 @@ class InventoryForm
                 ->label('Cliente')
                 ->searchable()
                 ->preload()
+                ->helperText('Selecciona el cliente asociado al inventario')
                 ->required(),
 
             TextInput::make('name')
                 ->label('Nombre del inventario')
                 ->required()
+                ->helperText('Nombre descriptivo para el inventario')
                 ->maxLength(255),
         ]);
     }

@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Inventories\Pages;
+namespace App\Filament\Resources\Suppliers\Pages;
 
-use App\Filament\Resources\Inventories\InventoryResource;
+use App\Filament\Resources\Suppliers\SupplierResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
 
-class ViewInventory extends ViewRecord
+class ViewSupplier extends ViewRecord
 {
-    protected static string $resource = InventoryResource::class;
+    protected static string $resource = SupplierResource::class;
 
     protected function getHeaderActions(): array
     {
