@@ -34,6 +34,21 @@ class Customer extends Model
         );
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', false);
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('customer_type', $tipo);
+    }
+
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'customer_supplier')
