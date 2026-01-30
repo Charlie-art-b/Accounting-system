@@ -11,7 +11,7 @@ class CreateCustomer extends CreateRecord
     protected static string $resource = CustomerResource::class;
 
     //Mensaje de confirmación al crear un cliente
-    protected function getFormActions(): array
+    /*protected function getFormActions(): array
     {
         return [
             Action::make('create')
@@ -29,7 +29,7 @@ class CreateCustomer extends CreateRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
         ];
-    }
+    }*/
 
     protected function getHeaderActions(): array
     {

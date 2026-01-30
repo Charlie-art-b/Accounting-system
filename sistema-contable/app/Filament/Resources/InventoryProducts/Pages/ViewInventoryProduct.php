@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Customers\Pages;
+namespace App\Filament\Resources\InventoryProducts\Pages;
 
-use App\Filament\Resources\Customers\CustomerResource;
+use App\Filament\Resources\InventoryProducts\InventoryProductResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
 
-class ViewCustomer extends ViewRecord
+class ViewInventoryProduct extends ViewRecord
 {
-    protected static string $resource = CustomerResource::class;
+    protected static string $resource = InventoryProductResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -20,8 +20,8 @@ class ViewCustomer extends ViewRecord
                 ->label('')
                 ->icon('heroicon-o-x-mark')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')) 
+                ->tooltip('Volver'),
         ];
     }
 }
