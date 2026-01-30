@@ -15,20 +15,20 @@ class EditCustomer extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back')
+            ->label('')
+            ->icon('heroicon-o-x-mark')
+            ->color('gray')
+            ->url($this->getResource()::getUrl('index'))
+            ->tooltip('Volver a la lista'),
+            
             ViewAction::make(),
             DeleteAction::make(),
-
-            Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
         ];
     }
 
     //Mensaje de confirmación al editar un cliente
-    /*protected function getFormActions(): array
+    protected function getFormActions(): array
     {
         return [
             Action::make('save')
@@ -45,6 +45,6 @@ class EditCustomer extends EditRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
         ];
-    }*/
+    }
 
 }
