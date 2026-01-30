@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Supplier;
 
 class Customer extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'first_last_name',
@@ -30,8 +33,23 @@ class Customer extends Model
     protected function email(): Attribute
     {
         return Attribute::make(
-            set: fn($value) => strtolower(trim($value))
+            set: fn ($value) => strtolower(trim($value))
         );
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', false);
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('customer_type', $type);
     }
 
     public function suppliers()
