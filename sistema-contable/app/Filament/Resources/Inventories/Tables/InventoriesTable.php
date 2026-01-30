@@ -8,6 +8,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 
 class InventoriesTable
 {
@@ -36,7 +38,20 @@ class InventoriesTable
         ])
 
         ->filters([
-            //
+            SelectFilter::make('customer_id')
+                ->label('Cliente')
+                ->relationship('customer', 'name')
+                ->searchable()
+                ->preload(),
+        
+            Filter::make('with_low_stock')
+                ->label('Con stock bajo')
+                ->query(fn ($query) => $query->whereHas('inventoryProducts', function ($q) {
+                    $q->whereRaw('(stock_initial + entries - exits) < 10');
+                })),
+            Filter::make('empty_inventory')
+                ->label('Inventarios vacíos')
+                ->query(fn ($query) => $query->has('inventoryProducts', '=', 0)),
         ])
 
         ->recordActions([
