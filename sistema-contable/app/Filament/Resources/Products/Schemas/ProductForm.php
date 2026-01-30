@@ -15,17 +15,25 @@ class ProductForm
             ->components([
                 TextInput::make('name')
                     ->label('Nombre')
-                    ->required(),
+                    ->required()
+                    ->minLength(2)
+                    ->maxLength(100)
+                    ->regex('/^[\p{L}\p{N}\s]+$/u'),
+
                 Textarea::make('description')
                     ->label('Descripción')
+                    ->placeholder('Descripción del producto')
                     ->default(null)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->maxLength(500),
+
                 Select::make('supplier_id')
-                ->relationship('supplier', 'nombre_razon_social')
-                ->label('Proveedor')
-                ->searchable()
-                ->preload()
-                ->required(),
+                    ->relationship('supplier', 'nombre_razon_social')
+                    ->label('Proveedor')
+                    //->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->required(),
             ]);
     }
 }

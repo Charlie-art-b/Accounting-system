@@ -20,9 +20,26 @@ class InventoryProductResource extends Resource
 {
     protected static ?string $model = InventoryProduct::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'inventory_id';
+   // protected static ?string $recordTitleAttribute = 'inventory_id.name';
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Inventario de Productos';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Inventario de Producto';
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Inventarios de Productos';
+    }
 
     public static function form(Schema $schema): Schema
     {
