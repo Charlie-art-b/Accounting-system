@@ -24,8 +24,8 @@ class ListInventories extends ListRecords
                 ->url(ProductResource::getUrl('index')),
 
             Action::make('inventario productos')
-                ->label('Agregar productos al inventario')
-                ->icon('heroicon-o-plus-circle')
+                ->label('Ver Existencias en Inventarios')
+                
                 ->url(InventoryProductResource::getUrl('index')),
 
         ];

@@ -28,17 +28,17 @@ class InventoryProductResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Inventario de Productos';
+        return 'Existencias en Inventarios';
     }
 
     public static function getModelLabel(): string
     {
-        return 'Inventario de Producto';
+        return 'Existencias de productos';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Inventarios de Productos';
+        return 'Existencias';
     }
 
     public static function form(Schema $schema): Schema

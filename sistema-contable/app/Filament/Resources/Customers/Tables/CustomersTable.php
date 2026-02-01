@@ -105,6 +105,10 @@ class CustomersTable
                     ->label('Estado')
                     ->trueLabel('Activo')
                     ->falseLabel('Inactivo'),
+
+                SelectFilter::make('suppliers')
+                    ->relationship('suppliers', 'nombre_razon_social')
+                    ->label('Proveedor'),
             ])
             ->recordActions([
                 ViewAction::make(),

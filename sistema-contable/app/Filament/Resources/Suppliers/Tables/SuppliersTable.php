@@ -31,6 +31,13 @@ class SuppliersTable
                     ->searchable(),
                 TextColumn::make('estado')
                     ->searchable(),
+                TextColumn::make('customers_count')
+                    ->label('Clientes')
+                    ->counts('customers')
+                    ->badge()
+                    ->color('success')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -51,6 +58,9 @@ class SuppliersTable
                     ->label('Estado')
                     ->trueLabel('Activo')
                     ->falseLabel('Inactivo'),
+                SelectFilter::make('customers')
+                    ->relationship('customers', 'name')
+                    ->label('Cliente'),
             ])
             ->recordActions([
                 ViewAction::make(),

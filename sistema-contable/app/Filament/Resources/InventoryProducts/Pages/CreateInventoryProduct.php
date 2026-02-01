@@ -9,6 +9,8 @@ use Filament\Actions\Action;
 class CreateInventoryProduct extends CreateRecord
 {
     protected static string $resource = InventoryProductResource::class;
+    protected static ?string $title = 'Agregar existencias';
+
 
      protected function getFormActions(): array
     {

@@ -11,12 +11,14 @@ use Filament\Actions\Action;
 class ListInventoryProducts extends ListRecords
 {
     protected static string $resource = InventoryProductResource::class;
+    protected static ?string $title = 'Existencias';
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
-
+          CreateAction::make()
+                ->label('Agregar Existencias'),
+                
              Action::make('back')
                 ->label('')
                 ->icon('heroicon-o-x-mark')
