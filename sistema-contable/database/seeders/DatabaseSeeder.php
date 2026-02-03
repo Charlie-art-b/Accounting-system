@@ -15,13 +15,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-     $this->call([
-    CustomerSeeder::class,
-    SupplierSeeder::class,
-    ProductSeeder::class,
-    InventorySeeder::class,
-    InventoryProductSeeder::class,
-      ]);
+        $this->call([
+            CustomerSeeder::class,
+            SupplierSeeder::class,
+            ProductSeeder::class,
+            InventorySeeder::class,
+            InventoryProductSeeder::class,
+            AccountsReceivableSeeder::class,
+        ]);
 
  User::updateOrCreate(
             ['email' => 'test@example.com'],
