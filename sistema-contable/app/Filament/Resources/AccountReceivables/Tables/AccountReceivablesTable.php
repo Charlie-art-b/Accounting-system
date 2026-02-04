@@ -8,6 +8,15 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Placeholder;
+
 
 class AccountReceivablesTable
 {
@@ -44,9 +53,52 @@ class AccountReceivablesTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
-                //
+                
+                SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        'pending' => 'Pendiente',
+                        'partial' => 'Parcial',
+                        'paid'    => 'Pagado',
+                    ]),
+
+                SelectFilter::make('customer_id')
+                    ->label('Cliente')
+                    ->relationship('customer', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                Filter::make('dates')
+                    ->label('Fechas')
+                    ->form([
+                       
+                        DatePicker::make('issue_from')->label('Desde (emisión)'),
+                        DatePicker::make('issue_until')->label('Hasta (emisión)'),
+
+                        DatePicker::make('due_from')->label('Desde (vencimiento)'),
+                        DatePicker::make('due_until')->label('Hasta (vencimiento)'),
+                    ])
+                    ->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['issue_from'] ?? null, fn (Builder $q, $d) => $q->whereDate('issue_date', '>=', $d))
+                            ->when($data['issue_until'] ?? null, fn (Builder $q, $d) => $q->whereDate('issue_date', '<=', $d))
+                            ->when($data['due_from'] ?? null, fn (Builder $q, $d) => $q->whereDate('due_date', '>=', $d))
+                            ->when($data['due_until'] ?? null, fn (Builder $q, $d) => $q->whereDate('due_date', '<=', $d));
+                    }),
+
+
+                Filter::make('only_overdue')
+                    ->label('Solo vencidas')
+                    ->query(fn (Builder $query) => $query
+                        ->whereDate('due_date', '<', now()->toDateString())
+                        ->where('status', '!=', 'paid')
+                    ),
+                
             ])
+
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
