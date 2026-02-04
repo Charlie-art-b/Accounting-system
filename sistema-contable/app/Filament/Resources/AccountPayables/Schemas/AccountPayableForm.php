@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AccountPayables\Schemas;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Schemas\Schema;
 
 class AccountPayableForm
@@ -15,20 +16,34 @@ class AccountPayableForm
             ->components([
                 Select::make('supplier_id')
                     ->relationship('supplier', 'id')
+                    ->exists('suppliers', 'id')
                     ->required(),
                 TextInput::make('document_number')
-                    ->required(),
+                    ->required()
+                    ->maxLength(50)
+                    ->rules(['string'])
+                    ->unique(
+                        table: 'accounts_payable',
+                        column: 'document_number',
+                        ignorable: fn ($record) => $record,
+                        modifyRuleUsing: fn ($rule, Get $get) => $rule->where('supplier_id', $get('supplier_id')),
+                    ),
                 DatePicker::make('issue_date')
-                    ->required(),
+                    ->required()
+                    ->rules(['date']),
                 Select::make('payment_terms')
                     ->options(['cash' => 'Cash', 'credit' => 'Credit'])
                     ->default('credit')
-                    ->required(),
+                    ->required()
+                    ->rules(['in:cash,credit']),
                 TextInput::make('payment_period')
                     ->numeric()
-                    ->default(null),
+                    ->default(null)
+                    ->required(fn (Get $get) => $get('payment_terms') === 'credit')
+                    ->rules(['nullable', 'integer', 'min:1']),
                 DatePicker::make('due_date')
-                    ->required(),
+                    ->required()
+                    ->rules(['date', 'after_or_equal:issue_date']),
                 Select::make('type')
                     ->options([
             'invoice' => 'Invoice',
@@ -37,19 +52,27 @@ class AccountPayableForm
             'other' => 'Other',
         ])
                     ->default('invoice')
-                    ->required(),
+                    ->required()
+                    ->rules(['in:invoice,receipt,debit_note,other']),
                 TextInput::make('total_amount')
                     ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->rules(['numeric', 'min:0.01']),
                 TextInput::make('paid_amount')
                     ->required()
                     ->numeric()
-                    ->default(0.0),
-                DatePicker::make('payment_date'),
+                    ->default(0.0)
+                    ->rules(['numeric', 'min:0', 'lte:total_amount'])
+                    ->rule(fn (Get $get) => $get('status') === 'paid' ? 'same:total_amount' : null)
+                    ->rule(fn (Get $get) => $get('status') === 'pending' ? 'max:0' : null),
+                DatePicker::make('payment_date')
+                    ->required(fn (Get $get) => $get('status') === 'paid')
+                    ->rules(['nullable', 'date', 'after_or_equal:issue_date']),
                 Select::make('status')
                     ->options(['pending' => 'Pending', 'partial' => 'Partial', 'paid' => 'Paid', 'voided' => 'Voided'])
                     ->default('pending')
-                    ->required(),
+                    ->required()
+                    ->rules(['in:pending,partial,paid,voided']),
             ]);
     }
 }
