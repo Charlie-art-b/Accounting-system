@@ -227,7 +227,8 @@ class AccountPayablesTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn ($record) => $record->status !== 'paid'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
