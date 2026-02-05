@@ -27,6 +27,14 @@ class AccountReceivable extends Model
         'paid_amount' => 'decimal:2',
     ];
 
+    protected static function booted(): void 
+    {
+        static::creating(function (self $model) {
+            $model->paid_amount = 0;
+            $model->status = 'pending';
+        });
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
