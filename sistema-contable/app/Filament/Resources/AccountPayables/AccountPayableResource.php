@@ -50,9 +50,9 @@ class AccountPayableResource extends Resource
     {
         return [
             'index' => ListAccountPayables::route('/'),
-           // 'create' => CreateAccountPayable::route('/create'),
-           // 'view' => ViewAccountPayable::route('/{record}'),
-           // 'edit' => EditAccountPayable::route('/{record}/edit'),
+            'create' => CreateAccountPayable::route('/create'),
+            'view' => ViewAccountPayable::route('/{record}'),
+            'edit' => EditAccountPayable::route('/{record}/edit'),
         ];
     }
 }
