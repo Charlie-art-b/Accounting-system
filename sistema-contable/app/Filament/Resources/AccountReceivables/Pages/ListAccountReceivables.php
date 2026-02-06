@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AccountReceivables\Pages;
 use App\Filament\Resources\AccountReceivables\AccountReceivableResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Actions\Action;
 
 class ListAccountReceivables extends ListRecords
 {
@@ -13,7 +14,12 @@ class ListAccountReceivables extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            
+            CreateAction::make()
+                ->label('Crear cuenta por cobrar')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->keyBindings(['mod+n']),
         ];
     }
 }

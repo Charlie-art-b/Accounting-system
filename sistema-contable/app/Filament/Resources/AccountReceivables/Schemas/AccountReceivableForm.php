@@ -14,12 +14,14 @@ class AccountReceivableForm
         return $schema
             ->components([
                 Select::make('customer_id')
+                    ->label('Clientes')
                     ->relationship('customer', 'name')
                     ->required()
                     ->validationMessages([
                         'required' => 'El cliente es obligatorio.',
                     ]),
                 TextInput::make('invoice_number')
+                    ->label('Número de Factura')
                     ->required()
                     ->maxLength(50)
                     ->rule(fn (callable $get) =>
@@ -32,12 +34,14 @@ class AccountReceivableForm
                         'unique' => 'Ya existe una cuenta por cobrar con esta factura para el cliente seleccionado.',
                     ]),
                 DatePicker::make('issue_date')
+                     ->label('Fecha de Emisión')
                     ->required()
                     ->validationMessages([
                         'required' => 'La fecha de emisión es obligatoria.',
                         'date' => 'La fecha de emisión no es válida.',
                     ]),
                 DatePicker::make('due_date')
+                    ->label('Fecha de Vencimiento')
                     ->required()
                     ->minDate(fn (callable $get) => $get('issue_date'))
                     ->validationMessages([
@@ -45,6 +49,7 @@ class AccountReceivableForm
                         'minDate' => 'La fecha de vencimiento debe ser igual o posterior a la fecha de emisión.',
                     ]),
                 TextInput::make('description')
+                        ->label('Descripción')
                     ->required()
                     ->maxLength(255)
                     ->validationMessages([
@@ -52,6 +57,7 @@ class AccountReceivableForm
                         'max' => 'La descripción no puede exceder 255 caracteres.',
                     ]),
                 TextInput::make('total_amount')
+                    ->label('Monto Total')
                     ->required()->numeric()
                     ->gt(0)
                     ->validationMessages([
@@ -60,10 +66,12 @@ class AccountReceivableForm
                         'gt' => 'El monto total debe ser mayor a cero.',
                     ]),
                 TextInput::make('paid_amount')
+                    ->label('Monto Pagado')
                     ->required()
                     ->numeric()
                     ->default(0.0),
                 Select::make('status')
+                    ->label('Estado')
                     ->options(['pending' => 'Pending', 'partial' => 'Partial', 'paid' => 'Paid'])
                     ->default('pending')
                     ->required(),

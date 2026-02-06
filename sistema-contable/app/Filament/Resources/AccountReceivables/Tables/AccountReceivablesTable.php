@@ -25,30 +25,40 @@ class AccountReceivablesTable
         return $table
             ->columns([
                 TextColumn::make('customer.name')
+                    ->label('Cliente')
                     ->searchable(),
                 TextColumn::make('invoice_number')
+                    ->label('Número de factura')
                     ->searchable(),
                 TextColumn::make('issue_date')
+                    ->label('Fecha de emisión')
                     ->date()
                     ->sortable(),
                 TextColumn::make('due_date')
+                    ->label('Fecha de vencimiento')
                     ->date()
                     ->sortable(),
                 TextColumn::make('description')
+                    ->label('Descripción')
                     ->searchable(),
                 TextColumn::make('total_amount')
+                    ->label('Monto total')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('paid_amount')
+                    ->label('Monto pagado')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('status')
+                    ->label('Estado')
                     ->badge(),
                 TextColumn::make('created_at')
+                     ->label('Creado el')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado el')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

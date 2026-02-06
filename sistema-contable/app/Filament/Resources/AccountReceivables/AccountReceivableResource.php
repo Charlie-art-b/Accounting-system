@@ -45,14 +45,21 @@ class AccountReceivableResource extends Resource
             //
         ];
     }
-
+public static function getPluralModelLabel(): string
+    {
+        return 'Cuentas por cobrar';
+    }
+    public static function getModelLabel(): string
+    {
+        return 'Cuenta por cobrar';
+    }
     public static function getPages(): array
     {
         return [
             'index' => ListAccountReceivables::route('/'),
             'create' => CreateAccountReceivable::route('/create'),
             'view' => ViewAccountReceivable::route('/{record}'),
-            //'edit' => EditAccountReceivable::route('/{record}/edit'),
+            'edit' => EditAccountReceivable::route('/{record}/edit'),
         ];
     }
 }
