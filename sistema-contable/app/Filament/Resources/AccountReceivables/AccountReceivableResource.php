@@ -50,8 +50,8 @@ class AccountReceivableResource extends Resource
     {
         return [
             'index' => ListAccountReceivables::route('/'),
-            //'create' => CreateAccountReceivable::route('/create'),
-            //'view' => ViewAccountReceivable::route('/{record}'),
+            'create' => CreateAccountReceivable::route('/create'),
+            'view' => ViewAccountReceivable::route('/{record}'),
             //'edit' => EditAccountReceivable::route('/{record}/edit'),
         ];
     }
