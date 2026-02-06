@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AccountReceivable extends Model
 {
@@ -38,6 +39,11 @@ class AccountReceivable extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function collectionManagement(): HasOne
+    {
+        return $this->hasOne(CollectionManagement::class);
     }
 
     //calculo del saldo pendiente 
