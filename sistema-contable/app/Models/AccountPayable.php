@@ -34,6 +34,14 @@ class AccountPayable extends Model
 
     protected static function booted(): void
     {
+        static::deleting(function (self $accountPayable): void {
+            if ($accountPayable->status !== 'voided') {
+                throw ValidationException::withMessages([
+                    'status' => 'Solo se pueden eliminar cuentas por pagar canceladas (voided).',
+                ]);
+            }
+        });
+
         static::saving(function (self $accountPayable): void {
             if (
                 $accountPayable->exists
