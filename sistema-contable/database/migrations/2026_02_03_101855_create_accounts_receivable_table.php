@@ -29,7 +29,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['customer_id', 'invoice_number']);
+            $table->unique('invoice_number');
 
         });
     }
