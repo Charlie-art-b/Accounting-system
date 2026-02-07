@@ -10,7 +10,7 @@ use Filament\Actions\Action;
 class ViewAccountReceivable extends ViewRecord
 {
     protected static string $resource = AccountReceivableResource::class;
-
+    protected static ?string $title = 'Detalles de la cuenta por cobrar';
     protected function getHeaderActions(): array
     {
         return [
@@ -18,7 +18,8 @@ class ViewAccountReceivable extends ViewRecord
                 ->label('Editar')
                 ->icon('heroicon-o-pencil-square')
                 ->color('primary')
-                ->keyBindings(['mod+e']),
+                ->keyBindings(['mod+e']),7
+
         ];
     }
 }

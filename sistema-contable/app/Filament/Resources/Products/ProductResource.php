@@ -36,10 +36,6 @@ class ProductResource extends Resource
         return 'Producto';
     }
 
-    public static function getPluralModelLabel(): string
-    {
-        return 'Productos';
-    }
 
     public static function form(Schema $schema): Schema
     {

@@ -12,23 +12,32 @@ class AccountReceivableInfolist
         return $schema
             ->components([
                 TextEntry::make('customer.name')
-                    ->label('Customer'),
-                TextEntry::make('invoice_number'),
+                    ->label('Cliente'),
+                TextEntry::make('invoice_number')
+                    ->label('Número de Factura'),
                 TextEntry::make('issue_date')
+                    ->label('Fecha de Emisión')
                     ->date(),
                 TextEntry::make('due_date')
+                    ->label('Fecha de Vencimiento')
                     ->date(),
-                TextEntry::make('description'),
+                TextEntry::make('description')
+                    ->label('Descripción'),
                 TextEntry::make('total_amount')
-                    ->numeric(),
+                        ->label('Monto Total')
+                        ->numeric(),
                 TextEntry::make('paid_amount')
+                    ->label('Monto Pagado')
                     ->numeric(),
                 TextEntry::make('status')
+                    ->label('Estado')
                     ->badge(),
                 TextEntry::make('created_at')
+                        ->label('Creado en')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Actualizado en')
                     ->dateTime()
                     ->placeholder('-'),
             ]);

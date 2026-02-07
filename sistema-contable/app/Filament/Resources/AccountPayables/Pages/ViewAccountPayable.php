@@ -9,7 +9,7 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewAccountPayable extends ViewRecord
 {
     protected static string $resource = AccountPayableResource::class;
-
+   protected static ?string $title = 'Detalles de la cuenta por pagar';
     protected function getHeaderActions(): array
     {
         return [

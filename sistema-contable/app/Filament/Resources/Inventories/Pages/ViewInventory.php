@@ -10,7 +10,7 @@ use Filament\Actions\Action;
 class ViewInventory extends ViewRecord
 {
     protected static string $resource = InventoryResource::class;
-
+    protected static ?string $title = 'Detalles del inventario';
     protected function getHeaderActions(): array
     {
         return [

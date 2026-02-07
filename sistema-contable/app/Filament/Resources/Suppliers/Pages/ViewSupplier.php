@@ -10,7 +10,7 @@ use Filament\Actions\Action;
 class ViewSupplier extends ViewRecord
 {
     protected static string $resource = SupplierResource::class;
-
+ protected static ?string $title = 'Detalles del proveedor';
     protected function getHeaderActions(): array
     {
         return [

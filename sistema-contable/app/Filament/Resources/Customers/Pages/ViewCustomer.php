@@ -10,7 +10,7 @@ use Filament\Actions\Action;
 class ViewCustomer extends ViewRecord
 {
     protected static string $resource = CustomerResource::class;
-
+   protected static ?string $title = 'Detalles del cliente';
     protected function getHeaderActions(): array
     {
         return [

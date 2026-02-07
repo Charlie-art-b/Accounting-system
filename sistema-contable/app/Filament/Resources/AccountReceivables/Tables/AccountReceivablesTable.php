@@ -104,11 +104,22 @@ class AccountReceivablesTable
                     }),
 
 
-                Filter::make('only_overdue')
-                    ->label('Solo vencidas')
-                    ->query(fn (Builder $query) => $query
-                        ->whereDate('due_date', '<', now()->toDateString())
-                        ->where('status', '!=', 'paid')
+                Filter::make('pending')
+                    ->label('Pendientes')
+                    ->query(fn (Builder $query) =>
+                    $query->where('status', 'pending')
+                    ),
+
+                    Filter::make('partial')
+                      ->label('Parciales')
+                     ->query(fn (Builder $query) =>
+                     $query->where('status', 'partial')
+                     ),
+
+                Filter::make('paid')
+                    ->label('Pagados')
+                    ->query(fn (Builder $query) =>
+                    $query->where('status', 'paid')
                     ),
                 
             ])

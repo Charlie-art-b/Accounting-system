@@ -11,11 +11,12 @@ class ViewProduct extends ViewRecord
 {
     protected static string $resource = ProductResource::class;
 
+ protected static ?string $title = 'Detalles del producto';
+
     protected function getHeaderActions(): array
     {
         return [
             EditAction::make(),
-
             Action::make('back')
                 ->label('')
                 ->icon('heroicon-o-x-mark')
