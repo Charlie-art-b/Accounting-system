@@ -6,6 +6,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rule;
 
 class AccountReceivableForm
 {
@@ -20,21 +21,22 @@ class AccountReceivableForm
                     ->validationMessages([
                         'required' => 'El cliente es obligatorio.',
                     ]),
-                TextInput::make('invoice_number')
+               TextInput::make('invoice_number')
                     ->label('Número de Factura')
                     ->required()
                     ->maxLength(50)
-                    ->rule(fn (callable $get) =>
+                    ->rule(fn (? \App\Models\AccountReceivable $record) =>
                         Rule::unique('accounts_receivable', 'invoice_number')
-                            ->where(fn ($q) => $q->where('customer_id', $get('customer_id')))
+                            ->ignore($record?->id)
                     )
                     ->validationMessages([
                         'required' => 'La factura es obligatoria.',
                         'max' => 'La factura no puede exceder 50 caracteres.',
                         'unique' => 'Ya existe una cuenta por cobrar con esta factura para el cliente seleccionado.',
                     ]),
+
                 DatePicker::make('issue_date')
-                     ->label('Fecha de Emisión')
+                    ->label('Fecha de Emisión')
                     ->required()
                     ->validationMessages([
                         'required' => 'La fecha de emisión es obligatoria.',
@@ -49,7 +51,7 @@ class AccountReceivableForm
                         'minDate' => 'La fecha de vencimiento debe ser igual o posterior a la fecha de emisión.',
                     ]),
                 TextInput::make('description')
-                        ->label('Descripción')
+                    ->label('Descripción')
                     ->required()
                     ->maxLength(255)
                     ->validationMessages([
