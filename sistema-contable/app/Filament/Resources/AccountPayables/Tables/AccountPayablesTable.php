@@ -26,36 +26,48 @@ class AccountPayablesTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('document_number')
+                    ->label('N° Documento')
                     ->searchable(),
                 TextColumn::make('issue_date')
+                    ->label('Fecha de Emisión')
                     ->date()
                     ->sortable(),
                 TextColumn::make('payment_terms')
+                    ->label('Términos de Pago')
                     ->badge(),
                 TextColumn::make('payment_period')
+                    ->label('Período de Pago')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('due_date')
+                    ->label('Fecha de Vencimiento')
                     ->date()
                     ->sortable(),
                 TextColumn::make('type')
+                    ->label('Tipo')
                     ->badge(),
                 TextColumn::make('total_amount')
+                    ->label('Monto Total')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('paid_amount')
+                    ->label('Monto Pagado')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('payment_date')
+                    ->label('Fecha de Pago')
                     ->date()
                     ->sortable(),
                 TextColumn::make('status')
+                    ->label('Estado')
                     ->badge(),
                 TextColumn::make('created_at')
+                    ->label('Fecha de Creación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Fecha de Actualización')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -66,6 +78,7 @@ class AccountPayablesTable
                     ->relationship('supplier', 'nombre_razon_social')
                     ->searchable(),
                 SelectFilter::make('status')
+                    ->label('Estado')
                     ->options([
                         'pending' => 'Pending',
                         'partial' => 'Partial',
@@ -73,6 +86,7 @@ class AccountPayablesTable
                         'voided' => 'Voided',
                     ]),
                 SelectFilter::make('type')
+                    ->label('Tipo')
                     ->options([
                         'invoice' => 'Invoice',
                         'receipt' => 'Receipt',
@@ -80,12 +94,14 @@ class AccountPayablesTable
                         'other' => 'Other',
                     ]),
                 SelectFilter::make('payment_terms')
+                    ->label('Términos de Pago')
                     ->options([
                         'cash' => 'Cash',
                         'credit' => 'Credit',
                     ]),
                 Filter::make('issue_date')
-                    ->label('Fecha de emision')
+                
+                    ->label('Fecha de Emisión')
                     ->form([
                         DatePicker::make('issue_from')->label('Desde'),
                         DatePicker::make('issue_until')->label('Hasta'),
@@ -102,7 +118,7 @@ class AccountPayablesTable
                             );
                     }),
                 Filter::make('due_date')
-                    ->label('Fecha de vencimiento')
+                    ->label('Fecha de Vencimiento')
                     ->form([
                         DatePicker::make('due_from')->label('Desde'),
                         DatePicker::make('due_until')->label('Hasta'),
@@ -119,7 +135,7 @@ class AccountPayablesTable
                             );
                     }),
                 Filter::make('payment_date')
-                    ->label('Fecha de pago')
+                    ->label('Fecha de Pago')
                     ->form([
                         DatePicker::make('payment_from')->label('Desde'),
                         DatePicker::make('payment_until')->label('Hasta'),
@@ -207,7 +223,7 @@ class AccountPayablesTable
                     ->label('Por vencer')
                     ->form([
                         TextInput::make('days')
-                            ->label('Dias')
+                            ->label('Días')
                             ->numeric()
                             ->default(7),
                     ])
