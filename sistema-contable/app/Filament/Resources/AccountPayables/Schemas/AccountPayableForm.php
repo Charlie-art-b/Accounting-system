@@ -5,7 +5,6 @@ namespace App\Filament\Resources\AccountPayables\Schemas;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
 use Filament\Schemas\Schema;
 
 class AccountPayableForm
@@ -15,7 +14,7 @@ class AccountPayableForm
         return $schema
             ->components([
                 Select::make('supplier_id')
-                    ->relationship('supplier', 'id')
+                    ->relationship('supplier', 'nombre_razon_social')
                     ->exists('suppliers', 'id')
                     ->required(),
                 TextInput::make('document_number')
@@ -39,7 +38,7 @@ class AccountPayableForm
                 TextInput::make('payment_period')
                     ->numeric()
                     ->default(null)
-                    ->required(fn (Get $get) => $get('payment_terms') === 'credit')
+                    ->required(fn ($get) => $get('payment_terms') === 'credit')
                     ->rules(['nullable', 'integer', 'min:1']),
                 DatePicker::make('due_date')
                     ->required()
@@ -63,10 +62,10 @@ class AccountPayableForm
                     ->numeric()
                     ->default(0.0)
                     ->rules(['numeric', 'min:0', 'lte:total_amount'])
-                    ->rule(fn (Get $get) => $get('status') === 'paid' ? 'same:total_amount' : null)
-                    ->rule(fn (Get $get) => $get('status') === 'pending' ? 'max:0' : null),
+                    ->rule(fn ($get) => $get('status') === 'paid' ? 'same:total_amount' : null)
+                    ->rule(fn ($get) => $get('status') === 'pending' ? 'max:0' : null),
                 DatePicker::make('payment_date')
-                    ->required(fn (Get $get) => $get('status') === 'paid')
+                    ->required(fn ($get) => $get('status') === 'paid')
                     ->rules(['nullable', 'date', 'after_or_equal:issue_date']),
                 Select::make('status')
                     ->options(['pending' => 'Pending', 'partial' => 'Partial', 'paid' => 'Paid', 'voided' => 'Voided'])
