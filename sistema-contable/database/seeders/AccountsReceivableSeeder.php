@@ -51,18 +51,14 @@ class AccountsReceivableSeeder extends Seeder
             ],
         ];
 
-        foreach ($customers as $customer) {
-            foreach ($accountsReceivable as $account) {
+        foreach ($customers as $i => $customer) {
+            $account = $accountsReceivable[$i] ?? null;
+            if (! $account) break;
+            
                 AccountReceivable::updateOrCreate(
-                    [
-                        'customer_id' => $customer->id,
-                        'invoice_number' => $account['invoice_number'],
-                    ],
-                    array_merge($account, [
-                        'customer_id' => $customer->id,
-                    ])
-                );
-            }
+                    ['invoice_number' => $account['invoice_number']],
+                    array_merge($account, ['customer_id' => $customer->id])
+            );
         }
     }
 }

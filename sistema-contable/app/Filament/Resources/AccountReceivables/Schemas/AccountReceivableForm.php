@@ -76,6 +76,7 @@ class AccountReceivableForm
                     ->label('Estado')
                     ->options(['pending' => 'Pending', 'partial' => 'Partial', 'paid' => 'Paid'])
                     ->default('pending')
+                    ->disabled()
                     ->required(),
             ]);
     }

@@ -49,6 +49,10 @@ class AccountReceivablesTable
                     ->label('Monto pagado')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('pending_amount')
+                    ->label('Monto pendiente')
+                    ->numeric()
+                    ->sortable(),
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),

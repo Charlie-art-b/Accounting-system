@@ -28,11 +28,30 @@ class AccountReceivable extends Model
         'paid_amount' => 'decimal:2',
     ];
 
-    protected static function booted(): void 
+    protected static function booted(): void
     {
         static::creating(function (self $model) {
-            $model->paid_amount = 0;
-            $model->status = 'pending';
+            $model->paid_amount ??= 0;
+            $model->status ??= 'pending';
+        });
+
+        static::saving(function (self $model) {
+            $model->total_amount = max(0, (float) $model->total_amount);
+            $model->paid_amount  = max(0, (float) $model->paid_amount);
+
+            // evitar pagado > total
+            if ($model->paid_amount > $model->total_amount) {
+                $model->paid_amount = $model->total_amount;
+            }
+
+            // estado automático
+            if ($model->total_amount > 0 && $model->paid_amount >= $model->total_amount) {
+                $model->status = 'paid';
+            } elseif ($model->paid_amount > 0) {
+                $model->status = 'partial';
+            } else {
+                $model->status = 'pending';
+            }
         });
     }
 
@@ -49,6 +68,6 @@ class AccountReceivable extends Model
     //calculo del saldo pendiente 
     public function getPendingAmountAttribute(): float
     {
-        return (float) $this->total_amount - (float) $this->paid_amount;
+        return max(0, (float) $this->total_amount - (float) $this->paid_amount);
     }
 }
