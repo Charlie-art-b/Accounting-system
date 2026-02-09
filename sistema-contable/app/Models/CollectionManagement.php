@@ -21,6 +21,8 @@ class CollectionManagement extends Model
         'next_reminder_at' => 'datetime',
     ];
 
+    protected $table = 'collection_managements';
+    
     public function accountReceivable(): BelongsTo
     {
         return $this->belongsTo(AccountReceivable::class);
