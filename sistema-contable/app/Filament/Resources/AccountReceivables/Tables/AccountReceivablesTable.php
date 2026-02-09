@@ -16,6 +16,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Placeholder;
+use Filament\Notifications\Notification;
 
 
 class AccountReceivablesTable
@@ -110,9 +111,9 @@ class AccountReceivablesTable
                     $query->where('status', 'pending')
                     ),
 
-                    Filter::make('partial')
-                      ->label('Parciales')
-                     ->query(fn (Builder $query) =>
+                Filter::make('partial')
+                    ->label('Parciales')
+                    ->query(fn (Builder $query) =>
                      $query->where('status', 'partial')
                      ),
 
@@ -130,7 +131,23 @@ class AccountReceivablesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, DeleteBulkAction $action) {
+
+                            $blocked = $records->filter(
+                                fn ($r) => in_array($r->status, ['pending', 'partial'], true)
+                            );
+
+                            if ($blocked->isNotEmpty()) {
+                                Notification::make()
+                                    ->title('NO SE PUEDE ELIMINAR')
+                                    ->body('Seleccionaste cuentas en estado Pendiente o Parcial. Solo se pueden eliminar cuentas ya Pagadas.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ]),
             ]);
     }

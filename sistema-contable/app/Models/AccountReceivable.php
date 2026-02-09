@@ -53,6 +53,15 @@ class AccountReceivable extends Model
                 $model->status = 'pending';
             }
         });
+
+        // evitar eliminacion si esta pendiente o parcial
+        static::deleting(function (self $model) {
+            if (in_array($model->status, ['pending', 'partial'], true)) {
+                throw new \Exception(
+                    'No se puede eliminar una cuenta por cobrar en estado Pendiente o Parcial.'
+                );
+            }
+        });
     }
 
     public function customer(): BelongsTo
