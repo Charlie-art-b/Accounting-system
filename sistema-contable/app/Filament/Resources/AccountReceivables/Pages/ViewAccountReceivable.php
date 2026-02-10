@@ -18,7 +18,7 @@ class ViewAccountReceivable extends ViewRecord
                 ->label('Editar')
                 ->icon('heroicon-o-pencil-square')
                 ->color('primary')
-                ->keyBindings(['mod+e']),7
+                ->keyBindings(['mod+e']),
 
         ];
     }
