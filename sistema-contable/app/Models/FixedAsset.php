@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
+
+class FixedAsset extends Model
+{
+    protected $table = 'fixed_assets';
+
+    protected $fillable = [
+        'asset_name',
+        'description',
+        'acquisition_value',
+        'acquisition_date',
+        'useful_life_years',
+        'residual_value',
+        'accumulated_depreciation',
+        'status',
+        'disposal_date',
+        'disposal_reason',
+    ];
+
+    protected $casts = [
+        'acquisition_date' => 'date',
+        'disposal_date' => 'date',
+        'acquisition_value' => 'decimal:2',
+        'residual_value' => 'decimal:2',
+        'accumulated_depreciation' => 'decimal:2',
+    ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $asset): void {
+
+            $value = max(0, (float) $asset->acquisition_value);
+            $residual = max(0, (float) $asset->residual_value);
+            $depreciation = max(0, (float) $asset->accumulated_depreciation);
+
+            if ($depreciation > $value) {
+                $depreciation = $value;
+            }
+
+            $asset->acquisition_value = $value;
+            $asset->residual_value = $residual;
+            $asset->accumulated_depreciation = $depreciation;
+
+            if ($asset->status === 'disposed') {
+
+                if (!$asset->disposal_date) {
+                    $asset->disposal_date = now()->toDateString();
+                }
+
+                if (!$asset->disposal_reason) {
+                    throw ValidationException::withMessages([
+                        'disposal_reason' => 'Disposal reason is required when asset is disposed.',
+                    ]);
+                }
+
+            } else {
+                $asset->disposal_date = null;
+                $asset->disposal_reason = null;
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessor - Calculated net value
+    |--------------------------------------------------------------------------
+    */
+
+    public function getNetValueCalculatedAttribute(): float
+    {
+        return (float)$this->acquisition_value
+            - (float)$this->accumulated_depreciation;
+    }
+}
