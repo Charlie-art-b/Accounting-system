@@ -50,9 +50,9 @@ class CollectionManagementResource extends Resource
     {
         return [
             'index' => ListCollectionManagement::route('/'),
-            // 'create' => CreateCollectionManagement::route('/create'),
+            'create' => CreateCollectionManagement::route('/create'),
             'view' => ViewCollectionManagement::route('/{record}'),
-            // 'edit' => EditCollectionManagement::route('/{record}/edit'),
+            'edit' => EditCollectionManagement::route('/{record}/edit'),
         ];
     }
 }
