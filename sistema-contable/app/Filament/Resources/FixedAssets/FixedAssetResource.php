@@ -50,9 +50,9 @@ class FixedAssetResource extends Resource
     {
         return [
             'index' => ListFixedAssets::route('/'),
-           //create' => CreateFixedAsset::route('/create'),
+           'create' => CreateFixedAsset::route('/create'),
             'view' => ViewFixedAsset::route('/{record}'),
-           // 'edit' => EditFixedAsset::route('/{record}/edit'),
+           'edit' => EditFixedAsset::route('/{record}/edit'),
         ];
     }
 }

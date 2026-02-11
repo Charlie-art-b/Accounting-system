@@ -72,15 +72,6 @@ class AccountReceivableForm
                     ->required()
                     ->numeric()
                     ->default(0.0),
-                Select::make('status')
-                    ->label('Estado')
-                    ->options([
-                       'pending' => 'Pendiente',
-                         'partial' => 'Parcial',
-                             'paid' => 'Pagado',
-                            ])                    
-                ->default('pending')
-                    ->required(),
             ]);
     }
 }
