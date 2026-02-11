@@ -8,6 +8,8 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
 
 class CollectionManagementTable
 {
@@ -37,7 +39,13 @@ class CollectionManagementTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('customer_id.name')
+                    ->label('Cliente')
+                    ->relationship('customer', 'name')
+                    ->searchable()
+                    ->preload(),
+
+
             ])
             ->recordActions([
                 ViewAction::make(),
