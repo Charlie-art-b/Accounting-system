@@ -13,7 +13,7 @@ class CreateAccountReceivable extends CreateRecord
      protected function getFormActions(): array
     {
         return [
-     Action::make('create')
+            Action::make('create')
                 ->label('Crear')
                 ->keyBindings(['mod+s'])
                 ->requiresConfirmation()
@@ -28,5 +28,23 @@ class CreateAccountReceivable extends CreateRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
         ];
+
+        
     }
+    protected function afterCreate(): void
+    {
+        $ar = $this->record;
+
+        \App\Models\CollectionManagement::firstOrCreate(
+            ['account_receivable_id' => $ar->id],
+            [
+                'customer_id' => $ar->customer_id,
+                'next_reminder_at' => null,
+                'reminder_attempts' => 0,
+                'last_action' => null,
+                'notes' => null,
+            ]
+        );
+    }
+
 }
