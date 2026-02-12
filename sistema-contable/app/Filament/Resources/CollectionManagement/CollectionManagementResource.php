@@ -46,11 +46,21 @@ class CollectionManagementResource extends Resource
         ];
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return 'Gestión de cobros';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Gestión de cobros';
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => ListCollectionManagement::route('/'),
-            'create' => CreateCollectionManagement::route('/create'),
+            // 'create' => CreateCollectionManagement::route('/create'),
             'view' => ViewCollectionManagement::route('/{record}'),
             'edit' => EditCollectionManagement::route('/{record}/edit'),
         ];
