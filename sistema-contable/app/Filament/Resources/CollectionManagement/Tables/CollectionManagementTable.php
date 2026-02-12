@@ -9,6 +9,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -102,6 +104,20 @@ class CollectionManagementTable
                     ->relationship('customer', 'name')
                     ->searchable()
                     ->preload(),
+
+                Filter::make('due_date_range')
+                ->label('Vencimiento')
+                ->form([
+                    DatePicker::make('from')->label('Desde (vencimiento)'),
+                    DatePicker::make('until')->label('Hasta (vencimiento)'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query->whereHas('accountReceivable', function (Builder $q) use ($data) {
+                        return $q
+                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('due_date', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('due_date', '<=', $date));
+                    });
+                }),
             ])
             ->recordActions([
                 // Registrar pago (actualiza accounts_receivable.paid_amount SOLO desde cobros)
