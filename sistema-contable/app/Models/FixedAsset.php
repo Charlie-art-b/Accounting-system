@@ -34,6 +34,26 @@ class FixedAsset extends Model
     {
         static::saving(function (self $asset): void {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Bloquear edición si está dado de baja
+            |--------------------------------------------------------------------------
+            */
+            if (
+                $asset->exists &&
+                $asset->getOriginal('status') === 'disposed' &&
+                $asset->isDirty()
+            ) {
+                throw ValidationException::withMessages([
+                    'status' => 'No se puede editar un activo que ya fue dado de baja.',
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Normalización de valores
+            |--------------------------------------------------------------------------
+            */
             $value = max(0, (float) $asset->acquisition_value);
             $residual = max(0, (float) $asset->residual_value);
             $depreciation = max(0, (float) $asset->accumulated_depreciation);
@@ -46,6 +66,11 @@ class FixedAsset extends Model
             $asset->residual_value = $residual;
             $asset->accumulated_depreciation = $depreciation;
 
+            /*
+            |--------------------------------------------------------------------------
+            | Validaciones cuando está dado de baja
+            |--------------------------------------------------------------------------
+            */
             if ($asset->status === 'disposed') {
 
                 if (!$asset->disposal_date) {
@@ -54,7 +79,8 @@ class FixedAsset extends Model
 
                 if (!$asset->disposal_reason) {
                     throw ValidationException::withMessages([
-                        'disposal_reason' => 'Disposal reason is required when asset is disposed.',
+                        'disposal_reason' =>
+                            'Debe indicar el motivo de baja cuando el activo está dado de baja.',
                     ]);
                 }
 
@@ -67,10 +93,9 @@ class FixedAsset extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Accessor - Calculated net value
+    | Accessor - Valor neto calculado
     |--------------------------------------------------------------------------
     */
-
     public function getNetValueCalculatedAttribute(): float
     {
         return (float)$this->acquisition_value
