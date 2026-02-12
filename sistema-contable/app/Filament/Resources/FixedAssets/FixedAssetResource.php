@@ -38,6 +38,14 @@ class FixedAssetResource extends Resource
     {
         return FixedAssetsTable::configure($table);
     }
+    public static function getPluralModelLabel(): string
+    {
+        return 'Activos fijos';
+    }
+    public static function getModelLabel(): string
+    {
+        return 'Activo fijo';
+    }
 
     public static function getRelations(): array
     {
@@ -49,7 +57,7 @@ class FixedAssetResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListFixedAssets::route('/'),
+           'index' => ListFixedAssets::route('/'),
            'create' => CreateFixedAsset::route('/create'),
             'view' => ViewFixedAsset::route('/{record}'),
            'edit' => EditFixedAsset::route('/{record}/edit'),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FixedAssets\Pages;
 use App\Filament\Resources\FixedAssets\FixedAssetResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Actions\Action;
 
 class ViewFixedAsset extends ViewRecord
 {
@@ -13,7 +14,11 @@ class ViewFixedAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            EditAction::make()
+                ->label('Editar')
+                ->icon('heroicon-o-pencil')
+                ->color('primary')
+                ->url($this->getResource()::getUrl('edit', ['record' => $this->record])),
         ];
     }
 }

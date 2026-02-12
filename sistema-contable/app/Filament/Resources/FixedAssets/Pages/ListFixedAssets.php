@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FixedAssets\Pages;
 use App\Filament\Resources\FixedAssets\FixedAssetResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Actions\Action;
 
 class ListFixedAssets extends ListRecords
 {
@@ -13,7 +14,13 @@ class ListFixedAssets extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+        
+            CreateAction::make()
+                ->label('Registrar Activo Fijo')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->url($this->getResource()::getUrl('create')),
         ];
     }
+    
 }
