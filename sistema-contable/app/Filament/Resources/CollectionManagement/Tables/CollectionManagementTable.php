@@ -6,6 +6,7 @@ use App\Models\CollectionManagement;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
@@ -249,6 +250,148 @@ class CollectionManagementTable
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error al registrar el pago')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                // Deshacer pago
+                Action::make('undo_payment')
+                    ->label('Deshacer pago')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Deshacer pago registrado')
+                    ->modalDescription('Esta acción revertirá el pago seleccionado y actualizará el estado de la cuenta')
+                    ->form(function (CollectionManagement $record) {
+                        // Parsear pagos registrados del campo notes
+                        $payments = [];
+                        if (!empty($record->notes)) {
+                            $lines = explode("\n", trim($record->notes));
+                            foreach ($lines as $index => $line) {
+                                if (str_contains($line, '|')) {
+                                    $parts = explode('|', $line, 3);
+                                    if (count($parts) === 3) {
+                                        $payments[$index] = sprintf(
+                                            "📅 %s - ₡%s - %s",
+                                            $parts[0],
+                                            number_format((float)$parts[1], 2),
+                                            $parts[2]
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
+                        if (empty($payments)) {
+                            return [
+                                Select::make('payment_index')
+                                    ->label('No hay pagos registrados')
+                                    ->disabled()
+                                    ->options([])
+                                    ->helperText('Este cobro no tiene pagos que se puedan deshacer'),
+                            ];
+                        }
+
+                        return [
+                            Select::make('payment_index')
+                                ->label('Seleccionar pago a deshacer')
+                                ->options($payments)
+                                ->required()
+                                ->searchable()
+                                ->helperText('⚠️ Esta acción no se puede deshacer'),
+                        ];
+                    })
+                    ->hidden(function (CollectionManagement $record) {
+                        // Ocultar si no hay pagos registrados
+                        if (empty($record->notes)) return true;
+                        
+                        $lines = explode("\n", trim($record->notes));
+                        foreach ($lines as $line) {
+                            if (str_contains($line, '|')) {
+                                return false; // Hay al menos un pago
+                            }
+                        }
+                        return true;
+                    })
+                    ->action(function (CollectionManagement $record, array $data) {
+                        if (!isset($data['payment_index'])) {
+                            Notification::make()
+                                ->title('Debe seleccionar un pago')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        try {
+                            DB::transaction(function () use ($record, $data) {
+                                $ar = $record->accountReceivable()->lockForUpdate()->first();
+
+                                if (!$ar) {
+                                    throw new \Exception('No existe la cuenta por cobrar asociada.');
+                                }
+
+                                // Parsear las notas
+                                $lines = explode("\n", trim($record->notes));
+                                $paymentIndex = (int) $data['payment_index'];
+
+                                if (!isset($lines[$paymentIndex])) {
+                                    throw new \Exception('El pago seleccionado no existe.');
+                                }
+
+                                $paymentLine = $lines[$paymentIndex];
+                                $parts = explode('|', $paymentLine, 3);
+
+                                if (count($parts) !== 3) {
+                                    throw new \Exception('Formato de pago inválido.');
+                                }
+
+                                $paymentAmount = (float) $parts[1];
+                                $paymentDate = $parts[0];
+                                $paymentNote = $parts[2];
+
+                                // Validar que el monto pagado actual sea suficiente
+                                if ($ar->paid_amount < $paymentAmount) {
+                                    throw new \Exception('No se puede deshacer: el monto pagado actual es menor al pago registrado.');
+                                }
+
+                                // Restar el monto del paid_amount
+                                $ar->paid_amount = (float) $ar->paid_amount - $paymentAmount;
+
+                                // Recalcular estado
+                                if ($ar->paid_amount <= 0) {
+                                    $ar->status = 'pending';
+                                } elseif ($ar->paid_amount < $ar->total_amount) {
+                                    $ar->status = 'partial';
+                                } else {
+                                    $ar->status = 'paid';
+                                }
+
+                                $ar->save();
+
+                                // Eliminar la línea del pago de las notas
+                                unset($lines[$paymentIndex]);
+                                $record->notes = implode("\n", array_values($lines));
+
+                                // Actualizar last_action
+                                $record->last_action = sprintf(
+                                    'Pago deshecho: ₡%s (fecha: %s)',
+                                    number_format($paymentAmount, 2),
+                                    $paymentDate
+                                );
+
+                                $record->save();
+                            });
+
+                            Notification::make()
+                                ->title('Pago deshecho exitosamente')
+                                ->body('El monto ha sido revertido y el estado actualizado')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error al deshacer el pago')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
