@@ -67,11 +67,7 @@ class AccountReceivableForm
                         'numeric' => 'El monto total debe ser numérico.',
                         'gt' => 'El monto total debe ser mayor a cero.',
                     ]),
-                TextInput::make('paid_amount')
-                    ->label('Monto Pagado')
-                    ->required()
-                    ->numeric()
-                    ->default(0.0),
+               
             ]);
     }
 }
