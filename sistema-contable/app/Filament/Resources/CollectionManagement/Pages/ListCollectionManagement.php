@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\CollectionManagement\Pages;
 
 use App\Filament\Resources\CollectionManagement\CollectionManagementResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListCollectionManagement extends ListRecords
@@ -13,7 +12,7 @@ class ListCollectionManagement extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            // No se permite crear gestiones de cobros manualmente
         ];
     }
 }

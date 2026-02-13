@@ -21,6 +21,10 @@ class CollectionManagement extends Model
         'next_reminder_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'title',
+    ];
+
     protected $table = 'collection_managements';
     
     public function accountReceivable(): BelongsTo
@@ -79,5 +83,14 @@ class CollectionManagement extends Model
         }
 
         return 'pending'; 
+    }
+
+    // título descriptivo para páginas
+    public function getTitleAttribute(): string
+    {
+        $invoice = $this->accountReceivable?->invoice_number ?? 'Sin factura';
+        $customer = $this->customer?->name ?? 'Cliente desconocido';
+        
+        return "Factura {$invoice} - {$customer}";
     }
 }

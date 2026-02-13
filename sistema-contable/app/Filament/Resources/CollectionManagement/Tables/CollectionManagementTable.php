@@ -4,9 +4,6 @@ namespace App\Filament\Resources\CollectionManagement\Tables;
 
 use App\Models\CollectionManagement;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
@@ -128,22 +125,36 @@ class CollectionManagementTable
                     ->requiresConfirmation()
                     ->modalHeading('Registrar pago')
                     ->modalDescription('Este pago actualizará el monto pagado de la cuenta por cobrar')
-                    ->form([
-                        TextInput::make('amount')
-                            ->label('Monto a pagar')
-                            ->numeric()
-                            ->minValue(0.01)
-                            ->required(),
+                    ->form(function (CollectionManagement $record) {
+                        $pendingAmount = $record->pending_amount ?? 0;
+                        $minDate = $record->accountReceivable?->issue_date 
+                            ? \Illuminate\Support\Carbon::parse($record->accountReceivable->issue_date)->format('Y-m-d')
+                            : null;
 
-                        DatePicker::make('paid_at')
-                            ->label('Fecha de pago')
-                            ->default(now())
-                            ->required(),
+                        return [
+                            TextInput::make('amount')
+                                ->label('Monto a pagar')
+                                ->numeric()
+                                ->minValue(0.01)
+                                ->maxValue($pendingAmount)
+                                ->helperText("Pendiente: ₡" . number_format($pendingAmount, 2))
+                                ->required(),
 
-                        Textarea::make('note')
-                            ->label('Nota (opcional)')
-                            ->rows(3),
-                    ])
+                            DatePicker::make('paid_at')
+                                ->label('Fecha de pago')
+                                ->default(now())
+                                ->maxDate(now())
+                                ->minDate($minDate)
+                                ->helperText($minDate ? "No puede ser anterior a la emisión ({$minDate})" : 'No puede ser fecha futura')
+                                ->required(),
+
+                            Textarea::make('note')
+                                ->label('Nota (opcional)')
+                                ->rows(3)
+                                ->helperText('Descripción del pago o método utilizado'),
+                        ];
+                    })
+                    ->hidden(fn (CollectionManagement $record) => !$record->accountReceivable)
                     ->action(function (CollectionManagement $record, array $data) {
                         // Evitar pagar si ya está pagada
                         if ($record->accountReceivable?->status === 'paid') {
@@ -162,6 +173,17 @@ class CollectionManagementTable
                                     throw new \Exception('No existe la cuenta por cobrar asociada.');
                                 }
 
+                                // Validaciones de fecha de pago
+                                $paidAt = \Illuminate\Support\Carbon::parse($data['paid_at']);
+                                
+                                if ($paidAt->gt(now())) {
+                                    throw new \Exception('La fecha de pago no puede ser futura.');
+                                }
+                                
+                                if (!empty($ar->issue_date) && $paidAt->lt(\Illuminate\Support\Carbon::parse($ar->issue_date))) {
+                                    throw new \Exception('La fecha de pago no puede ser anterior a la fecha de emisión.');
+                                }
+
                                 $pending = (float) $ar->total_amount - (float) $ar->paid_amount;
                                 $pay = (float) $data['amount'];
 
@@ -170,7 +192,19 @@ class CollectionManagementTable
                                 }
 
                                 if ($pay > $pending) {
-                                    throw new \Exception("El pago excede el pendiente. Pendiente: {$pending}");
+                                    throw new \Exception("El pago excede el pendiente. Pendiente: ₡" . number_format($pending, 2));
+                                }
+
+                                // Validación de pagos duplicados: mismo monto, fecha y nota
+                                $paymentSignature = sprintf(
+                                    "%s|%.2f|%s",
+                                    $data['paid_at'],
+                                    $pay,
+                                    $data['note'] ?? 'Sin nota'
+                                );
+                                
+                                if (str_contains($record->notes ?? '', $paymentSignature)) {
+                                    throw new \Exception('Pago duplicado: Ya existe un pago con el mismo monto, fecha y nota.');
                                 }
 
                                 // Actualizar monto pagado
@@ -187,13 +221,17 @@ class CollectionManagementTable
 
                                 $ar->save();
 
-                                // Actualizar la gestión (opcional)
-                                $record->last_action = 'Pago registrado';
-
-                                if (! empty($data['note'])) {
-                                    $line = $data['paid_at'] . ': ' . trim($data['note']);
-                                    $record->notes = trim(($record->notes ?? '') . "\n" . $line);
-                                }
+                                // Actualizar la gestión con registro del pago
+                                $record->last_action = 'Pago registrado: ₡' . number_format($pay, 2);
+                                
+                                // Registrar en notas con formato estructurado para evitar duplicados
+                                $paymentLog = sprintf(
+                                    "%s|%.2f|%s",
+                                    $data['paid_at'],
+                                    $pay,
+                                    $data['note'] ?? 'Sin nota'
+                                );
+                                $record->notes = trim(($record->notes ?? '') . "\n" . $paymentLog);
 
                                 // Si quedó pagada, apagamos recordatorio
                                 if ($ar->status === 'paid') {
@@ -204,12 +242,13 @@ class CollectionManagementTable
                             });
 
                             Notification::make()
-                                ->title('Pago registrado correctamente')
+                                ->title('Pago registrado exitosamente')
+                                ->body('Monto: ₡' . number_format((float) $data['amount'], 2))
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('No se pudo registrar el pago')
+                                ->title('Error al registrar el pago')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
@@ -217,13 +256,9 @@ class CollectionManagementTable
                     }),
 
                 ViewAction::make(),
-                EditAction::make()
-                    ->disabled(fn (CollectionManagement $record) => $record->accountReceivable?->status === 'paid'),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                // No hay acciones de creación ni eliminación
             ])
             ->defaultSort('next_reminder_at', 'asc');
     }
