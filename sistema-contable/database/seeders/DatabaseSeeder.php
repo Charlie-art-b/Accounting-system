@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             InventorySeeder::class,
             InventoryProductSeeder::class,
             AccountsReceivableSeeder::class,
+            CollectionManagementSeeder::class,
         ]);
 
  User::updateOrCreate(

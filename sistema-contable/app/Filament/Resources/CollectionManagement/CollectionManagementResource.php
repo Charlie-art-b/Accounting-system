@@ -2,11 +2,8 @@
 
 namespace App\Filament\Resources\CollectionManagement;
 
-use App\Filament\Resources\CollectionManagement\Pages\CreateCollectionManagement;
-use App\Filament\Resources\CollectionManagement\Pages\EditCollectionManagement;
 use App\Filament\Resources\CollectionManagement\Pages\ListCollectionManagement;
 use App\Filament\Resources\CollectionManagement\Pages\ViewCollectionManagement;
-use App\Filament\Resources\CollectionManagement\Schemas\CollectionManagementForm;
 use App\Filament\Resources\CollectionManagement\Schemas\CollectionManagementInfolist;
 use App\Filament\Resources\CollectionManagement\Tables\CollectionManagementTable;
 use App\Models\CollectionManagement;
@@ -22,7 +19,7 @@ class CollectionManagementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = 'title';
 
     public static function form(Schema $schema): Schema
     {
@@ -60,9 +57,7 @@ class CollectionManagementResource extends Resource
     {
         return [
             'index' => ListCollectionManagement::route('/'),
-            // 'create' => CreateCollectionManagement::route('/create'),
             'view' => ViewCollectionManagement::route('/{record}'),
-            'edit' => EditCollectionManagement::route('/{record}/edit'),
         ];
     }
 }

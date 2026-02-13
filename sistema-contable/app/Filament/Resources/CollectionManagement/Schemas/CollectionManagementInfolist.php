@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CollectionManagement\Schemas;
 
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -11,26 +12,176 @@ class CollectionManagementInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('accountReceivable.id')
-                    ->label('Account receivable'),
-                TextEntry::make('customer.name')
-                    ->label('Customer'),
-                TextEntry::make('next_reminder_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('reminder_attempts')
-                    ->numeric(),
-                TextEntry::make('last_action')
-                    ->placeholder('-'),
-                TextEntry::make('notes')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
+                // SECCIÓN: INFORMACIÓN DE LA FACTURA
+                Section::make('Información de la Factura')
+                    ->description('Datos de la cuenta por cobrar')
+                    ->schema([
+                        TextEntry::make('accountReceivable.invoice_number')
+                            ->label('Número de factura'),
+
+                        TextEntry::make('accountReceivable.issue_date')
+                            ->label('Fecha de emisión')
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y') : '—'),
+
+                        TextEntry::make('accountReceivable.due_date')
+                            ->label('Fecha de vencimiento')
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y') : '—'),
+
+                        TextEntry::make('days_late')
+                            ->label('Días de atraso')
+                            ->badge()
+                            ->formatStateUsing(function ($state) {
+                                if ($state > 30) return "{$state} días";
+                                if ($state > 7) return "{$state} días";
+                                return "{$state} días";
+                            })
+                            ->color(fn ($state) => $state > 30 ? 'danger' : ($state > 7 ? 'warning' : 'success'))
+                            ->icon(fn ($state) => $state > 30 ? 'heroicon-o-exclamation-circle' : ($state > 7 ? 'heroicon-o-clock' : 'heroicon-o-check-circle')),
+
+                        TextEntry::make('accountReceivable.description')
+                            ->label('Descripción')
+                            ->placeholder('Sin descripción')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                // SECCIÓN: INFORMACIÓN DEL CLIENTE
+                Section::make('Cliente')
+                    ->schema([
+                        TextEntry::make('customer.name')
+                            ->label('Nombre'),
+
+                        TextEntry::make('customer.identification')
+                            ->label('Identificación'),
+
+                        TextEntry::make('customer.email')
+                            ->label('Correo electrónico')
+                            ->icon('heroicon-o-envelope'),
+
+                        TextEntry::make('customer.phone')
+                            ->label('Teléfono')
+                            ->icon('heroicon-o-phone'),
+                    ])
+                    ->columns(2),
+
+                // SECCIÓN: MONTOS Y ESTADO
+                Section::make('Información Financiera')
+                    ->schema([
+                        TextEntry::make('accountReceivable.total_amount')
+                            ->label('Monto total')
+                            ->money('CRC'),
+
+                        TextEntry::make('accountReceivable.paid_amount')
+                            ->label('Monto pagado')
+                            ->money('CRC'),
+
+                        TextEntry::make('pending_amount')
+                            ->label('Monto pendiente')
+                            ->money('CRC')
+                            ->weight(\Filament\Support\Enums\FontWeight::Bold),
+
+                        TextEntry::make('status')
+                            ->label('Estado del cobro')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => match ($state) {
+                                'overdue' => 'Vencido',
+                                'due_soon' => 'Próximo a vencer',
+                                default => 'Pendiente',
+                            })
+                            ->color(fn ($state) => match ($state) {
+                                'overdue' => 'danger',
+                                'due_soon' => 'warning',
+                                default => 'success',
+                            })
+                            ->icon(fn ($state) => match ($state) {
+                                'overdue' => 'heroicon-o-exclamation-circle',
+                                'due_soon' => 'heroicon-o-clock',
+                                default => 'heroicon-o-check-circle',
+                            }),
+
+                        TextEntry::make('accountReceivable.status')
+                            ->label('Estado de la cuenta')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => match ($state) {
+                                'paid' => 'Pagada',
+                                'partial' => 'Pago parcial',
+                                'pending' => 'Pendiente',
+                                default => ucfirst($state ?? 'pending'),
+                            })
+                            ->color(fn ($state) => match ($state) {
+                                'paid' => 'success',
+                                'partial' => 'warning',
+                                'pending' => 'gray',
+                                default => 'gray',
+                            }),
+                    ])
+                    ->columns(2),
+
+                // SECCIÓN: GESTIÓN DE COBROS
+                Section::make('Gestión de Cobros')
+                    ->description('Información sobre recordatorios y acciones')
+                    ->schema([
+                        TextEntry::make('last_action')
+                            ->label('Última acción')
+                            ->placeholder('Sin acciones registradas')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('next_reminder_at')
+                            ->label('Próximo recordatorio')
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y H:i') : 'No programado')
+                            ->icon('heroicon-o-bell'),
+
+                        TextEntry::make('reminder_attempts')
+                            ->label('Intentos de recordatorio')
+                            ->suffix(' intentos')
+                            ->icon('heroicon-o-arrow-path'),
+
+                        TextEntry::make('notes')
+                            ->label('Notas de gestión')
+                            ->placeholder('Sin notas')
+                            ->columnSpanFull()
+                            ->formatStateUsing(function ($state) {
+                                if (empty($state)) return 'Sin notas';
+                                
+                                // Formatear notas estructuradas (fecha|monto|nota)
+                                $lines = explode("\n", trim($state));
+                                $formatted = [];
+                                
+                                foreach ($lines as $line) {
+                                    if (str_contains($line, '|')) {
+                                        $parts = explode('|', $line, 3);
+                                        if (count($parts) === 3) {
+                                            $formatted[] = sprintf(
+                                                "📅 %s - ₡%s - %s",
+                                                $parts[0],
+                                                number_format((float)$parts[1], 2),
+                                                $parts[2]
+                                            );
+                                            continue;
+                                        }
+                                    }
+                                    $formatted[] = $line;
+                                }
+                                
+                                return implode("<br>", $formatted);
+                            })
+                            ->html(),
+                    ])
+                    ->columns(2),
+
+                // SECCIÓN: METADATA
+                Section::make('Información del Registro')
+                    ->schema([
+                        TextEntry::make('created_at')
+                            ->label('Creado')
+                            ->dateTime('d/m/Y H:i'),
+
+                        TextEntry::make('updated_at')
+                            ->label('Última actualización')
+                            ->dateTime('d/m/Y H:i'),
+                    ])
+                    ->columns(2)
+                    ->collapsed(),
             ]);
     }
 }
