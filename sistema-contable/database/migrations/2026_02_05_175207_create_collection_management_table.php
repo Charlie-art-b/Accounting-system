@@ -19,18 +19,13 @@ return new class extends Migration
                 ->constrained('customers')
                 ->restrictOnDelete();
 
-            // Programación de recordatorios
             $table->dateTime('next_reminder_at')->nullable()->index();
             $table->unsignedSmallInteger('reminder_attempts')->default(0);
 
-            // Solo para registrar acciones humanas
             $table->string('last_action', 80)->nullable();
             $table->text('notes')->nullable();
 
             $table->timestamps();
-
-            // una gestión por factura
-            $table->unique(['account_receivable_id']);
         });
     }
 
