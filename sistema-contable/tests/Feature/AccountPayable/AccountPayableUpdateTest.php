@@ -72,8 +72,7 @@ class AccountPayableUpdateTest extends TestCase
         $this->assertEquals('paid', $ap->fresh()->status);
         $this->assertNotNull($ap->fresh()->payment_date);
 
-        // OJO: por tus reglas, si ya estaba paid NO se permite editar.
-        // Este test valida que efectivamente bloquee.
+
         $ap->paid_amount = 900;
 
         $this->expectException(ValidationException::class);

@@ -24,13 +24,26 @@ class AccountReceivableInfolist
                 TextEntry::make('description')
                     ->label('Descripción'),
                 TextEntry::make('total_amount')
-                        ->label('Monto Total')
-                        ->numeric(),
+                    ->label('Monto Total')
+                    ->money('CRC'),
+                    //->numeric(),
                 TextEntry::make('paid_amount')
                     ->label('Monto Pagado')
-                    ->numeric(),
+                    ->money('CRC'),
+                    //->numeric(),
                 TextEntry::make('status')
                     ->label('Estado')
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'pending' => 'Pendiente',
+                        'partial' => 'Parcial',
+                        'paid' => 'Pagado',
+                        default => $state,
+                    })
+                    ->colors([
+                        'danger' => 'pending',
+                        'warning' => 'partial',
+                        'success' => 'paid',
+                    ])
                     ->badge(),
                 TextEntry::make('created_at')
                         ->label('Creado en')
