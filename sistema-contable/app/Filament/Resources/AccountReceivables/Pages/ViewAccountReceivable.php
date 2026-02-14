@@ -19,7 +19,12 @@ class ViewAccountReceivable extends ViewRecord
                 ->icon('heroicon-o-pencil-square')
                 ->color('primary')
                 ->keyBindings(['mod+e']),
-
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
         ];
     }
 }

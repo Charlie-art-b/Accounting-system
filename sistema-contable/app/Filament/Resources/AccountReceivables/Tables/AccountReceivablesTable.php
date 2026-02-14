@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Placeholder;
 use Filament\Notifications\Notification;
+use App\Models\AccountReceivable;
 
 
 class AccountReceivablesTable
@@ -44,18 +45,33 @@ class AccountReceivablesTable
                     ->searchable(),
                 TextColumn::make('total_amount')
                     ->label('Monto total')
-                    ->numeric()
+                    ->money('CRC')
+                    //->numeric()
                     ->sortable(),
                 TextColumn::make('paid_amount')
                     ->label('Monto pagado')
-                    ->numeric()
+                    ->money('CRC')
+                    //->numeric()
                     ->sortable(),
                 TextColumn::make('pending_amount')
                     ->label('Monto pendiente')
-                    ->numeric()
+                    //->numeric()
+                    ->money('CRC')
                     ->sortable(),
                 TextColumn::make('status')
                     ->label('Estado')
+                    ->state(fn (AccountReceivable $record) => $record->status)
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'pending' => 'Pendiente',
+                        'partial' => 'Parcial',
+                        'paid' => 'Pagado',
+                        default => $state,
+                    })
+                    ->colors([
+                        'danger' => 'pending',
+                        'warning' => 'partial',
+                        'success' => 'paid',
+                    ])
                     ->badge(),
                 TextColumn::make('created_at')
                      ->label('Creado el')

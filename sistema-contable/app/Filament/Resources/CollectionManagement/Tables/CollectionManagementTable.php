@@ -61,7 +61,7 @@ class CollectionManagementTable
                     ->label('Estado')
                     ->state(fn (CollectionManagement $record) => $record->status)
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'overdue' => 'Vencido',
+                        'overdue' => 'Plazo Vencido',
                         'due_soon' => 'Próximo a vencer',
                         default => 'Pendiente',
                     })
