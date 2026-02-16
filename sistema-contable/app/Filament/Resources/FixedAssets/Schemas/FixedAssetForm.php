@@ -48,7 +48,7 @@ class FixedAssetForm
                     ->default(null),
                 Select::make('status')
                     ->label('Estado')
-                    ->options(['active' => 'Active', 'disposed' => 'Disposed'])
+                    ->options(['active' => 'Activo', 'disposed' => 'Dado de Baja'])
                     ->default('active')
                     ->required(),
                 DatePicker::make('disposal_date')
