@@ -45,7 +45,7 @@ class AccountReceivableResource extends Resource
             //
         ];
     }
-public static function getPluralModelLabel(): string
+    public static function getPluralModelLabel(): string
     {
         return 'Cuentas por cobrar';
     }

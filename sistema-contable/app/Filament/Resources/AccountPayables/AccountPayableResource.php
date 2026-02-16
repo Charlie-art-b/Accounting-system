@@ -39,6 +39,16 @@ class AccountPayableResource extends Resource
         return AccountPayablesTable::configure($table);
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return 'Cuentas por pagar';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Cuenta por pagar';
+    }
+
     public static function getRelations(): array
     {
         return [
