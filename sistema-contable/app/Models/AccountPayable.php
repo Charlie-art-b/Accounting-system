@@ -22,6 +22,7 @@ class AccountPayable extends Model
         'paid_amount',
         'payment_date',
         'status',
+        'notes',
     ];
 
     protected $casts = [
