@@ -28,6 +28,7 @@ return new class extends Migration
             $table->date('payment_date')->nullable();
 
             $table->enum('status', ['pending', 'partial', 'paid', 'voided'])->default('pending')->index();
+            $table->text('notes')->nullable();
 
             $table->timestamps();
 

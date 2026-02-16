@@ -24,16 +24,6 @@ class AccountPayableResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'document_number';
 
-    public static function getPluralModelLabel(): string
-    {
-        return 'Cuentas por pagar';
-    }
-
-    public static function getModelLabel(): string
-    {
-        return 'Cuenta por pagar';
-    }
-
     public static function form(Schema $schema): Schema
     {
         return AccountPayableForm::configure($schema);
