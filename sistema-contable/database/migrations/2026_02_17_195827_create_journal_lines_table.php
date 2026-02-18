@@ -22,7 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('source_id')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            $table->check('NOT (debit > 0 AND credit > 0)');
+            //$table->check('NOT (debit > 0 AND credit > 0)');
         });
     }
 
