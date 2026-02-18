@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             AccountsReceivableSeeder::class,
             AccountPayableSeeder::class,
             CollectionManagementSeeder::class,
+            FixedAssetsSeeder::class,
         ]);
 
  User::updateOrCreate(
