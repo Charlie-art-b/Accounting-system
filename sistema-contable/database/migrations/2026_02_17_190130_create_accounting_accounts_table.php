@@ -13,6 +13,28 @@ return new class extends Migration
     {
         Schema::create('accounting_accounts', function (Blueprint $table) {
             $table->id();
+
+            // Código de la cuenta (Ej: 1.1.01, 4.02)
+            $table->string('code')->unique();
+
+            // Nombre de la cuenta (Ej: Caja, Ingresos por servicios)
+            $table->string('name');
+
+            // Tipo de cuenta
+            $table->enum('type', [
+                'Activo',
+                'Pasivo',
+                'Patrimonio',
+                'Ingreso',
+                'Gasto'
+            ]);
+
+            // Estado
+            $table->enum('status', [
+                'Activa',
+                'Inactiva'
+            ])->default('Activa');
+
             $table->timestamps();
         });
     }

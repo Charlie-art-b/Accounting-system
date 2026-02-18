@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccountingAccount extends Model
 {
-    //
+    protected $fillable = [
+        'code',
+        'name',
+        'type',
+        'status',
+    ];
 }
