@@ -12,4 +12,8 @@ class AccountingAccount extends Model
         'type',
         'status',
     ];
+    public function customer(){
+
+        return $this->belongsTo(Customer::class);
+    }
 }

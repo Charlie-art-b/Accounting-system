@@ -11,32 +11,36 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accounting_accounts', function (Blueprint $table) {
-            $table->id();
+       Schema::create('accounting_accounts', function (Blueprint $table) {
+             $table->id();
 
-            // Código de la cuenta (Ej: 1.1.01, 4.02)
-            $table->string('code')->unique();
+         $table->foreignId('customer_id')
+          ->constrained()
+          ->onDelete('cascade');
 
-            // Nombre de la cuenta (Ej: Caja, Ingresos por servicios)
-            $table->string('name');
+     $table->string('code');
 
-            // Tipo de cuenta
-            $table->enum('type', [
-                'Activo',
-                'Pasivo',
-                'Patrimonio',
-                'Ingreso',
-                'Gasto'
-            ]);
+     $table->string('name');
 
-            // Estado
-            $table->enum('status', [
-                'Activa',
-                'Inactiva'
-            ])->default('Activa');
+     $table->enum('type', [
+        'Activo',
+        'Pasivo',
+        'Patrimonio',
+        'Ingreso',
+        'Gasto'
+    ]);
 
-            $table->timestamps();
-        });
+    
+    $table->enum('status', [
+        'Activa',
+        'Inactiva'
+    ])->default('Activa');
+
+    $table->timestamps();
+
+    $table->unique(['customer_id', 'code']);
+    });
+
     }
 
     /**

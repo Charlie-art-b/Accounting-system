@@ -57,4 +57,9 @@ class Customer extends Model
         return $this->belongsToMany(Supplier::class, 'customer_supplier')
                     ->withTimestamps();
     }
+
+    public function accountingAccounts()
+    {
+        return $this->hasMany(AccountingAccount::class);
+    }
 }
