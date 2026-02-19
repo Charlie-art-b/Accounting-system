@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Validation\ValidationException;
+use App\Models\AccountingAccount;
 
 class JournalLine extends Model
 {
@@ -15,7 +16,8 @@ class JournalLine extends Model
 
     protected $fillable = [
         'journal_entry_id',
-        'chart_of_account_id',
+        'accounting_account_id',
+        //'chart_of_account_id',
         'description',
         'debit',
         'credit',
@@ -37,8 +39,14 @@ class JournalLine extends Model
 
     public function account(): BelongsTo
     {
-        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
+        return $this->belongsTo(AccountingAccount::class, 'accounting_account_id');
     }
+
+
+    /*public function account(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
+    }*/
 
     protected static function booted(): void
     {
@@ -58,14 +66,35 @@ class JournalLine extends Model
                 ]);
             }
 
+            // validar cuenta
+            if ($line->accounting_account_id) {
+                $acct = AccountingAccount::find($line->accounting_account_id);
+
+                if (! $acct || ($acct->status ?? 'Activa') !== 'Activa') {
+                    throw ValidationException::withMessages([
+                        'accounting_account_id' => 'La cuenta contable no existe o no está activa.',
+                    ]);
+                }
+
+                // validar que la cuenta sea del mismo customer del asiento
+                $entry = $line->relationLoaded('journalEntry')
+                    ? $line->journalEntry
+                    : $line->journalEntry()->first();
+
+                if ($entry && $entry->customer_id && $acct->customer_id !== $entry->customer_id) {
+                    throw ValidationException::withMessages([
+                        'accounting_account_id' => 'La cuenta no pertenece al cliente seleccionado.',
+                    ]);
+                }
+
             // Ensure account exists and is active
-            if ($line->chart_of_account_id) {
+            /*if ($line->chart_of_account_id) {
                 $acct = ChartOfAccount::find($line->chart_of_account_id);
                 if (! $acct || ! $acct->is_active) {
                     throw ValidationException::withMessages([
                         'chart_of_account_id' => 'La cuenta contable no existe o no está activa.',
                     ]);
-                }
+                }*/
             }
         });
     }

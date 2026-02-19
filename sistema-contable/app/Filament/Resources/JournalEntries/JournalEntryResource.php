@@ -31,13 +31,15 @@ class JournalEntryResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'Contabilidad General';
+        return 'Asiento contable';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Contabilidad General';
+        return 'Asientos contables';
     }
+
+    //protected static ?string $navigationGroup = 'Finanzas';
 
     public static function form(Schema $schema): Schema
     {
@@ -65,9 +67,9 @@ class JournalEntryResource extends Resource
     {
         return [
             'index' => ListJournalEntries::route('/'),
-            //'create' => CreateJournalEntry::route('/create'),
-            //'view' => ViewJournalEntry::route('/{record}'),
-            //'edit' => EditJournalEntry::route('/{record}/edit'),
+            'create' => CreateJournalEntry::route('/create'),
+            'view' => ViewJournalEntry::route('/{record}'),
+            'edit' => EditJournalEntry::route('/{record}/edit'),
         ];
     }
 }
