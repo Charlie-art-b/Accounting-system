@@ -9,7 +9,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Tables\Columns\ToggleColumn;
+use App\Models\Customer;
 
 class AccountingAccountsTable
 {
@@ -17,6 +17,12 @@ class AccountingAccountsTable
     {
         return $table
             ->columns([
+
+                TextColumn::make('customer.name')
+                    ->label('Cliente')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('code')
                     ->label('Código')
                     ->searchable()
@@ -51,6 +57,13 @@ class AccountingAccountsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+
+                SelectFilter::make('customer_id')
+                    ->label('Cliente')
+                    ->options(
+                        Customer::orderBy('name')->pluck('name', 'id')->toArray()
+                    ),
+
                 SelectFilter::make('type')
                     ->label('Tipo')
                     ->options([

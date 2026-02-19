@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AccountingAccount extends Model
 {
     protected $fillable = [
+        'customer_id', 
         'code',
         'name',
         'type',
