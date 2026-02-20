@@ -66,45 +66,50 @@ class EstadoFinancieroService
         return $this;
     }
 
-    /**
-     * Obtiene los saldos de las cuentas en un período
-     */
-    private function obtenerSaldoCuentas(?Carbon $fechaHasta = null): Collection
-    {
-        $fecha = $fechaHasta ?? $this->fechaFin;
 
-        // Obtén todas las cuentas activas
-        $cuentas = AccountingAccount::where('status', 'Activa')->get();
+private function obtenerSaldoCuentas(?Carbon $fechaHasta = null): Collection
+{
+    $fecha = $fechaHasta ?? $this->fechaFin;
+
+
+    $cuentas = AccountingAccount::where('status', 'Activa')
+        ->when($this->customerId, function ($query) {
+            return $query->where('customer_id', $this->customerId);
+        })
+        ->get();
+    
+    $resultado = collect();
+    
+    foreach ($cuentas as $cuenta) {
+        // Suma débitos y créditos del período
+        $saldos = JournalLine::selectRaw(
+            'SUM(CAST(debit AS DECIMAL(15,2))) as total_debe,
+            SUM(CAST(credit AS DECIMAL(15,2))) as total_haber'
+        )
+        ->whereHas('journalEntry', function ($q) use ($fecha) {
+            $q->whereBetween('posted_at', [$this->fechaInicio, $fecha])
+              ->when($this->customerId, function ($query) {
+                  return $query->where('customer_id', $this->customerId);
+              })
+              ->where(function ($query) {
+                  $query->where('is_reversal', false)
+                        ->orWhereNull('is_reversal');
+              });
+        })
+        ->where('accounting_account_id', $cuenta->id)
+        ->first();
         
-        $resultado = collect();
+        $cuenta->total_debe = (float) ($saldos?->total_debe ?? 0);
+        $cuenta->total_haber = (float) ($saldos?->total_haber ?? 0);
         
-        foreach ($cuentas as $cuenta) {
-            // Suma débitos y créditos del período
-            $saldos = JournalLine::selectRaw(
-                'SUM(CAST(debit AS DECIMAL(15,2))) as total_debe,
-                SUM(CAST(credit AS DECIMAL(15,2))) as total_haber'
-            )
-            ->whereHas('journalEntry', function ($q) use ($fecha) {
-                $q->whereBetween('posted_at', [$this->fechaInicio, $fecha])
-                  ->where(function ($query) {
-                      $query->where('is_reversal', false)
-                            ->orWhereNull('is_reversal');
-                  });
-            })
-            ->where('accounting_account_id', $cuenta->id)
-            ->first();
-            
-            $cuenta->total_debe = (float) ($saldos?->total_debe ?? 0);
-            $cuenta->total_haber = (float) ($saldos?->total_haber ?? 0);
-            
-            // Solo incluye si tiene movimientos
-            if ($cuenta->total_debe > 0 || $cuenta->total_haber > 0) {
-                $resultado->push($cuenta);
-            }
+        // Solo incluye si tiene movimientos
+        if ($cuenta->total_debe > 0 || $cuenta->total_haber > 0) {
+            $resultado->push($cuenta);
         }
-        
-        return $resultado;
     }
+    
+    return $resultado;
+}
 
     /**
      * BALANCE GENERAL

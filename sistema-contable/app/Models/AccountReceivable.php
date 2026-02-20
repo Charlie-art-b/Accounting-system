@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AccountReceivable extends Model
@@ -42,9 +43,11 @@ class AccountReceivable extends Model
             $model->total_amount = max(0, (float) $model->total_amount);
             $model->paid_amount  = max(0, (float) $model->paid_amount);
 
-            // evitar pagado > total
-            if ($model->paid_amount > $model->total_amount) {
-                $model->paid_amount = $model->total_amount;
+            // No permitir reducir total por debajo de lo ya pagado
+            if ($model->total_amount < $model->paid_amount) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'total_amount' => 'El monto total no puede ser menor que el monto ya pagado. Revierta los pagos antes de ajustar el total.'
+                ]);
             }
 
             // estado automático
@@ -75,6 +78,11 @@ class AccountReceivable extends Model
     public function collectionManagement(): HasOne
     {
         return $this->hasOne(CollectionManagement::class);
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Payment::class, 'payable');
     }
 
     //calculo del saldo pendiente 

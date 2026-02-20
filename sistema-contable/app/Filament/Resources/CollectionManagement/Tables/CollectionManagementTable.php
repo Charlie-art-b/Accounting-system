@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use App\Services\PaymentService;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -167,80 +168,31 @@ class CollectionManagementTable
                         }
 
                         try {
-                            DB::transaction(function () use ($record, $data) {
-                                $ar = $record->accountReceivable()->lockForUpdate()->first();
+                            $service = new PaymentService();
+                            $ar = $record->accountReceivable;
 
-                                if (! $ar) {
-                                    throw new \Exception('No existe la cuenta por cobrar asociada.');
-                                }
+                            if (! $ar) {
+                                throw new \Exception('No existe la cuenta por cobrar asociada.');
+                            }
 
-                                // Validaciones de fecha de pago
-                                $paidAt = \Illuminate\Support\Carbon::parse($data['paid_at']);
-                                
-                                if ($paidAt->gt(now())) {
-                                    throw new \Exception('La fecha de pago no puede ser futura.');
-                                }
-                                
-                                if (!empty($ar->issue_date) && $paidAt->lt(\Illuminate\Support\Carbon::parse($ar->issue_date))) {
-                                    throw new \Exception('La fecha de pago no puede ser anterior a la fecha de emisión.');
-                                }
+                            $payment = $service->createPayment($ar, (float) $data['amount'], $data['paid_at'], $data['note'] ?? null);
 
-                                $pending = (float) $ar->total_amount - (float) $ar->paid_amount;
-                                $pay = (float) $data['amount'];
+                            // Registrar la gestión con registro del pago (nota y última acción)
+                            $paymentLog = sprintf(
+                                "%s|%.2f|%s",
+                                $data['paid_at'],
+                                (float) $data['amount'],
+                                $data['note'] ?? 'Sin nota'
+                            );
 
-                                if ($pay <= 0) {
-                                    throw new \Exception('El monto debe ser mayor que 0.');
-                                }
+                            $record->last_action = 'Pago registrado: ₡' . number_format((float) $data['amount'], 2);
+                            $record->notes = trim(($record->notes ?? '') . "\n" . $paymentLog);
 
-                                if ($pay > $pending) {
-                                    throw new \Exception("El pago excede el pendiente. Pendiente: ₡" . number_format($pending, 2));
-                                }
+                            if ($ar->status === 'paid') {
+                                $record->next_reminder_at = null;
+                            }
 
-                                // Validación de pagos duplicados: mismo monto, fecha y nota
-                                $paymentSignature = sprintf(
-                                    "%s|%.2f|%s",
-                                    $data['paid_at'],
-                                    $pay,
-                                    $data['note'] ?? 'Sin nota'
-                                );
-                                
-                                if (str_contains($record->notes ?? '', $paymentSignature)) {
-                                    throw new \Exception('Pago duplicado: Ya existe un pago con el mismo monto, fecha y nota.');
-                                }
-
-                                // Actualizar monto pagado
-                                $ar->paid_amount = (float) $ar->paid_amount + $pay;
-
-                                // Recalcular estado de la cuenta por cobrar
-                                if ($ar->paid_amount <= 0) {
-                                    $ar->status = 'pending';
-                                } elseif ($ar->paid_amount < $ar->total_amount) {
-                                    $ar->status = 'partial';
-                                } else {
-                                    $ar->status = 'paid';
-                                }
-
-                                $ar->save();
-
-                                // Actualizar la gestión con registro del pago
-                                $record->last_action = 'Pago registrado: ₡' . number_format($pay, 2);
-                                
-                                // Registrar en notas con formato estructurado para evitar duplicados
-                                $paymentLog = sprintf(
-                                    "%s|%.2f|%s",
-                                    $data['paid_at'],
-                                    $pay,
-                                    $data['note'] ?? 'Sin nota'
-                                );
-                                $record->notes = trim(($record->notes ?? '') . "\n" . $paymentLog);
-
-                                // Si quedó pagada, apagamos recordatorio
-                                if ($ar->status === 'paid') {
-                                    $record->next_reminder_at = null;
-                                }
-
-                                $record->save();
-                            });
+                            $record->save();
 
                             Notification::make()
                                 ->title('Pago registrado exitosamente')
@@ -265,15 +217,25 @@ class CollectionManagementTable
                     ->modalHeading('Deshacer pago registrado')
                     ->modalDescription('Esta acción revertirá el pago seleccionado y actualizará el estado de la cuenta')
                     ->form(function (CollectionManagement $record) {
-                        // Parsear pagos registrados del campo notes
-                        $payments = [];
-                        if (!empty($record->notes)) {
+                        $paymentsOptions = [];
+
+                        $ar = $record->accountReceivable;
+                        if ($ar) {
+                            $payments = $ar->payments()->where('is_reversal', false)->whereDoesntHave('reversal')->orderBy('paid_at', 'desc')->get();
+                            foreach ($payments as $p) {
+                                $label = sprintf('📅 %s - ₡%s - %s', optional($p->paid_at)->format('Y-m-d'), number_format((float)$p->amount, 2), $p->note ?? '');
+                                $paymentsOptions['payment_' . $p->id] = $label;
+                            }
+                        }
+
+                        // Fallback a notas legacy si no hay pagos en la tabla
+                        if (empty($paymentsOptions) && !empty($record->notes)) {
                             $lines = explode("\n", trim($record->notes));
                             foreach ($lines as $index => $line) {
                                 if (str_contains($line, '|')) {
                                     $parts = explode('|', $line, 3);
                                     if (count($parts) === 3) {
-                                        $payments[$index] = sprintf(
+                                        $paymentsOptions['note_' . $index] = sprintf(
                                             "📅 %s - ₡%s - %s",
                                             $parts[0],
                                             number_format((float)$parts[1], 2),
@@ -284,7 +246,7 @@ class CollectionManagementTable
                             }
                         }
 
-                        if (empty($payments)) {
+                        if (empty($paymentsOptions)) {
                             return [
                                 Select::make('payment_index')
                                     ->label('No hay pagos registrados')
@@ -297,20 +259,28 @@ class CollectionManagementTable
                         return [
                             Select::make('payment_index')
                                 ->label('Seleccionar pago a deshacer')
-                                ->options($payments)
+                                ->options($paymentsOptions)
                                 ->required()
                                 ->searchable()
                                 ->helperText('⚠️ Esta acción no se puede deshacer'),
                         ];
                     })
                     ->hidden(function (CollectionManagement $record) {
-                        // Ocultar si no hay pagos registrados
+                        // Ocultar si no hay pagos elegibles en la tabla payments y tampoco notas legacy
+                        // Si la tabla payments tiene cualquier fila (incluso reversos), no mostrar fallback a notas.
+                        $ar = $record->accountReceivable;
+                        $hasEligiblePayments = $ar && $ar->payments()->where('is_reversal', false)->whereDoesntHave('reversal')->exists();
+                        if ($hasEligiblePayments) return false;
+
+                        // Si hay cualquier pago histórico en la tabla (incluso reversos), ocultar la acción
+                        $hasAnyPayments = $ar && $ar->payments()->exists();
+                        if ($hasAnyPayments) return true;
+
                         if (empty($record->notes)) return true;
-                        
                         $lines = explode("\n", trim($record->notes));
                         foreach ($lines as $line) {
                             if (str_contains($line, '|')) {
-                                return false; // Hay al menos un pago
+                                return false; // Hay al menos un pago legacy
                             }
                         }
                         return true;
@@ -323,72 +293,82 @@ class CollectionManagementTable
                                 ->send();
                             return;
                         }
-
                         try {
-                            DB::transaction(function () use ($record, $data) {
-                                $ar = $record->accountReceivable()->lockForUpdate()->first();
+                            $service = new \App\Services\PaymentService();
 
-                                if (!$ar) {
-                                    throw new \Exception('No existe la cuenta por cobrar asociada.');
+                            // Detect whether selection is a payment id (payment_{id}) or legacy note (note_{index})
+                            $sel = $data['payment_index'];
+
+                            if (str_starts_with($sel, 'payment_')) {
+                                $id = (int) str_replace('payment_', '', $sel);
+                                $payment = \App\Models\Payment::find($id);
+
+                                if (! $payment) {
+                                    throw new \Exception('Pago no encontrado.');
                                 }
 
-                                // Parsear las notas
-                                $lines = explode("\n", trim($record->notes));
-                                $paymentIndex = (int) $data['payment_index'];
+                                $service->reversePayment($payment, auth()->id() ?? null);
 
-                                if (!isset($lines[$paymentIndex])) {
-                                    throw new \Exception('El pago seleccionado no existe.');
-                                }
-
-                                $paymentLine = $lines[$paymentIndex];
-                                $parts = explode('|', $paymentLine, 3);
-
-                                if (count($parts) !== 3) {
-                                    throw new \Exception('Formato de pago inválido.');
-                                }
-
-                                $paymentAmount = (float) $parts[1];
-                                $paymentDate = $parts[0];
-                                $paymentNote = $parts[2];
-
-                                // Validar que el monto pagado actual sea suficiente
-                                if ($ar->paid_amount < $paymentAmount) {
-                                    throw new \Exception('No se puede deshacer: el monto pagado actual es menor al pago registrado.');
-                                }
-
-                                // Restar el monto del paid_amount
-                                $ar->paid_amount = (float) $ar->paid_amount - $paymentAmount;
-
-                                // Recalcular estado
-                                if ($ar->paid_amount <= 0) {
-                                    $ar->status = 'pending';
-                                } elseif ($ar->paid_amount < $ar->total_amount) {
-                                    $ar->status = 'partial';
-                                } else {
-                                    $ar->status = 'paid';
-                                }
-
-                                $ar->save();
-
-                                // Eliminar la línea del pago de las notas
-                                unset($lines[$paymentIndex]);
-                                $record->notes = implode("\n", array_values($lines));
-
-                                // Actualizar last_action
-                                $record->last_action = sprintf(
-                                    'Pago deshecho: ₡%s (fecha: %s)',
-                                    number_format($paymentAmount, 2),
-                                    $paymentDate
-                                );
-
+                                $record->last_action = sprintf('Pago deshecho: ₡%s (id: %s)', number_format((float)$payment->amount, 2), $payment->id);
                                 $record->save();
-                            });
 
-                            Notification::make()
-                                ->title('Pago deshecho exitosamente')
-                                ->body('El monto ha sido revertido y el estado actualizado')
-                                ->success()
-                                ->send();
+                                Notification::make()->title('Pago deshecho exitosamente')->success()->send();
+                                return;
+                            }
+
+                            // Fallback legacy notes logic (note_{index})
+                            if (str_starts_with($sel, 'note_')) {
+                                DB::transaction(function () use ($record, $sel) {
+                                    $ar = $record->accountReceivable()->lockForUpdate()->first();
+
+                                    if (!$ar) {
+                                        throw new \Exception('No existe la cuenta por cobrar asociada.');
+                                    }
+
+                                    $lines = explode("\n", trim($record->notes));
+                                    $paymentIndex = (int) str_replace('note_', '', $sel);
+
+                                    if (!isset($lines[$paymentIndex])) {
+                                        throw new \Exception('El pago seleccionado no existe.');
+                                    }
+
+                                    $paymentLine = $lines[$paymentIndex];
+                                    $parts = explode('|', $paymentLine, 3);
+
+                                    if (count($parts) !== 3) {
+                                        throw new \Exception('Formato de pago inválido.');
+                                    }
+
+                                    $paymentAmount = (float) $parts[1];
+
+                                    if ($ar->paid_amount < $paymentAmount) {
+                                        throw new \Exception('No se puede deshacer: el monto pagado actual es menor al pago registrado.');
+                                    }
+
+                                    $ar->paid_amount = (float) $ar->paid_amount - $paymentAmount;
+
+                                    if ($ar->paid_amount <= 0) {
+                                        $ar->status = 'pending';
+                                    } elseif ($ar->paid_amount < $ar->total_amount) {
+                                        $ar->status = 'partial';
+                                    } else {
+                                        $ar->status = 'paid';
+                                    }
+
+                                    $ar->save();
+
+                                    unset($lines[$paymentIndex]);
+                                    $record->notes = implode("\n", array_values($lines));
+
+                                    $record->last_action = sprintf('Pago deshecho: ₡%s', number_format($paymentAmount, 2));
+                                    $record->save();
+                                });
+
+                                Notification::make()->title('Pago deshecho exitosamente')->success()->send();
+                                return;
+                            }
+
+                            throw new \Exception('Selección de pago inválida.');
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error al deshacer el pago')

@@ -13,12 +13,14 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
+use Filament\Tables\Actions\DeleteBulkAction as TableDeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use App\Services\PaymentService;
 
 class AccountPayablesTable
 {
@@ -97,18 +99,7 @@ class AccountPayablesTable
                         'pending' => 'Pendiente',
                         'partial' => 'Parcial',
                         'paid' => 'Pagado',
-                        'voided' => 'Anulado',
                     ]),
-
-                SelectFilter::make('type')
-                    ->label('Tipo')
-                    ->options([
-                        'invoice' => 'Factura',
-                        'receipt' => 'Recibo',
-                        'debit_note' => 'Nota de débito',
-                        'other' => 'Otro',
-                    ]),
-
                 SelectFilter::make('payment_terms')
                     ->label('Términos de Pago')
                     ->options([
@@ -202,65 +193,25 @@ class AccountPayablesTable
                         }
 
                         try {
-                            DB::transaction(function () use ($record, $data) {
-                                $record = AccountPayable::where('id', $record->id)->lockForUpdate()->first();
+                            $service = new PaymentService();
+                            $payable = AccountPayable::find($record->id);
 
-                                if (!$record) {
-                                    throw new \Exception('No se pudo obtener el registro.');
-                                }
+                            if (! $payable) {
+                                throw new \Exception('No se pudo obtener el registro.');
+                            }
 
-                                // Validaciones de fecha de pago
-                                $paidAt = \Illuminate\Support\Carbon::parse($data['paid_at']);
-                                
-                                if ($paidAt->gt(now())) {
-                                    throw new \Exception('La fecha de pago no puede ser futura.');
-                                }
-                                
-                                if (!empty($record->issue_date) && $paidAt->lt(\Illuminate\Support\Carbon::parse($record->issue_date))) {
-                                    throw new \Exception('La fecha de pago no puede ser anterior a la fecha de emisión.');
-                                }
+                            $payment = $service->createPayment($payable, (float) $data['amount'], $data['paid_at'], $data['note'] ?? null);
 
-                                $pending = (float) $record->total_amount - (float) $record->paid_amount;
-                                $pay = (float) $data['amount'];
+                            // Registrar en notas y actualizar last_action
+                            $paymentLog = sprintf(
+                                "%s|%.2f|%s",
+                                $data['paid_at'],
+                                (float) $data['amount'],
+                                $data['note'] ?? 'Sin nota'
+                            );
 
-                                if ($pay <= 0) {
-                                    throw new \Exception('El monto debe ser mayor que 0.');
-                                }
-
-                                if ($pay > $pending) {
-                                    throw new \Exception("El pago excede el pendiente. Pendiente: $" . number_format($pending, 2));
-                                }
-
-                                // Validación de pagos duplicados
-                                $paymentSignature = sprintf(
-                                    "%s|%.2f|%s",
-                                    $data['paid_at'],
-                                    $pay,
-                                    $data['note'] ?? 'Sin nota'
-                                );
-                                
-                                if (str_contains($record->notes ?? '', $paymentSignature)) {
-                                    throw new \Exception('Pago duplicado: Ya existe un pago con el mismo monto, fecha y nota.');
-                                }
-
-                                // Actualizar monto pagado
-                                $record->paid_amount = (float) $record->paid_amount + $pay;
-                                
-                                // Actualizar payment_date si corresponde
-                                $record->payment_date = $data['paid_at'];
-
-                                // Registrar en notas
-                                $paymentLog = sprintf(
-                                    "%s|%.2f|%s",
-                                    $data['paid_at'],
-                                    $pay,
-                                    $data['note'] ?? 'Sin nota'
-                                );
-                                $record->notes = trim(($record->notes ?? '') . "\n" . $paymentLog);
-
-                                // El observer del modelo se encargará de actualizar el status automáticamente
-                                $record->save();
-                            });
+                            $payable->notes = trim(($payable->notes ?? '') . "\n" . $paymentLog);
+                            $payable->save();
 
                             Notification::make()
                                 ->title('Pago registrado exitosamente')
@@ -285,15 +236,23 @@ class AccountPayablesTable
                     ->modalHeading('Deshacer pago registrado')
                     ->modalDescription('Esta acción revertirá el pago seleccionado y actualizará el estado de la cuenta')
                     ->form(function (AccountPayable $record) {
-                        // Parsear pagos registrados del campo notes
-                        $payments = [];
-                        if (!empty($record->notes)) {
+                        $paymentsOptions = [];
+
+                        $payable = $record;
+                        $payments = $payable->payments()->where('is_reversal', false)->whereDoesntHave('reversal')->orderBy('paid_at', 'desc')->get();
+                        foreach ($payments as $p) {
+                            $label = sprintf('📅 %s - $%s - %s', optional($p->paid_at)->format('Y-m-d'), number_format((float)$p->amount, 2), $p->note ?? '');
+                            $paymentsOptions['payment_' . $p->id] = $label;
+                        }
+
+                        // Fallback legacy notes only if there are no rows in payments table
+                        if (empty($paymentsOptions) && !$payable->payments()->exists() && !empty($record->notes)) {
                             $lines = explode("\n", trim($record->notes));
                             foreach ($lines as $index => $line) {
                                 if (str_contains($line, '|')) {
                                     $parts = explode('|', $line, 3);
                                     if (count($parts) === 3) {
-                                        $payments[$index] = sprintf(
+                                        $paymentsOptions['note_' . $index] = sprintf(
                                             "📅 %s - $%s - %s",
                                             $parts[0],
                                             number_format((float)$parts[1], 2),
@@ -304,7 +263,7 @@ class AccountPayablesTable
                             }
                         }
 
-                        if (empty($payments)) {
+                        if (empty($paymentsOptions)) {
                             return [
                                 Select::make('payment_index')
                                     ->label('No hay pagos registrados')
@@ -317,20 +276,26 @@ class AccountPayablesTable
                         return [
                             Select::make('payment_index')
                                 ->label('Seleccionar pago a deshacer')
-                                ->options($payments)
+                                ->options($paymentsOptions)
                                 ->required()
                                 ->searchable()
                                 ->helperText('⚠️ Esta acción no se puede deshacer'),
                         ];
                     })
                     ->visible(function (AccountPayable $record) {
-                        // Ocultar si no hay pagos registrados
+                        // Visible sólo si hay pagos elegibles en la tabla payments o notas legacy
+                        $hasEligiblePayments = $record->payments()->where('is_reversal', false)->whereDoesntHave('reversal')->exists();
+                        if ($hasEligiblePayments) return true;
+
+                        // Si hay cualquier pago histórico en la tabla (incluso reversos), ocultar la acción
+                        $hasAnyPayments = $record->payments()->exists();
+                        if ($hasAnyPayments) return false;
+
                         if (empty($record->notes)) return false;
-                        
                         $lines = explode("\n", trim($record->notes));
                         foreach ($lines as $line) {
                             if (str_contains($line, '|')) {
-                                return true; // Hay al menos un pago
+                                return true; // Hay al menos un pago legacy
                             }
                         }
                         return false;
@@ -343,57 +308,71 @@ class AccountPayablesTable
                                 ->send();
                             return;
                         }
-
                         try {
-                            DB::transaction(function () use ($record, $data) {
-                                $record = AccountPayable::where('id', $record->id)->lockForUpdate()->first();
+                            $service = new PaymentService();
+                            $sel = $data['payment_index'];
 
-                                if (!$record) {
-                                    throw new \Exception('No se pudo obtener el registro.');
+                            if (str_starts_with($sel, 'payment_')) {
+                                $id = (int) str_replace('payment_', '', $sel);
+                                $payment = \App\Models\Payment::find($id);
+                                if (! $payment) {
+                                    throw new \Exception('Pago no encontrado.');
                                 }
 
-                                // Parsear las notas
-                                $lines = explode("\n", trim($record->notes));
-                                $paymentIndex = (int) $data['payment_index'];
+                                $service->reversePayment($payment, auth()->id() ?? null);
 
-                                if (!isset($lines[$paymentIndex])) {
-                                    throw new \Exception('El pago seleccionado no existe.');
-                                }
-
-                                $paymentLine = $lines[$paymentIndex];
-                                $parts = explode('|', $paymentLine, 3);
-
-                                if (count($parts) !== 3) {
-                                    throw new \Exception('Formato de pago inválido.');
-                                }
-
-                                $paymentAmount = (float) $parts[1];
-
-                                // Validar que el monto a deshacer no exceda el pagado
-                                if ($paymentAmount > $record->paid_amount) {
-                                    throw new \Exception('El monto a deshacer excede el monto pagado actual.');
-                                }
-
-                                // Revertir el pago
-                                $record->paid_amount = (float) $record->paid_amount - $paymentAmount;
-
-                                // Remover la línea del pago de las notas
-                                unset($lines[$paymentIndex]);
-                                $record->notes = implode("\n", $lines);
-
-                                // Si no quedan pagos, limpiar payment_date
-                                if (empty(trim($record->notes))) {
-                                    $record->payment_date = null;
-                                }
-
-                                // El observer actualizará automáticamente el status
+                                $record->notes = trim(($record->notes ?? '') . "\nReverso de pago #{$payment->id}");
                                 $record->save();
-                            });
 
-                            Notification::make()
-                                ->title('Pago deshecho exitosamente')
-                                ->success()
-                                ->send();
+                                Notification::make()->title('Pago deshecho exitosamente')->success()->send();
+                                return;
+                            }
+
+                            if (str_starts_with($sel, 'note_')) {
+                                DB::transaction(function () use ($record, $sel) {
+                                    $rec = AccountPayable::where('id', $record->id)->lockForUpdate()->first();
+
+                                    if (!$rec) {
+                                        throw new \Exception('No se pudo obtener el registro.');
+                                    }
+
+                                    $lines = explode("\n", trim($rec->notes));
+                                    $paymentIndex = (int) str_replace('note_', '', $sel);
+
+                                    if (!isset($lines[$paymentIndex])) {
+                                        throw new \Exception('El pago seleccionado no existe.');
+                                    }
+
+                                    $paymentLine = $lines[$paymentIndex];
+                                    $parts = explode('|', $paymentLine, 3);
+
+                                    if (count($parts) !== 3) {
+                                        throw new \Exception('Formato de pago inválido.');
+                                    }
+
+                                    $paymentAmount = (float) $parts[1];
+
+                                    if ($paymentAmount > $rec->paid_amount) {
+                                        throw new \Exception('El monto a deshacer excede el monto pagado actual.');
+                                    }
+
+                                    $rec->paid_amount = (float) $rec->paid_amount - $paymentAmount;
+
+                                    unset($lines[$paymentIndex]);
+                                    $rec->notes = implode("\n", array_values($lines));
+
+                                    if (empty(trim($rec->notes))) {
+                                        $rec->payment_date = null;
+                                    }
+
+                                    $rec->save();
+                                });
+
+                                Notification::make()->title('Pago deshecho exitosamente')->success()->send();
+                                return;
+                            }
+
+                            throw new \Exception('Selección de pago inválida.');
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error al deshacer el pago')
@@ -405,7 +384,22 @@ class AccountPayablesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, DeleteBulkAction $action) {
+                            $blocked = $records->filter(
+                                fn ($r) => in_array($r->status, ['pending', 'partial'], true)
+                            );
+
+                            if ($blocked->isNotEmpty()) {
+                                Notification::make()
+                                    ->title('NO SE PUEDE ELIMINAR')
+                                    ->body('Seleccionaste cuentas en estado Pendiente o Parcial. Solo se pueden eliminar cuentas ya Pagadas.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ]),
             ])
             ->defaultSort('due_date', 'asc')

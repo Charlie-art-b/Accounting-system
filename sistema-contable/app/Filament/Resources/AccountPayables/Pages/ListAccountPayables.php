@@ -13,7 +13,9 @@ class ListAccountPayables extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label("Crear cuenta por pagar")
+                ->icon('heroicon-o-plus'),
         ];
     }
 }
