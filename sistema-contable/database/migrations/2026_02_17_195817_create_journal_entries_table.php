@@ -14,7 +14,11 @@ return new class extends Migration
         Schema::create('journal_entries', function (Blueprint $table) {
             $table->id();
 
-            //$table->foreignId('customer_id')->constrained()->cascadeOnDelete()->index();
+            $table->foreignId('customer_id')
+                ->constrained('customers')
+                ->cascadeOnDelete()
+                ->name('fk_journal_entries_customer_id')
+                ->index();
 
             $table->string('journal_type')->default('general');
             $table->text('description')->nullable();
@@ -23,10 +27,18 @@ return new class extends Migration
             $table->decimal('total_credit', 15, 2)->default(0);
             $table->unsignedBigInteger('fiscal_period_id')->nullable();
             $table->timestamp('posted_at')->nullable();
-            $table->foreignId('posted_by')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('posted_by')
+                ->nullable()
+                ->constrained('users')
+                ->cascadeOnDelete()
+                ->name('fk_journal_entries_posted_by');
             $table->boolean('is_reversal')->default(false);
             $table->unsignedBigInteger('reversed_entry_id')->nullable();
-            $table->foreign('reversed_entry_id')->references('id')->on('journal_entries')->cascadeOnDelete();
+            $table->foreign('reversed_entry_id')
+                ->references('id')
+                ->on('journal_entries')
+                ->cascadeOnDelete()
+                ->name('fk_journal_entries_reversed_entry_id');
             $table->string('source_type')->nullable();
             $table->unsignedBigInteger('source_id')->nullable();
             $table->json('metadata')->nullable();
