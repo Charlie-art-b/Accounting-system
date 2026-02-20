@@ -11,26 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('accounting_accounts', function (Blueprint $table) {
-             $table->id();
+      Schema::create('accounting_accounts', function (Blueprint $table) {
+    $table->id();
 
-         $table->foreignId('customer_id')
-          ->constrained()
-          ->onDelete('cascade');
+    $table->foreignId('customer_id')
+        ->constrained()
+        ->cascadeOnDelete()
+        ->index();
 
-     $table->string('code');
+    $table->string('code');
+    $table->string('name');
 
-     $table->string('name');
-
-     $table->enum('type', [
+    $table->enum('type', [
         'Activo',
         'Pasivo',
         'Patrimonio',
         'Ingreso',
         'Gasto'
-    ]);
+    ])->index();
 
-    
+    // 🔥 LO ÚNICO QUE FALTABA
+    $table->enum('normal_balance', ['debit', 'credit']);
+
     $table->enum('status', [
         'Activa',
         'Inactiva'
@@ -39,7 +41,7 @@ return new class extends Migration
     $table->timestamps();
 
     $table->unique(['customer_id', 'code']);
-    });
+});
 
     }
 
