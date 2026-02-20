@@ -14,10 +14,7 @@ return new class extends Migration
         Schema::create('journal_entries', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('customer_id')
-                ->constrained()
-                ->cascadeOnDelete()
-                ->index();
+            //$table->foreignId('customer_id')->constrained()->cascadeOnDelete()->index();
 
             $table->string('journal_type')->default('general');
             $table->text('description')->nullable();

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Validation\ValidationException;
 
 class AccountPayable extends Model
@@ -69,6 +70,13 @@ class AccountPayable extends Model
                 $paid = $total;
             }
 
+            // No permitir reducir total por debajo de lo ya pagado
+            if ($accountPayable->total_amount < $accountPayable->paid_amount) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'total_amount' => 'El monto total no puede ser menor que el monto ya pagado. Revierta los pagos antes de ajustar el total.'
+                ]);
+            }
+
             $accountPayable->total_amount = $total;
             $accountPayable->paid_amount = $paid;
 
@@ -100,6 +108,11 @@ class AccountPayable extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Payment::class, 'payable');
     }
 
     // calculo del saldo pendiente
