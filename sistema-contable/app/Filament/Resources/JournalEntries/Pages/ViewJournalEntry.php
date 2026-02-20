@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Actions\Action;
 
 class ViewJournalEntry extends ViewRecord
 {
@@ -16,6 +17,7 @@ class ViewJournalEntry extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+
             // Edit solo si NO está posteado
             Actions\EditAction::make()
                 ->visible(fn () => $this->record->posted_at === null),
@@ -47,6 +49,13 @@ class ViewJournalEntry extends ViewRecord
 
                     $this->redirect(JournalEntryResource::getUrl('index'));
                 }),
+
+                Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
         ];
     }
 }
