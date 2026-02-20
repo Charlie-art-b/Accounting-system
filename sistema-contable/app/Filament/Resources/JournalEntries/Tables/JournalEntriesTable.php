@@ -23,6 +23,7 @@ class JournalEntriesTable
         return $table
             ->columns([
                 TextColumn::make('id')
+                    ->label('Código de asiento')
                     ->sortable(),
 
                 TextColumn::make('customer.name')
@@ -58,7 +59,7 @@ class JournalEntriesTable
                     ->label('Posteado')
                     ->dateTime()
                     ->sortable()
-                    ->placeholder('Draft'),
+                    ->placeholder('BORRADOR'),
 
                 TextColumn::make('postedBy.name')
                     ->label('Posteado por')

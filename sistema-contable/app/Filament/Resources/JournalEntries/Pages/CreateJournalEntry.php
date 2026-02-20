@@ -7,6 +7,7 @@ use App\Services\LedgerService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Actions\Action;
 
 class CreateJournalEntry extends CreateRecord
 {
@@ -22,7 +23,7 @@ class CreateJournalEntry extends CreateRecord
 
     public function updated($propertyName): void
     {
-        parent::updated($propertyName);
+        //parent::updated($propertyName);
         $this->updateTotalsText();
     }
 
@@ -64,6 +65,18 @@ class CreateJournalEntry extends CreateRecord
         return round($debit, 2) !== round($credit, 2);
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
+        ];
+    }
+
     protected function getFormActions(): array
     {
         return [
@@ -78,10 +91,15 @@ class CreateJournalEntry extends CreateRecord
                 ->requiresConfirmation()
                 ->disabled(fn () => $this->isNotBalanced())
                 ->action(function (LedgerService $ledger) {
-                    // crear registro draft
-                    $record = $this->createRecord();
+                    //obtener data del form
+                    $data = $this->form->getState();
 
-                    // postear con servicio
+                    $record = $this->handleRecordCreation($data);
+
+                    //guardar relaciones (Repeater -> relationship() = lines)
+                    $this->form->model($record)->saveRelationships();
+
+                    //postear con el servicio
                     $ledger->postJournalEntry($record->fresh(['lines']), auth()->user());
 
                     Notification::make()
@@ -90,7 +108,7 @@ class CreateJournalEntry extends CreateRecord
                         ->send();
 
                     $this->redirect(JournalEntryResource::getUrl('view', ['record' => $record]));
-                }),
+                })
         ];
     }
 }

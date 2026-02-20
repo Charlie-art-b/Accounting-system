@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\JournalEntries\Schemas;
 
-use Filament\Infolists\Components\Section;
+//use Filament\Infolists\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Schema;
@@ -13,16 +14,17 @@ class JournalEntryInfolist
     {
         return $schema->components([
             Section::make('Encabezado')
+                ->label('Información del asiento')
                 ->columns(2)
                 ->schema([
-                    TextEntry::make('id')
-                        ->label('ID'),
+                    //TextEntry::make('id')
+                    //    ->label('ID'),
 
                     TextEntry::make('customer.name')
                         ->label('Cliente'),
 
                     TextEntry::make('journal_type')
-                        ->label('Tipo')
+                        ->label('Tipo de asiento')
                         ->badge(),
 
                     TextEntry::make('reference')
@@ -59,6 +61,7 @@ class JournalEntryInfolist
                 ]),
 
             Section::make('Líneas del asiento')
+                //->columnSpan(2)
                 ->schema([
                     RepeatableEntry::make('lines')
                         ->label('')

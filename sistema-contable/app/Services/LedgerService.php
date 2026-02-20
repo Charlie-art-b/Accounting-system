@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class LedgerService
 {
-    public function postJournalEntry(JournalEntry $entry, User $user): JournalEntry
+    public function postJournalEntry(JournalEntry $entry, ?User $user = null): JournalEntry
     {
         if ($entry->posted_at !== null) {
             throw ValidationException::withMessages([
@@ -38,7 +38,7 @@ class LedgerService
             $entry->total_debit = $debit;
             $entry->total_credit = $credit;
             $entry->posted_at = now();
-            $entry->posted_by = $user->id;
+            $entry->posted_by = $user?->id;
 
             $entry->save();
 
