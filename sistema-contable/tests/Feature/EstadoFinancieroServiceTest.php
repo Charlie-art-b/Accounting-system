@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
-use App\Models\ChartOfAccount;
+use App\Models\AccountingAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Services\EstadoFinancieroService;
@@ -39,93 +39,105 @@ class EstadoFinancieroServiceTest extends TestCase
     {
         $this->cuentas = [
             // Activos
-            'caja' => ChartOfAccount::create([
+            'caja' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '1100',
                 'name' => 'Caja',
-                'type' => 'asset',
+                'type' => 'Activo',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'bancos' => ChartOfAccount::create([
+            'bancos' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '1110',
                 'name' => 'Bancos',
-                'type' => 'asset',
+                'type' => 'Activo',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'cuentas_cobrar' => ChartOfAccount::create([
+            'cuentas_cobrar' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '1200',
                 'name' => 'Cuentas por Cobrar',
-                'type' => 'asset',
+                'type' => 'Activo',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'inventario' => ChartOfAccount::create([
+            'inventario' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '1300',
                 'name' => 'Inventario',
-                'type' => 'asset',
+                'type' => 'Activo',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
             // Pasivos
-            'cuentas_pagar' => ChartOfAccount::create([
+            'cuentas_pagar' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '2100',
                 'name' => 'Cuentas por Pagar',
-                'type' => 'liability',
+                'type' => 'Pasivo',
                 'normal_balance' => 'credit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'deuda_corto_plazo' => ChartOfAccount::create([
+            'deuda_corto_plazo' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '2200',
                 'name' => 'Deuda a Corto Plazo',
-                'type' => 'liability',
+                'type' => 'Pasivo',
                 'normal_balance' => 'credit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
             // Patrimonio
-            'capital' => ChartOfAccount::create([
+            'capital' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '3100',
                 'name' => 'Capital Social',
-                'type' => 'equity',
+                'type' => 'Patrimonio',
                 'normal_balance' => 'credit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
             // Ingresos
-            'ventas' => ChartOfAccount::create([
+            'ventas' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '4100',
                 'name' => 'Ventas',
-                'type' => 'revenue',
+                'type' => 'Ingreso',
                 'normal_balance' => 'credit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'servicios' => ChartOfAccount::create([
+            'servicios' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '4200',
                 'name' => 'Servicios Prestados',
-                'type' => 'revenue',
+                'type' => 'Ingreso',
                 'normal_balance' => 'credit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
             // Gastos
-            'salarios' => ChartOfAccount::create([
+            'salarios' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '5100',
                 'name' => 'Salarios',
-                'type' => 'expense',
+                'type' => 'Gasto',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'arrendamiento' => ChartOfAccount::create([
+            'arrendamiento' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '5200',
                 'name' => 'Arrendamiento',
-                'type' => 'expense',
+                'type' => 'Gasto',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
-            'servicios_publicos' => ChartOfAccount::create([
+            'servicios_publicos' => AccountingAccount::create([
+                'customer_id' => $this->cliente->id,
                 'code' => '5300',
                 'name' => 'Servicios Públicos',
-                'type' => 'expense',
+                'type' => 'Gasto',
                 'normal_balance' => 'debit',
-                'is_active' => true,
+                'status' => 'Activa',
             ]),
         ];
     }
@@ -139,6 +151,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         // Asiento 1: Aporte de capital
         $asiento1 = JournalEntry::create([
+            'customer_id' => $this->cliente->id,
             'journal_type' => 'general',
             'description' => 'Aporte de capital inicial',
             'reference' => 'APORTES-001',
@@ -150,7 +163,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento1->id,
-            'chart_of_account_id' => $this->cuentas['caja']->id,
+            'accounting_account_id' => $this->cuentas['caja']->id,
             'description' => 'Aporte de capital',
             'debit' => 100000,
             'credit' => 0,
@@ -158,7 +171,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento1->id,
-            'chart_of_account_id' => $this->cuentas['capital']->id,
+            'accounting_account_id' => $this->cuentas['capital']->id,
             'description' => 'Capital aportado',
             'debit' => 0,
             'credit' => 100000,
@@ -166,6 +179,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         // Asiento 2: Ventas
         $asiento2 = JournalEntry::create([
+            'customer_id' => $this->cliente->id,
             'journal_type' => 'sales',
             'description' => 'Venta de productos',
             'reference' => 'V-001',
@@ -177,7 +191,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento2->id,
-            'chart_of_account_id' => $this->cuentas['bancos']->id,
+            'accounting_account_id' => $this->cuentas['bancos']->id,
             'description' => 'Venta de productos',
             'debit' => 50000,
             'credit' => 0,
@@ -185,7 +199,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento2->id,
-            'chart_of_account_id' => $this->cuentas['ventas']->id,
+            'accounting_account_id' => $this->cuentas['ventas']->id,
             'description' => 'Ingreso por venta',
             'debit' => 0,
             'credit' => 50000,
@@ -193,6 +207,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         // Asiento 3: Gastos de salarios
         $asiento3 = JournalEntry::create([
+            'customer_id' => $this->cliente->id,
             'journal_type' => 'general',
             'description' => 'Pago de salarios',
             'reference' => 'GAS-001',
@@ -204,7 +219,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento3->id,
-            'chart_of_account_id' => $this->cuentas['salarios']->id,
+            'accounting_account_id' => $this->cuentas['salarios']->id,
             'description' => 'Gastos de salarios',
             'debit' => 15000,
             'credit' => 0,
@@ -212,7 +227,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento3->id,
-            'chart_of_account_id' => $this->cuentas['bancos']->id,
+            'accounting_account_id' => $this->cuentas['bancos']->id,
             'description' => 'Pago de salarios',
             'debit' => 0,
             'credit' => 15000,
@@ -220,6 +235,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         // Asiento 4: Otros gastos
         $asiento4 = JournalEntry::create([
+            'customer_id' => $this->cliente->id,
             'journal_type' => 'general',
             'description' => 'Gastos mensuales',
             'reference' => 'GAS-002',
@@ -231,7 +247,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento4->id,
-            'chart_of_account_id' => $this->cuentas['arrendamiento']->id,
+            'accounting_account_id' => $this->cuentas['arrendamiento']->id,
             'description' => 'Arrendamiento oficina',
             'debit' => 2500,
             'credit' => 0,
@@ -239,7 +255,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento4->id,
-            'chart_of_account_id' => $this->cuentas['servicios_publicos']->id,
+            'accounting_account_id' => $this->cuentas['servicios_publicos']->id,
             'description' => 'Servicios públicos',
             'debit' => 2500,
             'credit' => 0,
@@ -247,7 +263,7 @@ class EstadoFinancieroServiceTest extends TestCase
 
         JournalLine::create([
             'journal_entry_id' => $asiento4->id,
-            'chart_of_account_id' => $this->cuentas['bancos']->id,
+            'accounting_account_id' => $this->cuentas['bancos']->id,
             'description' => 'Pago de gastos',
             'debit' => 0,
             'credit' => 5000,
@@ -309,6 +325,7 @@ class EstadoFinancieroServiceTest extends TestCase
         $estado = $this->service
             ->setCliente($this->cliente->id)
             ->setFechas(Carbon::now()->startOfYear(), Carbon::now())
+            ->setTasaImpuestos(0.25)
             ->estadoResultados();
 
         // Ingresos deben ser 50000

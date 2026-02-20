@@ -13,14 +13,15 @@ class AccountingAccount extends Model
         'code',
         'name',
         'type',
+        'normal_balance',
         'status',
     ];
-    public function customer(){
 
+    public function customer(): BelongsTo
+    {
         return $this->belongsTo(Customer::class);
     }
 
-    //para Contabilidad General
     public function journalLines(): HasMany
     {
         return $this->hasMany(JournalLine::class, 'accounting_account_id');
@@ -36,4 +37,13 @@ class AccountingAccount extends Model
         return $query->where('status', 'Activa');
     }
 
+    public function getSaldo(): float
+    {
+        $debe = $this->journalLines()->sum('debit');
+        $haber = $this->journalLines()->sum('credit');
+        
+        return $this->normal_balance === 'debit' 
+            ? $debe - $haber 
+            : $haber - $debe;
+    }
 }
