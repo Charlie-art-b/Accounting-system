@@ -27,8 +27,8 @@ class JournalLine extends Model
     ];
 
     protected $casts = [
-        'debit' => 'decimal:2',
-        'credit' => 'decimal:2',
+        //'debit' => 'decimal:2',
+        //'credit' => 'decimal:2',
         'metadata' => 'array',
     ];
 
@@ -60,7 +60,13 @@ class JournalLine extends Model
                 ]);
             }
 
-            if ($line->debit <= 0 && $line->credit <= 0) {
+            //  Obtener el asiento padre
+            $entry = $line->relationLoaded('journalEntry')
+                ? $line->journalEntry
+                : $line->journalEntry()->first();
+
+            //  Solo exigir > 0 cuando el asiento esté posteado
+            if ($entry?->posted_at && $line->debit <= 0 && $line->credit <= 0) {
                 throw ValidationException::withMessages([
                     'line' => 'Una línea debe tener débito o crédito mayor que cero.',
                 ]);
@@ -87,14 +93,6 @@ class JournalLine extends Model
                     ]);
                 }
 
-            // Ensure account exists and is active
-            /*if ($line->chart_of_account_id) {
-                $acct = ChartOfAccount::find($line->chart_of_account_id);
-                if (! $acct || ! $acct->is_active) {
-                    throw ValidationException::withMessages([
-                        'chart_of_account_id' => 'La cuenta contable no existe o no está activa.',
-                    ]);
-                }*/
             }
         });
     }

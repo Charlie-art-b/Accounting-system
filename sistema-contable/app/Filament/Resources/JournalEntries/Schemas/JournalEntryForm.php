@@ -71,14 +71,15 @@ class JournalEntryForm
                     */
                 ]),
 
-            Section::make('Líneas del asiento')
+            Section::make('Movimientos contables')
                 ->description('El asiento debe quedar balanceado para poder postear.')
                 ->columnSpanFull()
                 ->columns(1)
                 ->schema([   
                     //Líneas (HasMany)
                     Repeater::make('lines')
-                        //->label('Líneas del asiento')
+                        ->live()
+                        ->label('Líneas del asiento')
                         ->relationship() // usa JournalEntry->lines()
                         ->minItems(2)
                         ->defaultItems(2)
@@ -90,7 +91,7 @@ class JournalEntryForm
                                 ->searchable()
                                 ->preload()
                                 ->options(function ($get) {
-                                    //en Filament v4 esta ruta suele funcionar mejor que ../../
+                                    
                                     $customerId = $get('../..//customer_id') ?? $get('../../customer_id') ?? $get('customer_id');
 
                                     if (! $customerId) {
@@ -115,8 +116,10 @@ class JournalEntryForm
 
                             TextInput::make('debit')
                                 ->label('Débito')
+                                ->live(debounce: 300)
                                 ->numeric()
                                 ->minValue(0)
+                                ->inputMode('decimal')
                                 ->step('0.01')
                                 ->default(0)
                                 ->reactive()
@@ -129,8 +132,10 @@ class JournalEntryForm
 
                             TextInput::make('credit')
                                 ->label('Crédito')
+                                ->live(debounce: 300)
                                 ->numeric()
                                 ->minValue(0)
+                                ->inputMode('decimal')
                                 ->step('0.01')
                                 ->default(0)
                                 ->reactive()
@@ -141,12 +146,13 @@ class JournalEntryForm
                                 })
                                 ->columnSpan(2),
                         ])
+                        ->addActionLabel('+ Agregar línea')
                         ->reactive(),
 
                         Placeholder::make('totals_hint')
                             ->label('Totales')
                             ->content(fn ($livewire) => $livewire->totalsText ?? '—'),
-                    ]),
+                    ])
                 ]);
 
     }
