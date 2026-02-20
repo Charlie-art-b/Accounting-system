@@ -15,14 +15,12 @@ class AccountingAccountForm
         return $schema
             ->components([
 
-                // Cliente (dropdown normal sin buscador)
                 Select::make('customer_id')
                     ->label('Cliente')
                     ->relationship('customer', 'name')
-                    ->preload() // 👈 Carga todos al abrir
+                    ->preload()
                     ->required(),
 
-                // Código único por cliente
                 TextInput::make('code')
                     ->label('Código')
                     ->required()
@@ -38,10 +36,7 @@ class AccountingAccountForm
                     ->label('Nombre')
                     ->required()
                     ->maxLength(100)
-                    ->helperText('Nombre de la cuenta contable')
-                    ->validationMessages([
-                        'required' => 'El nombre es obligatorio',
-                    ]),
+                    ->helperText('Nombre de la cuenta contable'),
 
                 Select::make('type')
                     ->label('Tipo')
@@ -52,20 +47,26 @@ class AccountingAccountForm
                         'Ingreso' => 'Ingreso',
                         'Gasto' => 'Gasto',
                     ])
-                    ->required()
-                    ->validationMessages([
-                        'required' => 'Seleccione un tipo',
-                    ]),
+                    ->required(),
+
+                // 🔥 NUEVO CAMPO
+                Select::make('normal_balance')
+                    ->label('Naturaleza')
+                    ->options([
+                        'debit' => 'Deudora',
+                        'credit' => 'Acreedora',
+                    ])
+                    ->required(),
 
                 Toggle::make('status')
                     ->label('Cuenta activa')
-                    //->hiddenOn('create')
+                    ->hiddenOn('create')
                     ->afterStateHydrated(
-                        fn($component, $state) =>
+                        fn ($component, $state) =>
                         $component->state($state === 'Activa')
                     )
                     ->dehydrateStateUsing(
-                        fn($state) =>
+                        fn ($state) =>
                         $state ? 'Activa' : 'Inactiva'
                     ),
             ]);

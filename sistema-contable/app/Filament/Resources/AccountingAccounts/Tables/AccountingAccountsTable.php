@@ -38,22 +38,39 @@ class AccountingAccountsTable
                     ->badge()
                     ->sortable(),
 
+                // 🔥 NUEVA COLUMNA
+                TextColumn::make('normal_balance')
+                    ->label('Naturaleza')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) =>
+                        $state === 'debit' ? 'Deudora' : 'Acreedora'
+                    )
+                    ->color(fn ($state) =>
+                        $state === 'debit' ? 'info' : 'warning'
+                    ),
+
+                // 🔥 SALDO DINÁMICO
+                TextColumn::make('saldo')
+                    ->label('Saldo')
+                    ->getStateUsing(fn ($record) => $record->getSaldo())
+                    ->money('USD', true),
+
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn ($state) => $state === 'Activa' ? 'success' : 'danger')
+                    ->color(fn ($state) =>
+                        $state === 'Activa' ? 'success' : 'danger'
+                    )
                     ->sortable(),
 
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime()
-                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('Actualizado')
                     ->dateTime()
-                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -72,6 +89,14 @@ class AccountingAccountsTable
                         'Patrimonio' => 'Patrimonio',
                         'Ingreso' => 'Ingreso',
                         'Gasto' => 'Gasto',
+                    ]),
+
+                // 🔥 NUEVO FILTRO
+                SelectFilter::make('normal_balance')
+                    ->label('Naturaleza')
+                    ->options([
+                        'debit' => 'Deudora',
+                        'credit' => 'Acreedora',
                     ]),
 
                 SelectFilter::make('status')
