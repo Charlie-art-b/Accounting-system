@@ -7,53 +7,53 @@ use Carbon\Carbon;
 
 class ClientesService
 {
-    protected EstadoFinancieroService $estadoService;
+    protected EstadoFinancieroService $statementService;
 
-    public function __construct(EstadoFinancieroService $estadoService)
+    public function __construct(EstadoFinancieroService $statementService)
     {
-        $this->estadoService = $estadoService;
+        $this->statementService = $statementService;
     }
 
     /**
-     * Dashboard financiero básico de un cliente
+     * Get basic financial dashboard for a customer
      */
-    public function dashboardCliente(int $customerId, Carbon $fecha = null): array
+    public function dashboardCliente(int $customerId, Carbon $date = null): array
     {
-        $fecha = $fecha ?? Carbon::now();
+        $date = $date ?? Carbon::now();
 
-        $cliente = Customer::findOrFail($customerId);
+        $customer = Customer::findOrFail($customerId);
 
-        $estado = $this->estadoService
-            ->setCliente($customerId)
-            ->setFechas($fecha->copy()->startOfYear(), $fecha)
-            ->estadoResultados();
+        $statement = $this->statementService
+            ->setCustomer($customerId)
+            ->setDates($date->copy()->startOfYear(), $date)
+            ->incomeStatement();
 
-        $balance = $this->estadoService
-            ->setCliente($customerId)
-            ->setFechas($fecha->copy()->startOfYear(), $fecha)
-            ->balanceGeneral();
+        $balance = $this->statementService
+            ->setCustomer($customerId)
+            ->setDates($date->copy()->startOfYear(), $date)
+            ->balanceSheet();
 
         return [
-            'cliente' => [
-                'id' => $cliente->id,
-                'nombre' => $cliente->name,
-                'identificacion' => $cliente->identification,
-                'tipo' => $cliente->customer_type,
-                'estado' => $cliente->status ? 'Activo' : 'Inactivo',
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'identification' => $customer->identification,
+                'type' => $customer->customer_type,
+                'status' => $customer->status ? 'Active' : 'Inactive',
             ],
 
-            'estado_resultados' => [
-                'ingresos' => $estado['ingresos']['total'] ?? 0,
-                'gastos' => $estado['gastos']['total'] ?? 0,
-                'utilidad_neta' => $estado['utilidad_neta'] ?? 0,
-                'margen_neto' => $estado['margen_neto'] ?? 0,
+            'income_statement' => [
+                'revenues' => $statement['revenues']['total'] ?? 0,
+                'expenses' => $statement['expenses']['total'] ?? 0,
+                'net_income' => $statement['net_income'] ?? 0,
+                'net_margin' => $statement['net_margin'] ?? 0,
             ],
 
-            'balance_general' => [
-                'activos' => $balance['total_activos'] ?? 0,
-                'pasivos' => $balance['pasivos']['total'] ?? 0,
-                'patrimonio' => $balance['patrimonio']['total'] ?? 0,
-                'ecuacion_balanceada' => $balance['ecuacion_balanceada'] ?? false,
+            'balance_sheet' => [
+                'assets' => $balance['total_assets'] ?? 0,
+                'liabilities' => $balance['liabilities']['total'] ?? 0,
+                'equity' => $balance['equity']['total'] ?? 0,
+                'equation_balanced' => $balance['equation_balanced'] ?? false,
             ],
         ];
     }
