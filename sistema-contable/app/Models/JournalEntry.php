@@ -79,6 +79,16 @@ class JournalEntry extends Model
         $this->total_credit = $this->lines->sum(fn ($l) => (float) $l->credit);
     }
 
+    public function getTotalDebitAttribute()
+    {
+        return $this->lines()->sum('debit');
+    }
+
+    public function getTotalCreditAttribute()
+    {
+        return $this->lines()->sum('credit');
+    }
+
     protected static function booted(): void
     {
         static::saving(function (self $entry) {

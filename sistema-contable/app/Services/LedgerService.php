@@ -19,6 +19,12 @@ class LedgerService
 
         $entry->loadMissing('lines');
 
+         if ($entry->lines->isEmpty()) {
+            throw ValidationException::withMessages([
+                'lines' => 'El asiento no tiene líneas.',
+            ]);
+        }
+
         $debit = 0.0;
         $credit = 0.0;
 
@@ -27,11 +33,28 @@ class LedgerService
             $credit += (float) $line->credit;
         }
 
-        if (round($debit, 2) !== round($credit, 2)) {
+        $debit = round($debit, 2);
+        $credit = round($credit, 2);
+
+         //No permitir asiento en cero
+        if ($debit <= 0 || $credit <= 0) {
+            throw ValidationException::withMessages([
+                'lines' => 'El asiento debe tener montos mayores a cero.',
+            ]);
+        }
+
+        //No permitir desbalance
+        if ($debit !== $credit) {
             throw ValidationException::withMessages([
                 'lines' => 'El asiento no está balanceado.',
             ]);
         }
+
+        /*if (round($debit, 2) !== round($credit, 2)) {
+            throw ValidationException::withMessages([
+                'lines' => 'El asiento no está balanceado.',
+            ]);
+        }*/
 
         return DB::transaction(function () use ($entry, $user, $debit, $credit) {
 

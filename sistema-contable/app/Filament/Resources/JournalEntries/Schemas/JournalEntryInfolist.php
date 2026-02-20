@@ -17,8 +17,8 @@ class JournalEntryInfolist
                 ->label('Información del asiento')
                 ->columns(2)
                 ->schema([
-                    //TextEntry::make('id')
-                    //    ->label('ID'),
+                    TextEntry::make('id')
+                        ->label('Código de asiento'),
 
                     TextEntry::make('customer.name')
                         ->label('Cliente'),
@@ -39,7 +39,7 @@ class JournalEntryInfolist
                     TextEntry::make('posted_at')
                         ->label('Posteado')
                         ->dateTime()
-                        ->placeholder('Draft'),
+                        ->placeholder('BORRADOR'),
 
                     TextEntry::make('postedBy.name')
                         ->label('Posteado por')

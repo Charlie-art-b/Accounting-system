@@ -48,12 +48,14 @@ class JournalEntriesTable
                 TextColumn::make('total_debit')
                     ->label('Débitos')
                     ->numeric(decimalPlaces: 2)
-                    ->sortable(),
+                    ->sortable()
+                    ->money('CRC'),
 
                 TextColumn::make('total_credit')
                     ->label('Créditos')
                     ->numeric(decimalPlaces: 2)
-                    ->sortable(),
+                    ->sortable()
+                    ->money('CRC'),
 
                 TextColumn::make('posted_at')
                     ->label('Posteado')
