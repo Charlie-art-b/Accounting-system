@@ -6,6 +6,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rule;
 
 class AccountingAccountForm
 {
@@ -14,16 +15,24 @@ class AccountingAccountForm
         return $schema
             ->components([
 
+                // Cliente (dropdown normal sin buscador)
+                Select::make('customer_id')
+                    ->label('Cliente')
+                    ->relationship('customer', 'name')
+                    ->preload() // 👈 Carga todos al abrir
+                    ->required(),
+
+                // Código único por cliente
                 TextInput::make('code')
                     ->label('Código')
                     ->required()
-                    ->numeric()
-                    ->unique(ignoreRecord: true)
-                    ->helperText('Ingrese solo números')
-                    ->validationMessages([
-                        'required' => 'El código es obligatorio',
-                        'numeric' => 'Debe ser un número',
-                    ]),
+                    ->maxLength(50)
+                    ->rule(function ($get, $record) {
+                        return Rule::unique('accounting_accounts', 'code')
+                            ->where('customer_id', $get('customer_id'))
+                            ->ignore($record);
+                    })
+                    ->helperText('El código debe ser único por cliente'),
 
                 TextInput::make('name')
                     ->label('Nombre')
@@ -48,14 +57,15 @@ class AccountingAccountForm
                         'required' => 'Seleccione un tipo',
                     ]),
 
-                // 👉 Toggle solo en edición
                 Toggle::make('status')
                     ->label('Cuenta activa')
                     //->hiddenOn('create')
-                    ->afterStateHydrated(fn ($component, $state) =>
+                    ->afterStateHydrated(
+                        fn($component, $state) =>
                         $component->state($state === 'Activa')
                     )
-                    ->dehydrateStateUsing(fn ($state) =>
+                    ->dehydrateStateUsing(
+                        fn($state) =>
                         $state ? 'Activa' : 'Inactiva'
                     ),
             ]);

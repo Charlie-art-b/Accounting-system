@@ -16,6 +16,7 @@ class JournalEntry extends Model
     protected $table = 'journal_entries';
 
     protected $fillable = [
+        'customer_id',
         'journal_type',
         'description',
         'reference',
@@ -38,6 +39,11 @@ class JournalEntry extends Model
         'metadata' => 'array',
         'is_reversal' => 'boolean',
     ];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function lines(): HasMany
     {
@@ -80,8 +86,10 @@ class JournalEntry extends Model
             $entry->total_debit = max(0, (float) ($entry->total_debit ?? 0));
             $entry->total_credit = max(0, (float) ($entry->total_credit ?? 0));
 
-            // If lines are loaded, ensure totals match lines
-            if ($entry->relationLoaded('lines')) {
+            // solo exigir balance cuando se va a postear (posted_at tiene valor)
+            if (! is_null($entry->posted_at)) {
+                $entry->loadMissing('lines');
+
                 $debits = $entry->lines->sum(fn ($l) => (float) $l->debit);
                 $credits = $entry->lines->sum(fn ($l) => (float) $l->credit);
 
@@ -90,6 +98,17 @@ class JournalEntry extends Model
                         'lines' => 'Las líneas del asiento no están balanceadas (debits != credits).',
                     ]);
                 }
+
+            // If lines are loaded, ensure totals match lines
+           /* if ($entry->relationLoaded('lines')) {
+                $debits = $entry->lines->sum(fn ($l) => (float) $l->debit);
+                $credits = $entry->lines->sum(fn ($l) => (float) $l->credit);
+
+                if (bccomp((string) $debits, (string) $credits, 2) !== 0) {
+                    throw ValidationException::withMessages([
+                        'lines' => 'Las líneas del asiento no están balanceadas (debits != credits).',
+                    ]);
+                }*/
 
                 $entry->total_debit = $debits;
                 $entry->total_credit = $credits;
