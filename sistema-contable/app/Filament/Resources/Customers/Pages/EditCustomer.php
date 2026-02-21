@@ -7,10 +7,25 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 
 class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Cambios guardados!')
+            ->body('Los cambios del cliente se han guardado correctamente.');
+    }
+    
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
 
     protected function getHeaderActions(): array
     {
@@ -23,11 +38,34 @@ class EditCustomer extends EditRecord
             ->tooltip('Volver a la lista'),
             
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->before(function (DeleteAction $action) {
+                    $pendingAccounts = $this->record->accountReceivables()
+                        ->whereIn('status', ['pending', 'partial'])
+                        ->count();
+
+                    if ($pendingAccounts > 0) {
+                        Notification::make()
+                            ->title('NO SE PUEDE ELIMINAR')
+                            ->body("Este cliente tiene {$pendingAccounts} cuenta(s) por cobrar con saldo pendiente. Solo se pueden eliminar clientes sin deudas pendientes.")
+                            ->danger()
+                            ->send();
+
+                        throw new Halt();
+                    }
+                })
+                ->successNotification(
+                    Notification::make()
+                        ->success()
+                        ->title('¡Cliente eliminado!')
+                        ->body('El cliente ha sido eliminado correctamente.')
+                )
+                ->after(function () {
+                    return redirect()->to($this->getResource()::getUrl('index'));
+                }),
         ];
     }
 
-    //Mensaje de confirmación al editar un cliente
     protected function getFormActions(): array
     {
         return [

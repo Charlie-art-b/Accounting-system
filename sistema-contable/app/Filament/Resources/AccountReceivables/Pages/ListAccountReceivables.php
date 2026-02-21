@@ -14,7 +14,6 @@ class ListAccountReceivables extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            
             CreateAction::make()
                 ->label('Crear cuenta por cobrar')
                 ->icon('heroicon-o-plus')

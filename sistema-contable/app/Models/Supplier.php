@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class Supplier extends Model
 {
@@ -53,6 +54,28 @@ class Supplier extends Model
         'activo' => 'Activo',
         'inactivo' => 'Inactivo',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $supplier): void {
+            $accountsWithPendingBalance = $supplier->cuentasPorPagar()
+                ->whereIn('status', ['pending', 'partial'])
+                ->count();
+
+            if ($accountsWithPendingBalance > 0) {
+                throw ValidationException::withMessages([
+                    'nombre_razon_social' => "No se puede eliminar el proveedor. Tiene {$accountsWithPendingBalance} cuenta(s) por pagar con saldo pendiente.",
+                ]);
+            }
+
+            $productsCount = $supplier->productos()->count();
+            if ($productsCount > 0) {
+                throw ValidationException::withMessages([
+                    'nombre_razon_social' => "No se puede eliminar el proveedor. Tiene {$productsCount} producto(s) asociado(s).",
+                ]);
+            }
+        });
+    }
 
     /**
      * Mutadores: Convertir a minúsculas el correo
@@ -148,7 +171,7 @@ class Supplier extends Model
      */
     public function cuentasPorPagar()
     {
-        return $this->hasMany(CuentaPorPagar::class, 'supplier_id');
+        return $this->hasMany(AccountPayable::class, 'supplier_id');
     }
 
     /**
@@ -156,7 +179,7 @@ class Supplier extends Model
      */
     public function productos()
     {
-        return $this->hasMany(Producto::class, 'supplier_id');
+        return $this->hasMany(Product::class, 'supplier_id');
     }
 
     /**

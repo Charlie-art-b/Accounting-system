@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Validation\ValidationException;
 use App\Models\Supplier;
 
 class Customer extends Model
@@ -29,6 +30,22 @@ class Customer extends Model
         'customer_type' => 'string',
         'status' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $customer): void {
+            // Verificar si tiene cuentas por cobrar con saldo pendiente
+            $accountsWithPendingBalance = $customer->accountReceivables()
+                ->whereIn('status', ['pending', 'partial'])
+                ->count();
+
+            if ($accountsWithPendingBalance > 0) {
+                throw ValidationException::withMessages([
+                    'name' => "No se puede eliminar el cliente. Tiene {$accountsWithPendingBalance} cuenta(s) por cobrar con saldo pendiente.",
+                ]);
+            }
+        });
+    }
 
     protected function email(): Attribute
     {
@@ -61,5 +78,10 @@ class Customer extends Model
     public function accountingAccounts()
     {
         return $this->hasMany(AccountingAccount::class);
+    }
+
+    public function accountReceivables()
+    {
+        return $this->hasMany(AccountReceivable::class);
     }
 }

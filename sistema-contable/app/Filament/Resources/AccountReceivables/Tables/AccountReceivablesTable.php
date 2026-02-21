@@ -150,15 +150,26 @@ class AccountReceivablesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {
+                            $blockedCount = 0;
+                            $blockedReasons = [];
 
-                            $blocked = $records->filter(
-                                fn ($r) => in_array($r->status, ['pending', 'partial'], true)
-                            );
+                            foreach ($records as $account) {
+                                if (in_array($account->status, ['pending', 'partial'], true)) {
+                                    $blockedCount++;
+                                    $statusLabel = match($account->status) {
+                                        'pending' => 'Pendiente',
+                                        'partial' => 'Parcial',
+                                        default => $account->status,
+                                    };
+                                    $blockedReasons[] = "{$account->invoice_number} ({$account->customer->name}): Estado {$statusLabel}";
+                                }
+                            }
 
-                            if ($blocked->isNotEmpty()) {
+                            if ($blockedCount > 0) {
+                                $reasonsList = implode("\n• ", $blockedReasons);
                                 Notification::make()
                                     ->title('NO SE PUEDE ELIMINAR')
-                                    ->body('Seleccionaste cuentas en estado Pendiente o Parcial. Solo se pueden eliminar cuentas ya Pagadas.')
+                                    ->body("No se pueden eliminar {$blockedCount} cuenta(s):\n\n• {$reasonsList}\n\nSolo se pueden eliminar cuentas ya Pagadas.")
                                     ->danger()
                                     ->send();
 
