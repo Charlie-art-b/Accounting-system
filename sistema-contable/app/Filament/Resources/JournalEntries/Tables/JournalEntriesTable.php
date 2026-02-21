@@ -16,6 +16,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\DatePicker;
 
 
 class JournalEntriesTable
@@ -84,8 +85,32 @@ class JournalEntriesTable
                 SelectFilter::make('customer_id')
                     ->label('Cliente')
                     ->relationship('customer', 'name')
-                    ->searchable()
                     ->preload(),
+
+                SelectFilter::make('journal_type')
+                    ->label('Tipo de asiento')
+                    ->options([
+                        'general' => 'General',
+                        'adjustment' => 'Ajuste',
+                        'closing' => 'Cierre',
+                        'reversal' => 'Reverso',
+                    ])
+                    ->preload(),
+                Filter::make('posted_date_range')
+                    ->label('Fecha de posteo')
+                    ->form([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if ($data['from']) {
+                            $query->whereDate('posted_at', '>=', $data['from']);
+                        }
+                        if ($data['until']) {
+                            $query->whereDate('posted_at', '<=', $data['until']);
+                        }
+                    }),
+                
             ])
             ->actions([
                 ViewAction::make(),
