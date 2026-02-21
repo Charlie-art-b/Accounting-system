@@ -71,7 +71,7 @@ class LedgerService
 
     public function reverseJournalEntry(
         JournalEntry $entry,
-        User $user,
+        User $user = null,
         ?string $memo = null,
         bool $autoPost = true
     ): JournalEntry {

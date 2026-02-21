@@ -14,6 +14,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 
 
 class JournalEntriesTable
@@ -91,9 +93,14 @@ class JournalEntriesTable
                 EditAction::make()
                     ->visible(fn ($record) => $record->posted_at === null),
 
-                DeleteAction::make()
-                    ->visible(fn ($record) => $record->posted_at === null),
+                //DeleteAction::make()
+                    //->visible(fn ($record) => $record->posted_at === null),
             ])
-            ->defaultSort('id', 'desc');
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('id', 'asc');
     }
 }
