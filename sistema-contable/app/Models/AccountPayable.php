@@ -37,9 +37,9 @@ class AccountPayable extends Model
     protected static function booted(): void
     {
         static::deleting(function (self $accountPayable): void {
-            if ($accountPayable->status !== 'voided') {
+            if (!in_array($accountPayable->status, ['voided', 'paid'])) {
                 throw ValidationException::withMessages([
-                    'status' => 'Solo se pueden eliminar cuentas por pagar canceladas (voided).',
+                    'status' => 'Solo se pueden eliminar cuentas en estado Pagado o Anulado.',
                 ]);
             }
         });
@@ -50,9 +50,13 @@ class AccountPayable extends Model
                 && $accountPayable->getOriginal('status') === 'paid'
                 && $accountPayable->isDirty()
             ) {
-                throw ValidationException::withMessages([
-                    'status' => 'No se permiten ediciones ni pagos adicionales cuando la cuenta está pagada.',
-                ]);
+                // Permitir cambio de Pagado a Anulado, bloquear otros cambios
+                $newStatus = $accountPayable->status;
+                if ($newStatus !== 'voided') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Una cuenta Pagada solo puede cambiar a estado Anulado.',
+                    ]);
+                }
             }
 
             $total = (float) ($accountPayable->total_amount ?? 0);

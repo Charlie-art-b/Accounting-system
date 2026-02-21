@@ -75,6 +75,7 @@ class AccountPayableForm
                             ->native(false)
                             ->displayFormat('d/m/Y')
                             ->default(now())
+                            ->maxDate(now())
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $paymentTerms = $get('payment_terms');
@@ -107,28 +108,32 @@ class AccountPayableForm
                         
                         TextInput::make('payment_period')
                             ->label('Período de Pago (días)')
-                            ->numeric()
-                            ->minValue(1)
-                            ->maxValue(365)
-                            ->requiredIf('payment_terms', 'credit')
+                            ->readOnly()
+                            ->dehydrated(false)
                             ->visible(fn ($get) => $get('payment_terms') === 'credit')
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $issueDate = $get('issue_date');
-                                if ($issueDate && $state) {
-                                    $dueDate = \Carbon\Carbon::parse($issueDate)->addDays($state);
-                                    $set('due_date', $dueDate->format('Y-m-d'));
-                                }
-                            })
-                            ->helperText('Días de crédito otorgados'),
+                            ->helperText('Se calcula automáticamente desde la fecha de vencimiento'),
                         
                         DatePicker::make('due_date')
                             ->label('Fecha de Vencimiento')
                             ->required()
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->after('issue_date')
-                            ->helperText('Se calcula automáticamente según términos de pago'),
+                            ->minDate(fn (callable $get) => $get('issue_date'))
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                if (! $state) {
+                                    return;
+                                }
+
+                                $paymentTerms = $get('payment_terms');
+                                $issueDate = $get('issue_date');
+
+                                if ($paymentTerms === 'credit' && $issueDate) {
+                                    $days = \Carbon\Carbon::parse($issueDate)->diffInDays(\Carbon\Carbon::parse($state));
+                                    $set('payment_period', $days > 0 ? $days : 0);
+                                }
+                            })
+                            ->helperText('Debe ser igual o posterior a la fecha de emisión'),
                     ])
                     ->columns(2),
 
@@ -168,22 +173,51 @@ class AccountPayableForm
                             ->label('Fecha de Pago')
                             ->native(false)
                             ->displayFormat('d/m/Y')
+                            ->minDate(fn (callable $get) => $get('issue_date'))
                             ->maxDate(now())
-                            ->helperText('Opcional: fecha del último pago registrado'),
+                            ->helperText('Opcional: debe ser igual o posterior a la fecha de emisión'),
                         
                         Select::make('status')
                             ->label('Estado')
-                            ->options([
-                                'pending' => 'Pendiente',
-                                'partial' => 'Parcial',
-                                'paid' => 'Pagado',
-                                'voided' => 'Anulado',
-                            ])
+                            ->options(function (callable $get, $record): array {
+                                $total = (float) ($get('total_amount') ?? 0);
+                                $paid = (float) ($get('paid_amount') ?? 0);
+                                $currentStatus = $record?->status;
+
+                                // Si la cuenta está en estado Pagado, solo permitir cambio a Anulado
+                                if ($currentStatus === 'paid') {
+                                    return [
+                                        'paid' => 'Pagado',
+                                        'voided' => 'Anulado',
+                                    ];
+                                }
+
+                                // Para otros estados (Pendiente, Parcial), mostrar opciones normales
+                                $options = [
+                                    'pending' => 'Pendiente',
+                                    'partial' => 'Parcial',
+                                    'voided' => 'Anulado',
+                                ];
+
+                                if ($total > 0 && $paid === $total) {
+                                    $options['paid'] = 'Pagado';
+                                }
+
+                                return $options;
+                            })
                             ->default('pending')
                             ->required()
                             ->reactive()
-                            ->helperText('El estado se actualiza automáticamente según los pagos')
-                            ->disabled(fn ($record) => $record?->status === 'paid'),
+                            ->helperText('Si está Pagado, solo se puede cambiar a Anulado')
+                            ->rules([
+                                function ($get, $record) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($get, $record) {
+                                        if ($record?->status === 'paid' && !in_array($value, ['paid', 'voided'])) {
+                                            $fail('Cuando una cuenta está Pagada, solo puede cambiar a estado Anulado.');
+                                        }
+                                    };
+                                }
+                            ]),
                     ])
                     ->columns(2),
             ]);

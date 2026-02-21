@@ -18,7 +18,8 @@ class ViewAccountReceivable extends ViewRecord
                 ->label('Editar')
                 ->icon('heroicon-o-pencil-square')
                 ->color('primary')
-                ->keyBindings(['mod+e']),
+                ->keyBindings(['mod+e'])
+                ->visible(fn () => $this->record->status !== 'paid'),
             Action::make('back')
                 ->label('')
                 ->icon('heroicon-o-x-mark')

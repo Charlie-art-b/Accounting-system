@@ -42,6 +42,11 @@ class AccountPayablesTable
                     ->sortable(),
                 TextColumn::make('payment_terms')
                     ->label('Términos de Pago')
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'cash' => 'Efectivo',
+                        'credit' => 'Crédito',
+                        default => $state,
+                    })
                     ->badge(),
                 TextColumn::make('payment_period')
                     ->label('Período de Pago')
@@ -53,6 +58,13 @@ class AccountPayablesTable
                     ->sortable(),
                 TextColumn::make('type')
                     ->label('Tipo')
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'invoice' => 'Factura',
+                        'receipt' => 'Recibo',
+                        'debit_note' => 'Nota de débito',
+                        'other' => 'Otro',
+                        default => $state,
+                    })
                     ->badge(),
                 TextColumn::make('total_amount')
                     ->label('Monto Total')
@@ -73,7 +85,20 @@ class AccountPayablesTable
                     ->sortable(),
                 TextColumn::make('status')
                     ->label('Estado')
-                    ->badge(),
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'pending' => 'Pendiente',
+                        'partial' => 'Parcial',
+                        'paid' => 'Pagado',
+                        'voided' => 'Anulado',
+                        default => $state,
+                    })
+                    ->badge()
+                    ->colors([
+                        'danger' => 'pending',
+                        'warning' => 'partial',
+                        'success' => 'paid',
+                        'gray' => 'voided',
+                    ]),
                 TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime()
@@ -386,20 +411,27 @@ class AccountPayablesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {
-                            $blocked = $records->filter(
-                                fn ($r) => in_array($r->status, ['pending', 'partial'], true)
+                            $notDeletable = $records->filter(
+                                fn ($r) => !in_array($r->status, ['voided', 'paid'])
                             );
 
-                            if ($blocked->isNotEmpty()) {
+                            if ($notDeletable->isNotEmpty()) {
+                                $count = $notDeletable->count();
                                 Notification::make()
                                     ->title('NO SE PUEDE ELIMINAR')
-                                    ->body('Seleccionaste cuentas en estado Pendiente o Parcial. Solo se pueden eliminar cuentas ya Pagadas.')
+                                    ->body("Seleccionaste {$count} cuenta(s) que no pueden ser eliminadas. Solo se pueden eliminar cuentas en estado Pagado o Anulado.")
                                     ->danger()
                                     ->send();
 
                                 $action->halt();
                             }
-                        }),
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('¡Cuenta(s) eliminada(s)!')
+                                ->body('La(s) cuenta(s) por pagar han sido eliminada(s) correctamente.')
+                        ),
                 ]),
             ])
             ->defaultSort('due_date', 'asc')
