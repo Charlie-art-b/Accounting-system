@@ -6,11 +6,10 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 
 class SuppliersTable
 {
@@ -20,16 +19,39 @@ class SuppliersTable
         ->defaultSort('nombre_razon_social', 'asc')//orden alfabetico por nombre de proveedor
             ->columns([
                 TextColumn::make('tipo_proveedor')
+                    ->label('Tipo')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'persona' => 'Persona Natural',
+                        'empresa' => 'Empresa',
+                        default => $state,
+                    })
                     ->searchable(),
                 TextColumn::make('nombre_razon_social')
-                    ->searchable(),
+                    ->label('Nombre / Razón Social')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('identificacion')
+                    ->label('Identificación')
                     ->searchable(),
                 TextColumn::make('correo')
+                    ->label('Correo Electrónico')
                     ->searchable(),
                 TextColumn::make('telefono')
+                    ->label('Teléfono')
                     ->searchable(),
                 TextColumn::make('estado')
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'activo' => 'Activo',
+                        'inactivo' => 'Inactivo',
+                        default => $state,
+                    })
+                    ->colors([
+                        'success' => 'activo',
+                        'danger' => 'inactivo',
+                    ])
                     ->searchable(),
                 TextColumn::make('customers_count')
                     ->label('Clientes')
@@ -39,10 +61,12 @@ class SuppliersTable
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('created_at')
+                    ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -54,10 +78,12 @@ class SuppliersTable
                         'persona' => 'Persona Natural',
                         'empresa' => 'Empresa',
                     ]),
-                TernaryFilter::make('estado')
+                SelectFilter::make('estado')
                     ->label('Estado')
-                    ->trueLabel('Activo')
-                    ->falseLabel('Inactivo'),
+                    ->options([
+                        'activo' => 'Activo',
+                        'inactivo' => 'Inactivo',
+                    ]),
                 SelectFilter::make('customers')
                     ->relationship('customers', 'name')
                     ->label('Cliente'),
@@ -68,7 +94,48 @@ class SuppliersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, DeleteBulkAction $action) {
+                            $blockedCount = 0;
+                            $blockedReasons = [];
+
+                            foreach ($records as $supplier) {
+                                // Verificar cuentas por pagar con saldo pendiente
+                                $pendingAccounts = $supplier->cuentasPorPagar()
+                                    ->whereIn('status', ['pending', 'partial'])
+                                    ->count();
+
+                                if ($pendingAccounts > 0) {
+                                    $blockedCount++;
+                                    $blockedReasons[] = "{$supplier->nombre_razon_social}: {$pendingAccounts} cuenta(s) por pagar pendiente(s)";
+                                    continue;
+                                }
+
+                                // Verificar productos
+                                $productsCount = $supplier->productos()->count();
+                                if ($productsCount > 0) {
+                                    $blockedCount++;
+                                    $blockedReasons[] = "{$supplier->nombre_razon_social}: {$productsCount} producto(s) asociado(s)";
+                                }
+                            }
+
+                            if ($blockedCount > 0) {
+                                $reasonsList = implode("\n• ", $blockedReasons);
+                                Notification::make()
+                                    ->danger()
+                                    ->title('NO SE PUEDE ELIMINAR')
+                                    ->body("No se pueden eliminar {$blockedCount} proveedor(es):\n\n• {$reasonsList}")
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('¡Proveedor(es) eliminado(s)!')
+                                ->body('Los proveedores seleccionados han sido eliminados correctamente.')
+                        ),
                 ]),
             ]);
     }

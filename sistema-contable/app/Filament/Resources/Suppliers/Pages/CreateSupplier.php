@@ -5,10 +5,19 @@ namespace App\Filament\Resources\Suppliers\Pages;
 use App\Filament\Resources\Suppliers\SupplierResource;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 
 class CreateSupplier extends CreateRecord
 {
     protected static string $resource = SupplierResource::class;
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Proveedor creado!')
+            ->body('El proveedor se ha creado correctamente.');
+    }
 
     protected function getFormActions(): array
     {
@@ -33,5 +42,17 @@ class CreateSupplier extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
+        ];
     }
 }

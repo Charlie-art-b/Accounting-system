@@ -411,15 +411,26 @@ class AccountPayablesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {
-                            $notDeletable = $records->filter(
-                                fn ($r) => !in_array($r->status, ['voided', 'paid'])
-                            );
+                            $blockedCount = 0;
+                            $blockedReasons = [];
 
-                            if ($notDeletable->isNotEmpty()) {
-                                $count = $notDeletable->count();
+                            foreach ($records as $account) {
+                                if (!in_array($account->status, ['voided', 'paid'])) {
+                                    $blockedCount++;
+                                    $statusLabel = match($account->status) {
+                                        'pending' => 'Pendiente',
+                                        'partial' => 'Parcial',
+                                        default => $account->status,
+                                    };
+                                    $blockedReasons[] = "{$account->document_number} ({$account->supplier->nombre_razon_social}): Estado {$statusLabel}";
+                                }
+                            }
+
+                            if ($blockedCount > 0) {
+                                $reasonsList = implode("\n• ", $blockedReasons);
                                 Notification::make()
                                     ->title('NO SE PUEDE ELIMINAR')
-                                    ->body("Seleccionaste {$count} cuenta(s) que no pueden ser eliminadas. Solo se pueden eliminar cuentas en estado Pagado o Anulado.")
+                                    ->body("No se pueden eliminar {$blockedCount} cuenta(s):\n\n• {$reasonsList}\n\nSolo se pueden eliminar cuentas en estado Pagado o Anulado.")
                                     ->danger()
                                     ->send();
 

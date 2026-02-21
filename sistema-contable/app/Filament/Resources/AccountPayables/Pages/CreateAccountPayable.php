@@ -37,7 +37,17 @@ class CreateAccountPayable extends CreateRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
         ];
+    }
 
-        
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
+        ];
     }
 }
