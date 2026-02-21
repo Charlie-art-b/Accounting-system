@@ -10,7 +10,6 @@ class CreateCustomer extends CreateRecord
 {
     protected static string $resource = CustomerResource::class;
 
-    //Mensaje de confirmación al crear un cliente
     protected function getFormActions(): array
     {
         return [

@@ -143,7 +143,8 @@ class AccountReceivablesTable
 
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn ($record) => $record->status !== 'paid'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -163,7 +164,13 @@ class AccountReceivablesTable
 
                                 $action->halt();
                             }
-                        }),
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('¡Cuenta(s) eliminada(s)!')
+                                ->body('La(s) cuenta(s) por cobrar han sido eliminada(s) correctamente.')
+                        ),
                 ]),
             ]);
     }

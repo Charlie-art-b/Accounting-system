@@ -5,12 +5,22 @@ use Filament\Actions\Action;
 
 use App\Filament\Resources\AccountReceivables\AccountReceivableResource;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Notifications\Notification;
+use App\Models\CollectionManagement;
 
 class CreateAccountReceivable extends CreateRecord
 {
     protected static string $resource = AccountReceivableResource::class;
     
-     protected function getFormActions(): array
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Cuenta por cobrar creada!')
+            ->body('La cuenta por cobrar se ha creado correctamente.');
+    }
+
+    protected function getFormActions(): array
     {
         return [
             Action::make('create')
@@ -31,11 +41,12 @@ class CreateAccountReceivable extends CreateRecord
 
         
     }
+    
     protected function afterCreate(): void
     {
         $ar = $this->record;
 
-        \App\Models\CollectionManagement::firstOrCreate(
+        CollectionManagement::firstOrCreate(
             ['account_receivable_id' => $ar->id],
             [
                 'customer_id' => $ar->customer_id,

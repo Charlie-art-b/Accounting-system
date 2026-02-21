@@ -7,10 +7,24 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 
 class EditAccountReceivable extends EditRecord
 {
     protected static string $resource = AccountReceivableResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Cambios guardados!')
+            ->body('Los cambios de la cuenta por cobrar se han guardado correctamente.');
+    }
 
     protected function getHeaderActions(): array
     {
@@ -22,7 +36,18 @@ class EditAccountReceivable extends EditRecord
             ->url($this->getResource()::getUrl('index'))
             ->tooltip('Volver a la lista'), 
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->before(function (DeleteAction $action) {
+                    if (in_array($this->record->status, ['pending', 'partial'], true)) {
+                        Notification::make()
+                            ->title('NO SE PUEDE ELIMINAR')
+                            ->body('Solo se pueden eliminar cuentas por cobrar en estado Pagado.')
+                            ->danger()
+                            ->send();
+
+                        $action->halt();
+                    }
+                }),
         ];
     }
     protected function getFormActions(): array
