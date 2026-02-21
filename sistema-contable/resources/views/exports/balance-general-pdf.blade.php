@@ -1,208 +1,234 @@
-<!-- filepath: resources/views/exports/balance-general-pdf.blade.php -->
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Balance General</title>
+    <meta charset="UTF-8">
+    <title>Estado de Situación Financiera</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
+            font-size: 11px;
+            color: #000;
         }
-        h1 {
+
+        .container {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .header {
             text-align: center;
-            font-size: 18px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 8px;
         }
-        .fecha {
-            text-align: center;
-            font-size: 12px;
-            margin-bottom: 20px;
-            color: #666;
+
+        .header strong {
+            display: block;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
-        th {
-            background-color: #f0f0f0;
-            padding: 10px;
+
+        th, td {
+            padding: 5px;
+        }
+
+        thead th {
+            border-bottom: 1px solid #000;
+            font-weight: bold;
+        }
+
+        .left {
             text-align: left;
-            border: 1px solid #ddd;
-            font-weight: bold;
         }
-        td {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
+
+        .center {
+            text-align: center;
         }
-        .section-header {
-            background-color: #e8e8e8;
-            font-weight: bold;
-            padding: 10px;
-        }
-        .subtotal {
-            background-color: #f9f9f9;
-            font-weight: bold;
-        }
-        .total {
-            background-color: #d4d4d4;
-            font-weight: bold;
-            border-top: 2px solid #333;
-        }
-        .monto {
+
+        .right {
             text-align: right;
         }
-        .validation {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 12px;
+
+        .section {
+            font-weight: bold;
+            padding-top: 8px;
         }
-        .success {
-            color: green;
+
+        .subtotal {
+            border-top: 1px solid #000;
+            font-weight: bold;
         }
-        .error {
-            color: red;
+
+        .total {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            font-weight: bold;
+        }
+
+        .indent {
+            padding-left: 20px;
         }
     </style>
 </head>
+
 <body>
-    <h1>BALANCE GENERAL</h1>
-    <div class="fecha">Al {{ \Carbon\Carbon::parse($fecha)->format('d de F de Y') }}</div>
+<div class="container">
+
+    <!-- ENCABEZADO -->
+    <div class="header">
+        <h1>TRANSPORTES Y SERVICIOS PEREZ Y ORTIZ DEL ATLANTICO S.A.</h1>
+        <strong>Cédula 3-101-752653</strong>
+        <strong>ESTADO DE SITUACIÓN FINANCIERA</strong>
+        <strong>AL 31 DE ENERO DEL 2026</strong>
+    </div>
 
     <table>
         <thead>
             <tr>
-                <th>CÓDIGO</th>
-                <th>CUENTA</th>
-                <th class="monto">SALDO (₡)</th>
+                <th class="left">Descripción</th>
+                <th class="center">Notas</th>
+                <th class="right">31-ene-26</th>
+                <th class="right">31-dic-25</th>
             </tr>
         </thead>
+
         <tbody>
-            {{-- Activos Circulantes --}}
-            <tr class="section-header">
-                <td colspan="3">ACTIVOS CIRCULANTES</td>
-            </tr>
-            @forelse($data['detalles'] as $detalle)
-                @if($detalle['tipo'] === 'Activo' && isset($detalle['es_circulante']) && $detalle['es_circulante'])
-                    <tr>
-                        <td>{{ $detalle['codigo'] }}</td>
-                        <td>{{ $detalle['nombre'] }}</td>
-                        <td class="monto">{{ number_format($detalle['saldo'], 2, ',', '.') }}</td>
-                    </tr>
-                @endif
-            @empty
-            @endforelse
-            <tr class="subtotal">
-                <td colspan="2">Subtotal Activos Circulantes</td>
-                <td class="monto">₡ {{ number_format($data['activos']['activos_circulantes'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
 
-            {{-- Activos No Circulantes --}}
-            <tr class="section-header">
-                <td colspan="3">ACTIVOS NO CIRCULANTES</td>
-            </tr>
-            @forelse($data['detalles'] as $detalle)
-                @if($detalle['tipo'] === 'Activo' && isset($detalle['es_circulante']) && !$detalle['es_circulante'])
-                    <tr>
-                        <td>{{ $detalle['codigo'] }}</td>
-                        <td>{{ $detalle['nombre'] }}</td>
-                        <td class="monto">{{ number_format($detalle['saldo'], 2, ',', '.') }}</td>
-                    </tr>
-                @endif
-            @empty
-            @endforelse
-            <tr class="subtotal">
-                <td colspan="2">Subtotal Activos No Circulantes</td>
-                <td class="monto">₡ {{ number_format($data['activos']['activos_no_circulantes'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
+        @php
+            $activosCorrientes = 0;
+            $activosNoCorrientes = 0;
+            $pasivosCorrientes = 0;
+            $pasivosNoCorrientes = 0;
+            $totalPatrimonio = 0;
 
-            {{-- Total Activos --}}
-            <tr class="total">
-                <td colspan="2">TOTAL ACTIVOS</td>
-                <td class="monto">₡ {{ number_format($data['total_activos'], 2, ',', '.') }}</td>
-            </tr>
+            $activosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_corriente');
+            $activosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_no_corriente');
+            $pasivosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_corriente');
+            $pasivosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_no_corriente');
+            $patrimonioList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Patrimonio');
+        @endphp
 
-            {{-- Pasivos Circulantes --}}
-            <tr class="section-header">
-                <td colspan="3">PASIVOS CIRCULANTES</td>
-            </tr>
-            @forelse($data['detalles'] as $detalle)
-                @if($detalle['tipo'] === 'Pasivo' && isset($detalle['es_circulante']) && $detalle['es_circulante'])
-                    <tr>
-                        <td>{{ $detalle['codigo'] }}</td>
-                        <td>{{ $detalle['nombre'] }}</td>
-                        <td class="monto">{{ number_format($detalle['saldo'], 2, ',', '.') }}</td>
-                    </tr>
-                @endif
-            @empty
-            @endforelse
-            <tr class="subtotal">
-                <td colspan="2">Subtotal Pasivos Circulantes</td>
-                <td class="monto">₡ {{ number_format($data['pasivos']['pasivos_circulantes'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
+        <!-- ACTIVOS -->
+        <tr><td colspan="4" class="section">ACTIVOS</td></tr>
+        <tr><td colspan="4" class="section">ACTIVOS CORRIENTES</td></tr>
 
-            {{-- Pasivos No Circulantes --}}
-            <tr class="section-header">
-                <td colspan="3">PASIVOS NO CIRCULANTES</td>
+        @foreach($activosCorrientesList as $detalle)
+            <tr>
+                <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
+                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
+                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
             </tr>
-            @forelse($data['detalles'] as $detalle)
-                @if($detalle['tipo'] === 'Pasivo' && isset($detalle['es_circulante']) && !$detalle['es_circulante'])
-                    <tr>
-                        <td>{{ $detalle['codigo'] }}</td>
-                        <td>{{ $detalle['nombre'] }}</td>
-                        <td class="monto">{{ number_format($detalle['saldo'], 2, ',', '.') }}</td>
-                    </tr>
-                @endif
-            @empty
-            @endforelse
-            <tr class="subtotal">
-                <td colspan="2">Subtotal Pasivos No Circulantes</td>
-                <td class="monto">₡ {{ number_format($data['pasivos']['pasivos_no_circulantes'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
+            @php $activosCorrientes += $detalle['saldo']; @endphp
+        @endforeach
 
-            {{-- Total Pasivos --}}
-            <tr class="total">
-                <td colspan="2">TOTAL PASIVOS</td>
-                <td class="monto">₡ {{ number_format($data['pasivos']['total'], 2, ',', '.') }}</td>
-            </tr>
+        <tr class="subtotal">
+            <td class="left">TOTAL ACTIVOS CORRIENTES</td>
+            <td></td>
+            <td class="right">{{ number_format($activosCorrientes,2,',','.') }}</td>
+            <td></td>
+        </tr>
 
-            {{-- Patrimonio --}}
-            <tr class="section-header">
-                <td colspan="3">PATRIMONIO</td>
-            </tr>
-            @forelse($data['detalles'] as $detalle)
-                @if($detalle['tipo'] === 'Patrimonio')
-                    <tr>
-                        <td>{{ $detalle['codigo'] }}</td>
-                        <td>{{ $detalle['nombre'] }}</td>
-                        <td class="monto">{{ number_format($detalle['saldo'], 2, ',', '.') }}</td>
-                    </tr>
-                @endif
-            @empty
-            @endforelse
-            <tr class="total">
-                <td colspan="2">TOTAL PATRIMONIO</td>
-                <td class="monto">₡ {{ number_format($data['patrimonio']['total'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
+        <tr><td colspan="4" class="section">ACTIVOS NO CORRIENTES</td></tr>
 
-            {{-- Total Pasivos + Patrimonio --}}
-            <tr class="total">
-                <td colspan="2">TOTAL PASIVOS + PATRIMONIO</td>
-                <td class="monto">₡ {{ number_format($data['total_pasivos_patrimonio'], 2, ',', '.') }}</td>
+        @foreach($activosNoCorrientesList as $detalle)
+            <tr>
+                <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
+                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
+                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
             </tr>
+            @php $activosNoCorrientes += $detalle['saldo']; @endphp
+        @endforeach
+
+        <tr class="subtotal">
+            <td class="left">TOTAL ACTIVOS NO CORRIENTES</td>
+            <td></td>
+            <td class="right">{{ number_format($activosNoCorrientes,2,',','.') }}</td>
+            <td></td>
+        </tr>
+
+        <tr class="total">
+            <td class="left">TOTAL ACTIVOS</td>
+            <td></td>
+            <td class="right">{{ number_format($data['total_activos'],2,',','.') }}</td>
+            <td></td>
+        </tr>
+
+        <!-- PASIVOS -->
+        <tr><td colspan="4" class="section">PASIVOS</td></tr>
+        <tr><td colspan="4" class="section">PASIVOS CORRIENTES</td></tr>
+
+        @foreach($pasivosCorrientesList as $detalle)
+            <tr>
+                <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
+                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
+                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+            </tr>
+            @php $pasivosCorrientes += $detalle['saldo']; @endphp
+        @endforeach
+
+        <tr class="subtotal">
+            <td class="left">TOTAL PASIVOS CORRIENTES</td>
+            <td></td>
+            <td class="right">{{ number_format($pasivosCorrientes,2,',','.') }}</td>
+            <td></td>
+        </tr>
+
+        <tr><td colspan="4" class="section">PASIVOS NO CORRIENTES</td></tr>
+
+        @foreach($pasivosNoCorrientesList as $detalle)
+            <tr>
+                <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
+                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
+                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+            </tr>
+            @php $pasivosNoCorrientes += $detalle['saldo']; @endphp
+        @endforeach
+
+        <tr class="subtotal">
+            <td class="left">TOTAL PASIVOS NO CORRIENTES</td>
+            <td></td>
+            <td class="right">{{ number_format($pasivosNoCorrientes,2,',','.') }}</td>
+            <td></td>
+        </tr>
+
+        <tr class="total">
+            <td class="left">TOTAL PASIVOS</td>
+            <td></td>
+            <td class="right">{{ number_format($data['pasivos']['total'],2,',','.') }}</td>
+            <td></td>
+        </tr>
+
+        <!-- PATRIMONIO -->
+        <tr><td colspan="4" class="section">PATRIMONIO</td></tr>
+
+        @foreach($patrimonioList as $detalle)
+            <tr>
+                <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
+                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
+                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+            </tr>
+            @php $totalPatrimonio += $detalle['saldo']; @endphp
+        @endforeach
+
+        <tr class="total">
+            <td class="left">TOTAL PASIVO + PATRIMONIO</td>
+            <td></td>
+            <td class="right">{{ number_format($data['total_pasivos_patrimonio'],2,',','.') }}</td>
+            <td></td>
+        </tr>
+
         </tbody>
     </table>
 
-    <div class="validation">
-        @if($data['ecuacion_balanceada'] ?? false)
-            <p class="success">✓ ECUACIÓN BALANCEADA</p>
-            <p class="success">La ecuación contable se cumple: Activos = Pasivos + Patrimonio</p>
-        @else
-            <p class="error">✗ NO BALANCEADO</p>
-            <p class="error">Diferencia: ₡{{ number_format($data['diferencia'] ?? 0, 2, ',', '.') }}</p>
-        @endif
-    </div>
+</div>
 </body>
 </html>

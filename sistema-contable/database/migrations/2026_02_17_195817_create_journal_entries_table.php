@@ -6,52 +6,61 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('journal_entries', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('customer_id')
-                ->constrained('customers')
-                ->cascadeOnDelete()
-                ->name('fk_journal_entries_customer_id')
-                ->index();
+            $table->unsignedBigInteger('customer_id');
+            $table->foreign('customer_id')
+                ->references('id')
+                ->on('customers')
+                ->onDelete('cascade');
+            $table->index('customer_id');
 
-            $table->string('journal_type')->default('general');
+            // Tipo de asiento
+            $table->string('journal_type')->default('general')->index();
+
+            // Categoría contable
+            $table->string('entry_category')->default('Operacion')->index();
+
             $table->text('description')->nullable();
             $table->string('reference')->nullable();
+
             $table->decimal('total_debit', 15, 2)->default(0);
             $table->decimal('total_credit', 15, 2)->default(0);
+
             $table->unsignedBigInteger('fiscal_period_id')->nullable();
-            $table->timestamp('posted_at')->nullable();
-            $table->foreignId('posted_by')
-                ->nullable()
-                ->constrained('users')
-                ->cascadeOnDelete()
-                ->name('fk_journal_entries_posted_by');
+
+            $table->timestamp('posted_at')->nullable()->index();
+
+            $table->unsignedBigInteger('posted_by')->nullable();
+            $table->foreign('posted_by')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade')
+                ->comment('Usuario que registró el asiento');
+
             $table->boolean('is_reversal')->default(false);
+
             $table->unsignedBigInteger('reversed_entry_id')->nullable();
             $table->foreign('reversed_entry_id')
                 ->references('id')
                 ->on('journal_entries')
-                ->cascadeOnDelete()
-                ->name('fk_journal_entries_reversed_entry_id');
+                ->onDelete('cascade')
+                ->comment('Referencia al asiento reversado');
+
+            // Integración con otros módulos
             $table->string('source_type')->nullable();
             $table->unsignedBigInteger('source_id')->nullable();
             $table->json('metadata')->nullable();
+
             $table->timestamps();
-            
+
             $table->index(['source_type', 'source_id']);
-            $table->index('posted_at');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('journal_entries');

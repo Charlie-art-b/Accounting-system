@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FixedAssetController;
+use App\Http\Controllers\PDFTestController;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -61,3 +62,5 @@ Route::get('/test/pdf/estado-resultados/{cliente}', function (\App\Models\Custom
     $pdf = \PDF::loadView('exports.estado-resultados-pdf', ['data' => $data]);
     return $pdf->stream('Estado_Resultados.pdf');
 });
+
+Route::get('/test/balance-general-pdf', [PDFTestController::class, 'balanceGeneralTest'])->name('test.balance-pdf');

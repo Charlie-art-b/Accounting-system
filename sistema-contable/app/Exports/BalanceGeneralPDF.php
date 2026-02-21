@@ -2,35 +2,60 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\View;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class BalanceGeneralPDF
 {
-    protected $data;
+    protected array $data;
+    protected string $fecha;
 
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->data = $data;
+        $this->fecha = $data['fecha'] ?? now()->format('Y-m-d');
     }
 
-    public function generate()
+    /**
+     * Construye el PDF con configuración personalizada
+     */
+    protected function buildPdf()
     {
-        $pdf = PDF::loadView('exports.balance-general-pdf', [
-            'data' => $this->data,
-            'fecha' => $this->data['fecha'] ?? now()->format('Y-m-d'),
-        ]);
-
-        return $pdf->stream('Balance_General_' . now()->format('Y-m-d') . '.pdf');
+        return Pdf::loadView('exports.balance-general-pdf', [
+                'data' => $this->data,
+                'fecha' => $this->fecha,
+            ])
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 110,
+            ]);
     }
 
+    /**
+     * Mostrar en navegador
+     */
+    public function stream()
+    {
+        return $this->buildPdf()
+            ->stream($this->fileName());
+    }
+
+    /**
+     * Descargar directamente
+     */
     public function download()
     {
-        $pdf = PDF::loadView('exports.balance-general-pdf', [
-            'data' => $this->data,
-            'fecha' => $this->data['fecha'] ?? now()->format('Y-m-d'),
-        ]);
+        return $this->buildPdf()
+            ->download($this->fileName());
+    }
 
-        return $pdf->download('Balance_General_' . now()->format('Y-m-d') . '.pdf');
+    /**
+     * Nombre dinámico del archivo
+     */
+    protected function fileName(): string
+    {
+        return 'Balance_General_' . now()->format('Y-m-d_H-i-s') . '.pdf';
     }
 }

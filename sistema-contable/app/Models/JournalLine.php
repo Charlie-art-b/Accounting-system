@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Validation\ValidationException;
-use App\Models\AccountingAccount;
 
 class JournalLine extends Model
 {
@@ -17,7 +16,6 @@ class JournalLine extends Model
     protected $fillable = [
         'journal_entry_id',
         'accounting_account_id',
-        //'chart_of_account_id',
         'description',
         'debit',
         'credit',
@@ -27,8 +25,8 @@ class JournalLine extends Model
     ];
 
     protected $casts = [
-        //'debit' => 'decimal:2',
-        //'credit' => 'decimal:2',
+        'debit' => 'decimal:2',
+        'credit' => 'decimal:2',
         'metadata' => 'array',
     ];
 
@@ -42,57 +40,36 @@ class JournalLine extends Model
         return $this->belongsTo(AccountingAccount::class, 'accounting_account_id');
     }
 
-
-    /*public function account(): BelongsTo
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
-    }*/
-
     protected static function booted(): void
     {
         static::saving(function (self $line) {
+
             $line->debit = max(0, (float) ($line->debit ?? 0));
             $line->credit = max(0, (float) ($line->credit ?? 0));
 
-            if ($line->debit > 0 && $line->credit > 0) {
+            // Validación coherente con CHECK de la BD
+            if (
+                ($line->debit > 0 && $line->credit > 0) ||
+                ($line->debit <= 0 && $line->credit <= 0)
+            ) {
                 throw ValidationException::withMessages([
-                    'line' => 'Una línea no puede tener débito y crédito al mismo tiempo.',
+                    'line' => 'Una línea debe tener solo débito o solo crédito.',
                 ]);
             }
 
-            //  Obtener el asiento padre
-            $entry = $line->relationLoaded('journalEntry')
-                ? $line->journalEntry
-                : $line->journalEntry()->first();
+            $entry = $line->journalEntry ?? $line->journalEntry()->first();
+            $acct = $line->account ?? AccountingAccount::find($line->accounting_account_id);
 
-            //  Solo exigir > 0 cuando el asiento esté posteado
-            if ($entry?->posted_at && $line->debit <= 0 && $line->credit <= 0) {
+            if (! $acct || $acct->status !== 'Activa') {
                 throw ValidationException::withMessages([
-                    'line' => 'Una línea debe tener débito o crédito mayor que cero.',
+                    'accounting_account_id' => 'La cuenta no existe o no está activa.',
                 ]);
             }
 
-            // validar cuenta
-            if ($line->accounting_account_id) {
-                $acct = AccountingAccount::find($line->accounting_account_id);
-
-                if (! $acct || ($acct->status ?? 'Activa') !== 'Activa') {
-                    throw ValidationException::withMessages([
-                        'accounting_account_id' => 'La cuenta contable no existe o no está activa.',
-                    ]);
-                }
-
-                // validar que la cuenta sea del mismo customer del asiento
-                $entry = $line->relationLoaded('journalEntry')
-                    ? $line->journalEntry
-                    : $line->journalEntry()->first();
-
-                if ($entry && $entry->customer_id && $acct->customer_id !== $entry->customer_id) {
-                    throw ValidationException::withMessages([
-                        'accounting_account_id' => 'La cuenta no pertenece al cliente seleccionado.',
-                    ]);
-                }
-
+            if ($entry && $acct->customer_id !== $entry->customer_id) {
+                throw ValidationException::withMessages([
+                    'accounting_account_id' => 'La cuenta no pertenece al cliente del asiento.',
+                ]);
             }
         });
     }

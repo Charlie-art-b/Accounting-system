@@ -18,6 +18,7 @@ class JournalEntry extends Model
     protected $fillable = [
         'customer_id',
         'journal_type',
+        'entry_category',
         'description',
         'reference',
         'total_debit',
@@ -39,6 +40,8 @@ class JournalEntry extends Model
         'metadata' => 'array',
         'is_reversal' => 'boolean',
     ];
+
+   
 
     public function customer(): BelongsTo
     {
@@ -65,43 +68,43 @@ class JournalEntry extends Model
         return $this->hasMany(self::class, 'reversed_entry_id');
     }
 
+    
+
     public function isBalanced(): bool
     {
-        $debits = $this->lines->sum(fn ($l) => (float) $l->debit);
-        $credits = $this->lines->sum(fn ($l) => (float) $l->credit);
+        $totals = $this->lines()
+            ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
+            ->first();
+
+        $debits = $totals->total_debit ?? 0;
+        $credits = $totals->total_credit ?? 0;
 
         return bccomp((string) $debits, (string) $credits, 2) === 0;
     }
 
     public function calculateTotals(): void
     {
-        $this->total_debit = $this->lines->sum(fn ($l) => (float) $l->debit);
-        $this->total_credit = $this->lines->sum(fn ($l) => (float) $l->credit);
+        $totals = $this->lines()
+            ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
+            ->first();
+
+        $this->total_debit = $totals->total_debit ?? 0;
+        $this->total_credit = $totals->total_credit ?? 0;
     }
 
-    public function getTotalDebitAttribute()
-    {
-        return $this->lines()->sum('debit');
-    }
-
-    public function getTotalCreditAttribute()
-    {
-        return $this->lines()->sum('credit');
-    }
-
+   
     protected static function booted(): void
     {
         static::saving(function (self $entry) {
-            // Ensure totals are non-negative
-            $entry->total_debit = max(0, (float) ($entry->total_debit ?? 0));
-            $entry->total_credit = max(0, (float) ($entry->total_credit ?? 0));
 
-            // solo exigir balance cuando se va a postear (posted_at tiene valor)
             if (! is_null($entry->posted_at)) {
-                $entry->loadMissing('lines');
 
-                $debits = $entry->lines->sum(fn ($l) => (float) $l->debit);
-                $credits = $entry->lines->sum(fn ($l) => (float) $l->credit);
+                $totals = $entry->lines()
+                    ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
+                    ->first();
+
+                $debits = $totals->total_debit ?? 0;
+                $credits = $totals->total_credit ?? 0;
 
                 if (bccomp((string) $debits, (string) $credits, 2) !== 0) {
                     throw ValidationException::withMessages([
@@ -109,44 +112,33 @@ class JournalEntry extends Model
                     ]);
                 }
 
-            // If lines are loaded, ensure totals match lines
-           /* if ($entry->relationLoaded('lines')) {
-                $debits = $entry->lines->sum(fn ($l) => (float) $l->debit);
-                $credits = $entry->lines->sum(fn ($l) => (float) $l->credit);
-
-                if (bccomp((string) $debits, (string) $credits, 2) !== 0) {
-                    throw ValidationException::withMessages([
-                        'lines' => 'Las líneas del asiento no están balanceadas (debits != credits).',
-                    ]);
-                }*/
-
                 $entry->total_debit = $debits;
                 $entry->total_credit = $credits;
             }
+
+            $entry->total_debit = max(0, (float) ($entry->total_debit ?? 0));
+            $entry->total_credit = max(0, (float) ($entry->total_credit ?? 0));
         });
     }
 
-    /**
-     * Basic post operation skeleton. Real posting (balances, events)
-     * should be implemented in a LedgerService and use DB transactions.
-     */
+   
     public function post($user = null): void
     {
-        if (! $this->relationLoaded('lines')) {
-            $this->load('lines');
-        }
-
         if (! $this->isBalanced()) {
-            throw ValidationException::withMessages(['entry' => 'El asiento no está balanceado.']);
+            throw ValidationException::withMessages([
+                'entry' => 'El asiento no está balanceado.',
+            ]);
         }
 
         DB::transaction(function () use ($user) {
+
             $this->posted_at = now();
+
             if ($user && method_exists($user, 'getKey')) {
                 $this->posted_by = $user->getKey();
             }
+
             $this->save();
-            // Actual update de balances y registros auxiliares debe hacerse en LedgerService.
         });
     }
 }
