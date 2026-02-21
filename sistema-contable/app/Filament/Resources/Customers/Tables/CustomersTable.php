@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -116,7 +117,39 @@ class CustomersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, DeleteBulkAction $action) {
+                            $blockedCount = 0;
+                            $blockedReasons = [];
+
+                            foreach ($records as $customer) {
+                                $pendingAccounts = $customer->accountReceivables()
+                                    ->whereIn('status', ['pending', 'partial'])
+                                    ->count();
+
+                                if ($pendingAccounts > 0) {
+                                    $blockedCount++;
+                                    $blockedReasons[] = "{$customer->name} {$customer->first_last_name}: {$pendingAccounts} cuenta(s) por cobrar pendiente(s)";
+                                }
+                            }
+
+                            if ($blockedCount > 0) {
+                                $reasonsList = implode("\n• ", $blockedReasons);
+                                Notification::make()
+                                    ->danger()
+                                    ->title('NO SE PUEDE ELIMINAR')
+                                    ->body("No se pueden eliminar {$blockedCount} cliente(s):\n\n• {$reasonsList}")
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('¡Clientes eliminados!')
+                                ->body('Los clientes seleccionados han sido eliminados correctamente.')
+                        ),
                 ]),
             ]);
     }

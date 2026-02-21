@@ -15,7 +15,6 @@ class ViewCustomer extends ViewRecord
     {
         return [
             EditAction::make(),
-
             Action::make('back')
                 ->label('')
                 ->icon('heroicon-o-x-mark')

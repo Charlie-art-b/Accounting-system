@@ -16,101 +16,125 @@ class CustomerForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label('Nombre')
-                    ->required()
-                    ->minLength(2)
-                    ->maxLength(100)
-                    ->regex('/^[\p{L}\p{N}\s]+$/u'),
+                Section::make('Información Personal')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->minLength(2)
+                            ->maxLength(100)
+                            ->regex('/^[\p{L}\p{N}\s]+$/u'),
 
-                TextInput::make('first_last_name')
-                    ->label('Primer apellido')
-                    ->required()
-                    ->minLength(2)
-                    ->maxLength(50)
-                    ->regex('/^[\p{L}\p{N}\s]+$/u'),
+                        TextInput::make('first_last_name')
+                            ->label('Primer apellido')
+                            ->required()
+                            ->minLength(2)
+                            ->maxLength(50)
+                            ->regex('/^[\p{L}\p{N}\s]+$/u'),
 
-                TextInput::make('second_last_name')
-                    ->label('Segundo apellido')
-                    ->minLength(2)
-                    ->maxLength(50)
-                    ->regex('/^[\p{L}\p{N}\s]+$/u')
-                    ->default(null),
-
-                Select::make('id_type')
-                    ->label('Tipo de identificación')
-                    ->options([
-                        'identification' => 'Cédula',
-                        'dimex' => 'DIMEX',
-                        'passport' => 'Pasaporte',
+                        TextInput::make('second_last_name')
+                            ->label('Segundo apellido')
+                            ->minLength(2)
+                            ->maxLength(50)
+                            ->regex('/^[\p{L}\p{N}\s]+$/u')
+                            ->default(null),
                     ])
-                    ->default('identification')
-                    ->required(),
+                    ->columns(2),
 
-                TextInput::make('identification')
-                    ->label('Identificación')
-                    ->required()
-                    ->maxLength(20)
-                    ->unique(table: 'customers', column: 'identification', ignoreRecord: true)
-                    ->regex('/^(\d{1}[-\s]?\d{4}[-\s]?\d{4}|\d{11,12}|[A-Z0-9]{6,12})$/i')
-                    ->validationMessages([
-                        'unique' => 'Esta identificación ya existe en el sistema.',
+                Section::make('Identificación')
+                    ->schema([
+                        Select::make('id_type')
+                            ->label('Tipo de identificación')
+                            ->options([
+                                'identification' => 'Cédula',
+                                'dimex' => 'DIMEX',
+                                'passport' => 'Pasaporte',
+                            ])
+                            ->default('identification')
+                            ->required(),
+
+                        TextInput::make('identification')
+                            ->label('Identificación')
+                            ->required()
+                            ->maxLength(20)
+                            ->unique(table: 'customers', column: 'identification', ignoreRecord: true)
+                            ->regex('/^(\d{1}[-\s]?\d{4}[-\s]?\d{4}|\d{11,12}|[A-Z0-9]{6,12})$/i')
+                            ->validationMessages([
+                                'unique' => 'Esta identificación ya existe en el sistema.',
+                            ]),
+                    ])
+                    ->columns(2),
+
+                Section::make('Contacto')
+                    ->schema([
+                        TextInput::make('email')
+                            ->label('Correo electrónico')
+                            ->email()
+                            ->required()
+                            ->maxLength(255)
+                            ->unique(table: 'customers', column: 'email', ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'Este correo electrónico ya existe en el sistema.',
+                            ]),
+
+                        TextInput::make('phone')
+                            ->label('Teléfono')
+                            ->tel()
+                            ->nullable()
+                            ->minLength(8)
+                            ->maxLength(20)
+                            ->default(null)
+                            ->regex('/^[0-9()+\-\s]+$/'),
+
+                        TextInput::make('address')
+                            ->label('Dirección')
+                            ->nullable()
+                            ->maxLength(355)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                Section::make('Información del Cliente')
+                    ->schema([
+                        Select::make('customer_type')
+                            ->label('Tipo de cliente')
+                            ->options([
+                                'individual' => 'Persona física',
+                                'legal_person' => 'Persona jurídica',
+                            ])
+                            ->default('individual')
+                            ->required(),
+                                    
+                        Toggle::make('status')
+                            ->label('Estado')
+                            ->helperText('Indica si el cliente está activo o inactivo.')
+                            ->default(true)
+                            ->required(),
+                    ])
+                    ->columns(2),
+
+                Section::make('Notas')
+                    ->schema([
+                        Textarea::make('notes')
+                            ->label('Notas')
+                            ->placeholder('Escriba información adicional del cliente (opcional).')
+                            ->nullable()
+                            ->maxLength(2000)
+                            ->columnSpanFull(),
                     ]),
 
-                TextInput::make('email')
-                    ->label('Correo electrónico')
-                    ->email()
-                    ->required()
-                    ->maxLength(255)
-                    ->unique(table: 'customers', column: 'email', ignoreRecord: true)
-                    ->validationMessages([
-                        'unique' => 'Este correo electrónico ya existe en el sistema.',
+                Section::make('Proveedores Asociados')
+                    ->schema([
+                        Select::make('suppliers')
+                            ->label('Asociar proveedores al cliente')
+                            ->multiple()
+                            ->relationship('suppliers', 'identificacion')
+                            ->getOptionLabelFromRecordUsing(fn(Supplier $record) => "{$record->nombre_razon_social} - {$record->identificacion}")
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Seleccione uno o más proveedores para asociar con este cliente')
+                            ->columnSpanFull(),
                     ]),
-
-                TextInput::make('phone')
-                    ->label('Teléfono')
-                    ->tel()
-                    ->nullable()
-                    ->minLength(8)
-                    ->maxLength(20)
-                    ->default(null)
-                    ->regex('/^[0-9()+\-\s]+$/'),
-
-                TextInput::make('address')
-                    ->label('Dirección')
-                    ->nullable()
-                    ->maxLength(355),
-
-                Select::make('customer_type')
-                    ->label('Tipo de cliente')
-                    ->options([
-                        'individual' => 'Persona física',
-                        'legal_person' => 'Persona jurídica',
-                    ])
-                    ->default('individual')
-                    ->required(),
-                            
-                Toggle::make('status')
-                    ->label('Estado')
-                    ->helperText('Indica si el cliente está activo o inactivo.')
-                    ->default(true)
-                    ->required(),
-
-                Textarea::make('notes')
-                    ->label('Notas')
-                    ->placeholder('Escriba información adicional del cliente (opcional).')
-                    ->nullable()
-                    ->maxLength(2000)
-                    ->columnSpanFull(),
-
-                Select::make('suppliers')
-                    ->label(__('Asociar proveedores al cliente'))
-                    ->multiple()
-                    ->relationship('suppliers', 'identificacion')
-                    ->getOptionLabelFromRecordUsing(fn(Supplier $record) => "{$record->nombre_razon_social} - {$record->identificacion}")
-                    ->searchable()
-                    ->preload()
-                    ->helperText(__('Seleccione uno o más proveedores para asociar con este cliente')),
             ]);
     }
 }
