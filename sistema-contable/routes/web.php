@@ -1,33 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\PDFTestController;
-use App\Services\PdfFallbackService;
+use App\Http\Controllers\EstadosFinancierosController;use App\Services\PdfFallbackService;
 
 Route::get('/', function () {
-    return redirect('/admin');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Fixed Assets - Backend actions
-|--------------------------------------------------------------------------
-*/
-
-// Registrar baja de activo fijo
-Route::patch(
-    '/fixed-assets/{fixedAsset}/dispose',
-    [FixedAssetController::class, 'dispose']
-);
-
-// routes/web.php
-Route::get('/test/balance-general/{cliente}', function (\App\Models\Customer $cliente) {
-    $service = app(\App\Services\EstadoFinancieroService::class);
-    $service->setCliente($cliente->id);
-    $data = $service->balanceGeneral();
-    
-    return response()->json($data, 200, [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    return view('welcome');
 });
 
 Route::get('/test/estado-resultados/{cliente}', function (\App\Models\Customer $cliente) {
@@ -50,24 +28,19 @@ Route::get('/test/pdf/balance-general/{cliente}', function (\App\Models\Customer
     $service = app(\App\Services\EstadoFinancieroService::class);
     $service->setCliente($cliente->id);
     $data = $service->balanceGeneral();
-
-    return app(PdfFallbackService::class)->stream(
-        view: 'exports.balance-general-pdf',
-        data: ['data' => $data, 'fecha' => now()],
-        baseFileName: 'Balance_General'
-    );
+    
+    $pdf = \PDF::loadView('exports.balance-general-pdf', ['data' => $data, 'fecha' => now()]);
+    return $pdf->stream('Balance_General.pdf');
 });
 
 Route::get('/test/pdf/estado-resultados/{cliente}', function (\App\Models\Customer $cliente) {
     $service = app(\App\Services\EstadoFinancieroService::class);
     $service->setCliente($cliente->id);
     $data = $service->estadoResultados();
-
-    return app(PdfFallbackService::class)->stream(
-        view: 'exports.estado-resultados-pdf',
-        data: ['data' => $data],
-        baseFileName: 'Estado_Resultados'
-    );
+    
+    $pdf = \PDF::loadView('exports.estado-resultados-pdf', ['data' => $data]);
+    return $pdf->stream('Estado_Resultados.pdf');
 });
 
 Route::get('/test/balance-general-pdf', [PDFTestController::class, 'balanceGeneralTest'])->name('test.balance-pdf');
+ Route::get('/prueba/{customerId}/balance-general', [EstadosFinancierosController::class, 'balanceGeneral']);
