@@ -2,35 +2,75 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\View;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFallbackService;
 
 class BalanceGeneralPDF
 {
-    protected $data;
+    protected array $data;
+    protected string $fecha;
 
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->data = $data;
+        $this->fecha = $data['fecha'] ?? now()->format('Y-m-d');
     }
 
-    public function generate()
+    /**
+     * Construye el PDF con configuración personalizada
+     */
+    protected function viewData(): array
     {
-        $pdf = PDF::loadView('exports.balance-general-pdf', [
+        return [
             'data' => $this->data,
-            'fecha' => $this->data['fecha'] ?? now()->format('Y-m-d'),
-        ]);
-
-        return $pdf->stream('Balance_General_' . now()->format('Y-m-d') . '.pdf');
+            'fecha' => $this->fecha,
+        ];
     }
 
+    /**
+     * Mostrar en navegador
+     */
+    public function stream()
+    {
+        return app(PdfFallbackService::class)->stream(
+            view: 'exports.balance-general-pdf',
+            data: $this->viewData(),
+            baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
+            paper: 'a4',
+            orientation: 'portrait',
+            options: [
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 110,
+            ],
+        );
+    }
+
+    /**
+     * Descargar directamente
+     */
     public function download()
     {
-        $pdf = PDF::loadView('exports.balance-general-pdf', [
-            'data' => $this->data,
-            'fecha' => $this->data['fecha'] ?? now()->format('Y-m-d'),
-        ]);
+        return app(PdfFallbackService::class)->download(
+            view: 'exports.balance-general-pdf',
+            data: $this->viewData(),
+            baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
+            paper: 'a4',
+            orientation: 'portrait',
+            options: [
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 110,
+            ],
+        );
+    }
 
-        return $pdf->download('Balance_General_' . now()->format('Y-m-d') . '.pdf');
+    /**
+     * Nombre dinámico del archivo
+     */
+    protected function fileName(): string
+    {
+        return 'Balance_General_' . now()->format('Y-m-d_H-i-s') . '.pdf';
     }
 }

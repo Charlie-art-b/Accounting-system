@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccountingAccounts\Schemas;
 
+use App\Models\AccountingAccount;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -35,8 +36,7 @@ class AccountingAccountForm
                 TextInput::make('name')
                     ->label('Nombre')
                     ->required()
-                    ->maxLength(100)
-                    ->helperText('Nombre de la cuenta contable'),
+                    ->maxLength(100),
 
                 Select::make('type')
                     ->label('Tipo')
@@ -47,9 +47,42 @@ class AccountingAccountForm
                         'Ingreso' => 'Ingreso',
                         'Gasto' => 'Gasto',
                     ])
-                    ->required(),
+                    ->required()
+                    ->reactive(),
 
-                // 🔥 NUEVO CAMPO
+                // ✅ NUEVO: Clasificación detallada
+                Select::make('classification')
+                    ->label('Clasificación')
+                    ->options(AccountingAccount::CLASSIFICATIONS)
+                    ->searchable()
+                    ->nullable(),
+
+                // ✅ NUEVO: Sección del reporte (flujo de efectivo u otros)
+                TextInput::make('report_section')
+                    ->label('Sección del Reporte')
+                    ->maxLength(100)
+                    ->nullable(),
+
+                // ✅ NUEVO: Cuenta Padre (Jerarquía)
+                Select::make('parent_id')
+                    ->label('Cuenta Padre')
+                    ->relationship('parent', 'display')
+                    ->searchable()
+                    ->nullable()
+                    ->helperText('Opcional. Para crear estructura jerárquica'),
+
+                // Nivel automático basado en el padre
+                TextInput::make('level')
+                    ->default(1)
+                    ->hidden()
+                    ->dehydrateStateUsing(function ($state, $get) {
+                        if ($get('parent_id')) {
+                            $parent = AccountingAccount::find($get('parent_id'));
+                            return $parent ? $parent->level + 1 : 1;
+                        }
+                        return 1;
+                    }),
+
                 Select::make('normal_balance')
                     ->label('Naturaleza')
                     ->options([

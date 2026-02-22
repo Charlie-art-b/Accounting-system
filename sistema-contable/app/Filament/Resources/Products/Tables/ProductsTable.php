@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -41,6 +43,19 @@ class ProductsTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: Product::class,
+                    title: 'Productos',
+                    filePrefix: 'productos',
+                    fields: [
+                        'id',
+                        'name',
+                        'description',
+                        'supplier_id',
+                    ],
+                    uniqueBy: ['name', 'supplier_id'],
+                    requiredFields: ['name', 'supplier_id'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

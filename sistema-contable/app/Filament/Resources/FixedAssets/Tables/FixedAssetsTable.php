@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\FixedAssets\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\FixedAsset;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -159,6 +161,40 @@ class FixedAssetsTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: FixedAsset::class,
+                    title: 'Activos Fijos',
+                    filePrefix: 'activos-fijos',
+                    fields: [
+                        'id',
+                        'asset_name',
+                        'description',
+                        'acquisition_value',
+                        'acquisition_date',
+                        'useful_life_years',
+                        'residual_value',
+                        'accumulated_depreciation',
+                        'status',
+                        'disposal_date',
+                        'disposal_reason',
+                    ],
+                    uniqueBy: ['asset_name', 'acquisition_date'],
+                    defaults: [
+                        'status' => 'active',
+                        'residual_value' => 0,
+                        'accumulated_depreciation' => 0,
+                    ],
+                    enumMaps: [
+                        'status' => [
+                            'active' => 'active',
+                            'activo' => 'active',
+                            'disposed' => 'disposed',
+                            'dado de baja' => 'disposed',
+                            'under_maintenance' => 'under_maintenance',
+                            'mantenimiento' => 'under_maintenance',
+                        ],
+                    ],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

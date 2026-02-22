@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFallbackService;
 
 class RatiosFinancierosPDF
 {
@@ -15,19 +15,19 @@ class RatiosFinancierosPDF
 
     public function generate()
     {
-        $pdf = PDF::loadView('exports.ratios-financieros-pdf', [
-            'data' => $this->data,
-        ]);
-
-        return $pdf->stream('Ratios_Financieros_' . now()->format('Y-m-d') . '.pdf');
+        return app(PdfFallbackService::class)->stream(
+            view: 'exports.ratios-financieros-pdf',
+            data: ['data' => $this->data],
+            baseFileName: 'Ratios_Financieros_' . now()->format('Y-m-d'),
+        );
     }
 
     public function download()
     {
-        $pdf = PDF::loadView('exports.ratios-financieros-pdf', [
-            'data' => $this->data,
-        ]);
-
-        return $pdf->download('Ratios_Financieros_' . now()->format('Y-m-d') . '.pdf');
+        return app(PdfFallbackService::class)->download(
+            view: 'exports.ratios-financieros-pdf',
+            data: ['data' => $this->data],
+            baseFileName: 'Ratios_Financieros_' . now()->format('Y-m-d'),
+        );
     }
 }

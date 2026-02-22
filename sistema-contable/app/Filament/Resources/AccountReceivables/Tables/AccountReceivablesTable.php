@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccountReceivables\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -147,6 +148,38 @@ class AccountReceivablesTable
                     ->visible(fn ($record) => $record->status !== 'paid'),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: AccountReceivable::class,
+                    title: 'Cuentas por Cobrar',
+                    filePrefix: 'cuentas-por-cobrar',
+                    fields: [
+                        'id',
+                        'customer_id',
+                        'invoice_number',
+                        'issue_date',
+                        'due_date',
+                        'description',
+                        'total_amount',
+                        'paid_amount',
+                        'status',
+                    ],
+                    uniqueBy: ['invoice_number'],
+                    defaults: [
+                        'paid_amount' => 0,
+                        'status' => 'pending',
+                    ],
+                    enumMaps: [
+                        'status' => [
+                            'pending' => 'pending',
+                            'pendiente' => 'pending',
+                            'partial' => 'partial',
+                            'parcial' => 'partial',
+                            'paid' => 'paid',
+                            'pagado' => 'paid',
+                        ],
+                    ],
+                    requiredFields: ['customer_id', 'invoice_number', 'total_amount'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {

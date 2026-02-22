@@ -3,11 +3,13 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class BalanceGeneralExport implements FromArray, WithHeadings, WithStyles
+class BalanceGeneralExport implements FromArray, WithStyles, WithEvents
 {
     protected $data;
     protected $fecha;
@@ -15,32 +17,47 @@ class BalanceGeneralExport implements FromArray, WithHeadings, WithStyles
     public function __construct($data)
     {
         $this->data = $data;
-        $this->fecha = $data['fecha'] ?? now()->format('Y-m-d');
+        $this->fecha = $data['fecha'] ?? now()->format('d-m-Y');
     }
 
     public function array(): array
     {
         $rows = [];
 
-        // Activos Circulantes
-        $rows[] = ['ACTIVOS CIRCULANTES'];
+        // ===== ENCABEZADO EMPRESARIAL =====
+        $rows[] = ['TRANSPORTES Y SERVICIOS PEREZ Y ORTIZ DEL ATLANTICO S.A.'];
+        $rows[] = ['Cédula Jurídica: 3-101-752653'];
+        $rows[] = ['ESTADO DE SITUACIÓN FINANCIERA'];
+        $rows[] = ["Al {$this->fecha}"];
+        $rows[] = [''];
+        $rows[] = [''];
+
+        // ===== ACTIVOS =====
+        $rows[] = ['ACTIVOS'];
+        $rows[] = [''];
+
+        // Activos Corrientes
+        $rows[] = ['ACTIVOS CORRIENTES'];
         foreach ($this->data['detalles'] as $detalle) {
             if ($detalle['tipo'] === 'Activo') {
-                // Classifica por código (1100-1199 = circulantes)
                 $codigo = (int)$detalle['codigo'];
                 if ($codigo >= 1100 && $codigo < 1200) {
                     $rows[] = [
                         $detalle['codigo'],
                         $detalle['nombre'],
-                        number_format($detalle['saldo'], 2, '.', ',')
+                        $detalle['saldo']
                     ];
                 }
             }
         }
-        $rows[] = ['', 'Subtotal Activos Circulantes', number_format($this->data['activos']['activos_circulantes'] ?? 0, 2, '.', ',')];
 
-        // Activos No Circulantes
-        $rows[] = ['ACTIVOS NO CIRCULANTES'];
+        $rows[] = ['', 'TOTAL ACTIVOS CORRIENTES',
+            $this->data['activos']['activos_circulantes'] ?? 0
+        ];
+        $rows[] = [''];
+
+        // Activos No Corrientes
+        $rows[] = ['ACTIVOS NO CORRIENTES'];
         foreach ($this->data['detalles'] as $detalle) {
             if ($detalle['tipo'] === 'Activo') {
                 $codigo = (int)$detalle['codigo'];
@@ -48,18 +65,27 @@ class BalanceGeneralExport implements FromArray, WithHeadings, WithStyles
                     $rows[] = [
                         $detalle['codigo'],
                         $detalle['nombre'],
-                        number_format($detalle['saldo'], 2, '.', ',')
+                        $detalle['saldo']
                     ];
                 }
             }
         }
-        $rows[] = ['', 'Subtotal Activos No Circulantes', number_format($this->data['activos']['activos_no_circulantes'] ?? 0, 2, '.', ',')];
 
-        $rows[] = ['', 'TOTAL ACTIVOS', number_format($this->data['total_activos'], 2, '.', ',')];
+        $rows[] = ['', 'TOTAL ACTIVOS NO CORRIENTES',
+            $this->data['activos']['activos_no_circulantes'] ?? 0
+        ];
 
-        // Pasivos
+        $rows[] = ['', 'TOTAL ACTIVOS',
+            $this->data['total_activos']
+        ];
+
         $rows[] = [''];
-        $rows[] = ['PASIVOS CIRCULANTES'];
+        $rows[] = [''];
+
+        // ===== PASIVOS =====
+        $rows[] = ['PASIVOS'];
+        $rows[] = ['PASIVOS CORRIENTES'];
+
         foreach ($this->data['detalles'] as $detalle) {
             if ($detalle['tipo'] === 'Pasivo') {
                 $codigo = (int)$detalle['codigo'];
@@ -67,15 +93,18 @@ class BalanceGeneralExport implements FromArray, WithHeadings, WithStyles
                     $rows[] = [
                         $detalle['codigo'],
                         $detalle['nombre'],
-                        number_format($detalle['saldo'], 2, '.', ',')
+                        $detalle['saldo']
                     ];
                 }
             }
         }
-        $rows[] = ['', 'Subtotal Pasivos Circulantes', number_format($this->data['pasivos']['pasivos_circulantes'] ?? 0, 2, '.', ',')];
 
-        // Pasivos No Circulantes
-        $rows[] = ['PASIVOS NO CIRCULANTES'];
+        $rows[] = ['', 'TOTAL PASIVOS CORRIENTES',
+            $this->data['pasivos']['pasivos_circulantes'] ?? 0
+        ];
+
+        $rows[] = ['PASIVOS NO CORRIENTES'];
+
         foreach ($this->data['detalles'] as $detalle) {
             if ($detalle['tipo'] === 'Pasivo') {
                 $codigo = (int)$detalle['codigo'];
@@ -83,49 +112,90 @@ class BalanceGeneralExport implements FromArray, WithHeadings, WithStyles
                     $rows[] = [
                         $detalle['codigo'],
                         $detalle['nombre'],
-                        number_format($detalle['saldo'], 2, '.', ',')
+                        $detalle['saldo']
                     ];
                 }
             }
         }
-        $rows[] = ['', 'Subtotal Pasivos No Circulantes', number_format($this->data['pasivos']['pasivos_no_circulantes'] ?? 0, 2, '.', ',')];
 
-        $rows[] = ['', 'TOTAL PASIVOS', number_format($this->data['pasivos']['total'], 2, '.', ',')];
+        $rows[] = ['', 'TOTAL PASIVOS NO CORRIENTES',
+            $this->data['pasivos']['pasivos_no_circulantes'] ?? 0
+        ];
 
-        // Patrimonio
+        $rows[] = ['', 'TOTAL PASIVOS',
+            $this->data['pasivos']['total']
+        ];
+
         $rows[] = [''];
+        $rows[] = [''];
+
+        // ===== PATRIMONIO =====
         $rows[] = ['PATRIMONIO'];
+
         foreach ($this->data['detalles'] as $detalle) {
             if ($detalle['tipo'] === 'Patrimonio') {
                 $rows[] = [
                     $detalle['codigo'],
                     $detalle['nombre'],
-                    number_format($detalle['saldo'], 2, '.', ',')
+                    $detalle['saldo']
                 ];
             }
         }
-        $rows[] = ['', 'TOTAL PATRIMONIO', number_format($this->data['patrimonio']['total'], 2, '.', ',')];
 
-        $rows[] = ['', 'TOTAL PASIVOS + PATRIMONIO', number_format($this->data['total_pasivos_patrimonio'], 2, '.', ',')];
+        $rows[] = ['', 'TOTAL PATRIMONIO',
+            $this->data['patrimonio']['total']
+        ];
+
+        $rows[] = ['', 'TOTAL PASIVO MÁS PATRIMONIO',
+            $this->data['total_pasivos_patrimonio']
+        ];
 
         return $rows;
-    }
-
-    public function headings(): array
-    {
-        return ['CÓDIGO', 'CUENTA', 'SALDO (₡)'];
     }
 
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => [
-                'font' => ['bold' => true, 'size' => 14],
-                'alignment' => ['horizontal' => 'center'],
-            ],
-            'A:C' => [
-                'alignment' => ['horizontal' => 'right'],
-            ],
+            1 => ['font' => ['bold' => true, 'size' => 14]],
+            2 => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
+            3 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+
+                $sheet = $event->sheet;
+
+                // Centrar encabezado
+                $sheet->mergeCells('A1:C1');
+                $sheet->mergeCells('A2:C2');
+                $sheet->mergeCells('A3:C3');
+                $sheet->mergeCells('A4:C4');
+
+                $sheet->getStyle('A1:A4')->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // Formato moneda
+                $sheet->getStyle('C:C')->getNumberFormat()
+                    ->setFormatCode('"₡"#,##0.00');
+
+                // Ajustar ancho columnas
+                $sheet->getColumnDimension('A')->setWidth(15);
+                $sheet->getColumnDimension('B')->setWidth(40);
+                $sheet->getColumnDimension('C')->setWidth(20);
+
+                // Negritas en totales
+                foreach (range(1, $sheet->getHighestRow()) as $row) {
+                    $cell = $sheet->getCell("B{$row}")->getValue();
+                    if (str_contains($cell, 'TOTAL')) {
+                        $sheet->getStyle("A{$row}:C{$row}")
+                            ->getFont()->setBold(true);
+                    }
+                }
+            },
         ];
     }
 }
