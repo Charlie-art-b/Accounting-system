@@ -26,11 +26,20 @@ class AccountingAccountSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
+
+            // 🔥 Asignar balance normal automáticamente
+            $normalBalance = match ($account['type']) {
+                'Activo', 'Gasto' => 'debit',
+                'Pasivo', 'Patrimonio', 'Ingreso' => 'credit',
+                default => 'debit',
+            };
+
             AccountingAccount::create([
                 'customer_id' => $customer->id,
                 'code' => $account['code'],
                 'name' => $account['name'],
                 'type' => $account['type'],
+                'normal_balance' => $normalBalance, // 👈 ahora sí obligatorio
                 'status' => 'Activa',
             ]);
         }

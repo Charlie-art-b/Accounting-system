@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccountingAccounts\Tables;
 
+use App\Models\Customer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -9,7 +10,6 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Models\Customer;
 
 class AccountingAccountsTable
 {
@@ -38,7 +38,16 @@ class AccountingAccountsTable
                     ->badge()
                     ->sortable(),
 
-                // 🔥 NUEVA COLUMNA
+                // ✅ Clasificación
+                TextColumn::make('classification')
+                    ->label('Clasificación')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) =>
+                        \App\Models\AccountingAccount::CLASSIFICATIONS[$state] ?? $state
+                    )
+                    ->sortable(),
+
+                // ✅ Naturaleza
                 TextColumn::make('normal_balance')
                     ->label('Naturaleza')
                     ->badge()
@@ -49,7 +58,17 @@ class AccountingAccountsTable
                         $state === 'debit' ? 'info' : 'warning'
                     ),
 
-                // 🔥 SALDO DINÁMICO
+                // ✅ Nivel
+                TextColumn::make('level')
+                    ->label('Nivel')
+                    ->sortable(),
+
+                // ✅ Cuenta Padre
+                TextColumn::make('parent.name')
+                    ->label('Cuenta Padre')
+                    ->toggleable(),
+
+                // ✅ Saldo dinámico
                 TextColumn::make('saldo')
                     ->label('Saldo')
                     ->getStateUsing(fn ($record) => $record->getSaldo())
@@ -91,7 +110,10 @@ class AccountingAccountsTable
                         'Gasto' => 'Gasto',
                     ]),
 
-                // 🔥 NUEVO FILTRO
+                SelectFilter::make('classification')
+                    ->label('Clasificación')
+                    ->options(\App\Models\AccountingAccount::CLASSIFICATIONS),
+
                 SelectFilter::make('normal_balance')
                     ->label('Naturaleza')
                     ->options([
