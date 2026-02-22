@@ -31,12 +31,12 @@ class JournalEntryResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'Asiento contable';
+        return 'Libro diario';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Asientos contables';
+        return 'Libro diario';
     }
 
     //protected static ?string $navigationGroup = 'Finanzas';

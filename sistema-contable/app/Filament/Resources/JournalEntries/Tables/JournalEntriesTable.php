@@ -27,7 +27,7 @@ class JournalEntriesTable
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->label('Código de asiento')
+                    ->label('Nº de asiento')
                     ->sortable(),
 
                 TextColumn::make('customer.name')
@@ -38,6 +38,13 @@ class JournalEntriesTable
                 TextColumn::make('journal_type')
                     ->label('Tipo')
                     ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'general' => 'General',
+                        'adjustment' => 'Ajuste',
+                        'closing' => 'Cierre',
+                        'reversal' => 'Reverso',
+                        default => $state,
+                    })
                     ->sortable(),
 
                 TextColumn::make('reference')
