@@ -10,6 +10,7 @@ use App\Exports\BalanceGeneralPDF;
 use App\Exports\EstadoResultadosPDF;
 use App\Exports\RatiosFinancierosPDF;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ExportacionesService
 {
