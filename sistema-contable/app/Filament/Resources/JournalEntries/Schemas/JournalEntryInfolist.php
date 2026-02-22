@@ -18,14 +18,21 @@ class JournalEntryInfolist
                 ->columns(2)
                 ->schema([
                     TextEntry::make('id')
-                        ->label('Código de asiento'),
+                        ->label('Nº de asiento'),
 
                     TextEntry::make('customer.name')
                         ->label('Cliente'),
 
                     TextEntry::make('journal_type')
                         ->label('Tipo de asiento')
-                        ->badge(),
+                        ->badge()
+                        ->formatStateUsing(fn ($state) => match ($state) {
+                            'general' => 'General',
+                            'adjustment' => 'Ajuste',
+                            'closing' => 'Cierre',
+                            'reversal' => 'Reverso',
+                            default => $state,
+                        }),
 
                     TextEntry::make('reference')
                         ->label('Referencia')
