@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\JournalEntries\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\ViewAction;
@@ -122,6 +123,44 @@ class JournalEntriesTable
                     //->visible(fn ($record) => $record->posted_at === null),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: JournalEntry::class,
+                    title: 'Asientos Contables',
+                    filePrefix: 'asientos-contables',
+                    fields: [
+                        'id',
+                        'customer_id',
+                        'journal_type',
+                        'entry_category',
+                        'description',
+                        'reference',
+                        'total_debit',
+                        'total_credit',
+                        'posted_at',
+                        'posted_by',
+                        'is_reversal',
+                        'reversed_entry_id',
+                        'source_type',
+                        'source_id',
+                    ],
+                    uniqueBy: ['id'],
+                    defaults: [
+                        'total_debit' => 0,
+                        'total_credit' => 0,
+                        'is_reversal' => false,
+                    ],
+                    enumMaps: [
+                        'journal_type' => [
+                            'general' => 'general',
+                            'adjustment' => 'adjustment',
+                            'ajuste' => 'adjustment',
+                            'closing' => 'closing',
+                            'cierre' => 'closing',
+                            'reversal' => 'reversal',
+                            'reverso' => 'reversal',
+                        ],
+                    ],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

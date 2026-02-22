@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\InventoryProducts\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\InventoryProduct;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -41,6 +43,26 @@ class InventoryProductsTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: InventoryProduct::class,
+                    title: 'Productos por Inventario',
+                    filePrefix: 'inventario-productos',
+                    fields: [
+                        'id',
+                        'inventory_id',
+                        'product_id',
+                        'stock_initial',
+                        'entries',
+                        'exits',
+                    ],
+                    uniqueBy: ['inventory_id', 'product_id'],
+                    defaults: [
+                        'stock_initial' => 0,
+                        'entries' => 0,
+                        'exits' => 0,
+                    ],
+                    requiredFields: ['inventory_id', 'product_id'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

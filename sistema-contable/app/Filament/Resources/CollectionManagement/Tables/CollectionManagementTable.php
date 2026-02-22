@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CollectionManagement\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
 use App\Models\CollectionManagement;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
@@ -381,7 +382,22 @@ class CollectionManagementTable
                 ViewAction::make(),
             ])
             ->toolbarActions([
-                // No hay acciones de creación ni eliminación
+                ...CrudImportExportActions::make(
+                    modelClass: CollectionManagement::class,
+                    title: 'Gestion de Cobro',
+                    filePrefix: 'gestion-cobro',
+                    fields: [
+                        'id',
+                        'account_receivable_id',
+                        'customer_id',
+                        'next_reminder_at',
+                        'reminder_attempts',
+                        'last_action',
+                        'notes',
+                    ],
+                    uniqueBy: ['account_receivable_id'],
+                    defaults: ['reminder_attempts' => 0],
+                ),
             ])
             ->defaultSort('next_reminder_at', 'asc');
     }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\PDFTestController;
+use App\Services\PdfFallbackService;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -49,18 +50,24 @@ Route::get('/test/pdf/balance-general/{cliente}', function (\App\Models\Customer
     $service = app(\App\Services\EstadoFinancieroService::class);
     $service->setCliente($cliente->id);
     $data = $service->balanceGeneral();
-    
-    $pdf = \PDF::loadView('exports.balance-general-pdf', ['data' => $data, 'fecha' => now()]);
-    return $pdf->stream('Balance_General.pdf');
+
+    return app(PdfFallbackService::class)->stream(
+        view: 'exports.balance-general-pdf',
+        data: ['data' => $data, 'fecha' => now()],
+        baseFileName: 'Balance_General'
+    );
 });
 
 Route::get('/test/pdf/estado-resultados/{cliente}', function (\App\Models\Customer $cliente) {
     $service = app(\App\Services\EstadoFinancieroService::class);
     $service->setCliente($cliente->id);
     $data = $service->estadoResultados();
-    
-    $pdf = \PDF::loadView('exports.estado-resultados-pdf', ['data' => $data]);
-    return $pdf->stream('Estado_Resultados.pdf');
+
+    return app(PdfFallbackService::class)->stream(
+        view: 'exports.estado-resultados-pdf',
+        data: ['data' => $data],
+        baseFileName: 'Estado_Resultados'
+    );
 });
 
 Route::get('/test/balance-general-pdf', [PDFTestController::class, 'balanceGeneralTest'])->name('test.balance-pdf');

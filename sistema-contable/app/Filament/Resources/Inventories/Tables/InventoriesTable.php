@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Inventories\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\Inventory;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Actions\BulkActionGroup;
@@ -59,6 +61,17 @@ class InventoriesTable
                 EditAction::make(),
         ])
         ->toolbarActions([
+            ...CrudImportExportActions::make(
+                modelClass: Inventory::class,
+                title: 'Inventarios',
+                filePrefix: 'inventarios',
+                fields: [
+                    'id',
+                    'customer_id',
+                    'name',
+                ],
+                uniqueBy: ['customer_id', 'name'],
+            ),
             BulkActionGroup::make([
                 DeleteBulkAction::make(),
             ]),
