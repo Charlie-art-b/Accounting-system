@@ -4,7 +4,7 @@ namespace App\Exports;
 
 use App\Services\PdfFallbackService;
 
-class BalanceGeneralPDF
+class CashFlowStatementPDF
 {
     protected $data;
     protected $fechaInicio;
@@ -32,39 +32,16 @@ class BalanceGeneralPDF
     public function stream()
     {
         return app(PdfFallbackService::class)->stream(
-            view: 'exports.balance-general-pdf',
+            view: 'exports.cash-flow-statement-pdf',
             data: $this->viewData(),
             baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
             paper: 'a4',
             orientation: 'portrait',
-            options: [
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'DejaVu Sans',
-                'dpi' => 110,
-            ],
-        );
-    }
-
-    public function download()
-    {
-        return app(PdfFallbackService::class)->download(
-            view: 'exports.balance-general-pdf',
-            data: $this->viewData(),
-            baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
-            paper: 'a4',
-            orientation: 'portrait',
-            options: [
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'DejaVu Sans',
-                'dpi' => 110,
-            ],
         );
     }
 
     protected function fileName(): string
     {
-        return 'Balance_General_' . now()->format('Y-m-d_H-i-s');
+        return 'Cash_Flow_Statement_' . now()->format('Y-m-d_H-i-s');
     }
 }

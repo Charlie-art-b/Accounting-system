@@ -367,4 +367,56 @@ class EstadoFinancieroService
             'fecha' => $this->fechaFin->format('Y-m-d'),
         ];
     }
+   public function estadoResultadosIntegral(): array
+{
+    $saldos = $this->obtenerSaldoCuentas();
+
+    $ingresos = 0;
+    $gastosOperativos = 0;
+    $otrosGastos = 0;
+    $depreciacion = 0;
+
+    foreach ($saldos as $cuenta) {
+
+        $saldo = $cuenta->normal_balance === 'credit'
+            ? $cuenta->total_haber - $cuenta->total_debe
+            : $cuenta->total_debe - $cuenta->total_haber;
+
+        if ($cuenta->classification === 'ingreso') {
+            $ingresos += $saldo;
+        }
+
+        if ($cuenta->classification === 'gasto') {
+
+            $nombre = strtolower($cuenta->name);
+
+            if (str_contains($nombre, 'depreci')) {
+                $depreciacion += $saldo;
+            }
+            elseif (str_contains($nombre, 'otro')) {
+                $otrosGastos += $saldo;
+            }
+            else {
+                $gastosOperativos += $saldo;
+            }
+        }
+    }
+
+    $utilidadAntesDep = $ingresos - $gastosOperativos;
+    $utilidadAntesImpuestos = $utilidadAntesDep - $depreciacion - $otrosGastos;
+    $impuestos = $utilidadAntesImpuestos * $this->tasaImpuestos;
+    $utilidadNeta = $utilidadAntesImpuestos - $impuestos;
+
+    return [
+        'ingresos' => $ingresos,
+        'gastos_operativos' => $gastosOperativos,
+        'depreciacion' => $depreciacion,
+        'otros_gastos' => $otrosGastos,
+        'utilidad_antes_depreciacion' => $utilidadAntesDep,
+        'utilidad_antes_impuestos' => $utilidadAntesImpuestos,
+        'impuestos' => $impuestos,
+        'utilidad_neta' => $utilidadNeta,
+        'fecha' => $this->fechaFin->format('Y-m-d'),
+    ];
+}
 }

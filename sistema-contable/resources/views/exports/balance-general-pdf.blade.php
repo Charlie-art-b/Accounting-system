@@ -5,10 +5,13 @@
     <title>Estado de Situación Financiera</title>
 
     <style>
+        
+   
         body {
-            font-family: Arial, sans-serif;
+        font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
             color: #000;
+            
         }
 
         .container {
@@ -16,6 +19,25 @@
             padding: 20px;
         }
 
+         .logo {
+        width: 90px;
+        margin-bottom: 10px;
+    }
+
+    .titulo {
+        font-size: 38px;
+        font-weight: bold;
+        color: #1B1464; /* Azul oscuro similar */
+        margin: 0;
+        letter-spacing: 3px;
+    }
+
+    .subtitulo {
+        font-size: 22px;
+        font-weight: normal;
+        color: #2E3192;
+        margin: 0;
+    }
         .header {
             text-align: center;
             margin-bottom: 15px;
@@ -102,10 +124,14 @@
 
     <!-- ENCABEZADO -->
     <div class="header">
-        <h1>{{ strtoupper($cliente->nombre) }}</h1>
-        <strong>Cédula {{ $cliente->cedula }}</strong>
+        <div class="empresa-info">
+        <h1 class="titulo">CAHEN</h1>
+        <h2 class="subtitulo">Servicios Contables</h2>
+        <strong>{{ strtoupper($cliente->nombre) }}</strong>
+        <strong>Cédula {{ strtoupper($cliente->identification ) }}</strong>
         <strong>ESTADO DE SITUACIÓN FINANCIERA</strong>
         <strong>AL {{ strtolower($fechaActual) }}</strong>
+        </div>
     </div>
     <table>
         <thead>

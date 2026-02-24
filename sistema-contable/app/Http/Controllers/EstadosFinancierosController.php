@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Services\EstadoFinancieroService;
 use App\Exports\BalanceGeneralPDF;
+use App\Exports\TrialBalancePDF;
+use App\Exports\CashFlowStatementPDF;
+use App\Exports\StatementOfChangesInEquityPDF;
+use App\Exports\StatementOfComprehensiveIncomePDF;
 use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,7 +29,25 @@ class EstadosFinancierosController extends Controller
             ->setTasaImpuestos((float) $tasa);
         return $servicio;
     }
+public function statementOfComprehensiveIncomePDF(Request $request, int $customerId)
+{
+    $fechaInicio = $request->query('fecha_inicio');
+    $fechaFin    = $request->query('fecha_fin');
 
+    $data = $this
+        ->configurarServicio($request, $customerId)
+        ->setFechas($fechaInicio, $fechaFin)
+        ->estadoResultadosIntegral();
+
+    $cliente = Customer::findOrFail($customerId);
+
+    return (new StatementOfComprehensiveIncomePDF(
+        $data,
+        $fechaInicio,
+        $fechaFin,
+        $cliente
+    ))->stream();
+}
    
    public function balanceGeneral(Request $request, int $customerId)
 {
@@ -99,54 +121,46 @@ public function balanceGeneralPDF(Request $request, int $customerId)
     }
 
     
-    public function balanceComprobacion(Request $request, int $customerId)
-    {
-        try {
-            $comprobacion = $this
-                ->configurarServicio($request, $customerId)
-                ->balanceComprobacion();
+    public function balanceComprobacionPDF(Request $request, int $customerId)
+{
+    $fechaInicio = $request->query('fecha_inicio');
+    $fechaFin    = $request->query('fecha_fin');
 
-            return response()->json([
-                'success' => true,
-                'data' => $comprobacion,
-                'message' => 'Balance de Comprobación generado correctamente',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
+    $data = $this
+        ->configurarServicio($request, $customerId)
+        ->setFechas($fechaInicio, $fechaFin)
+        ->balanceComprobacion();
 
-    /**
-     * ✅ FLUJO DE EFECTIVO - JSON
-     * GET /api/estados-financieros/{customerId}/flujo-efectivo
-     */
-    public function flujoEfectivo(Request $request, int $customerId)
-    {
-        try {
-            $flujo = $this
-                ->configurarServicio($request, $customerId)
-                ->flujoEfectivo();
+    $cliente = Customer::findOrFail($customerId);
 
-            return response()->json([
-                'success' => true,
-                'data' => $flujo,
-                'message' => 'Flujo de Efectivo generado correctamente',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
+    return (new TrialBalancePDF(
+        $data,
+        $fechaInicio,
+        $fechaFin,
+        $cliente
+    ))->stream();
+}
 
-    /**
-     * ✅ RATIOS FINANCIEROS - JSON
-     * GET /api/estados-financieros/{customerId}/ratios-financieros
-     */
+   public function flujoEfectivoPDF(Request $request, int $customerId)
+{
+    $fechaInicio = $request->query('fecha_inicio');
+    $fechaFin    = $request->query('fecha_fin');
+
+    $data = $this
+        ->configurarServicio($request, $customerId)
+        ->setFechas($fechaInicio, $fechaFin)
+        ->flujoEfectivo();
+
+    $cliente = Customer::findOrFail($customerId);
+
+    return (new CashFlowStatementPDF(
+        $data,
+        $fechaInicio,
+        $fechaFin,
+        $cliente
+    ))->stream();
+}
+   
     public function ratiosFinancieros(Request $request, int $customerId)
     {
         try {
@@ -167,34 +181,27 @@ public function balanceGeneralPDF(Request $request, int $customerId)
         }
     }
 
-    /**
-     * ✅ CAMBIOS EN PATRIMONIO - JSON
-     * GET /api/estados-financieros/{customerId}/cambios-patrimonio
-     */
-    public function cambiosPatrimonio(Request $request, int $customerId)
-    {
-        try {
-            $cambios = $this
-                ->configurarServicio($request, $customerId)
-                ->cambiosPatrimonio();
+    public function cambiosPatrimonioPDF(Request $request, int $customerId)
+{
+    $fechaInicio = $request->query('fecha_inicio');
+    $fechaFin    = $request->query('fecha_fin');
 
-            return response()->json([
-                'success' => true,
-                'data' => $cambios,
-                'message' => 'Cambios en Patrimonio generados correctamente',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
+    $data = $this
+        ->configurarServicio($request, $customerId)
+        ->setFechas($fechaInicio, $fechaFin)
+        ->cambiosPatrimonio();
 
-    /**
-     * ✅ TODOS LOS ESTADOS FINANCIEROS - JSON
-     * GET /api/estados-financieros/{customerId}/completo
-     */
+    $cliente = Customer::findOrFail($customerId);
+
+    return (new StatementOfChangesInEquityPDF(
+        $data,
+        $fechaInicio,
+        $fechaFin,
+        $cliente
+    ))->stream();
+}
+
+    
     public function reporteCompleto(Request $request, int $customerId)
     {
         try {

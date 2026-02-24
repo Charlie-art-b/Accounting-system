@@ -2,11 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PDFTestController;
-<<<<<<< HEAD
-=======
-use App\Http\Controllers\EstadosFinancierosController;
-use App\Services\PdfFallbackService;
->>>>>>> c056526a51b8a766519de194d1fd9be857ed5f5c
 
 Route::get('/', function () {
     return view('welcome');
