@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Suppliers\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\Supplier;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -93,6 +95,34 @@ class SuppliersTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: Supplier::class,
+                    title: 'Proveedores',
+                    filePrefix: 'proveedores',
+                    fields: [
+                        'id',
+                        'tipo_proveedor',
+                        'nombre_razon_social',
+                        'identificacion',
+                        'correo',
+                        'telefono',
+                        'estado',
+                    ],
+                    uniqueBy: ['identificacion'],
+                    defaults: ['estado' => 'activo'],
+                    enumMaps: [
+                        'tipo_proveedor' => [
+                            'persona' => 'persona',
+                            'persona natural' => 'persona',
+                            'empresa' => 'empresa',
+                        ],
+                        'estado' => [
+                            'activo' => 'activo',
+                            'inactivo' => 'inactivo',
+                        ],
+                    ],
+                    requiredFields: ['nombre_razon_social', 'identificacion'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {

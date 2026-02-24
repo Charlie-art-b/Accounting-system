@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AccountPayables\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
 use App\Models\AccountPayable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -408,6 +409,62 @@ class AccountPayablesTable
                     }),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: AccountPayable::class,
+                    title: 'Cuentas por Pagar',
+                    filePrefix: 'cuentas-por-pagar',
+                    fields: [
+                        'id',
+                        'supplier_id',
+                        'document_number',
+                        'issue_date',
+                        'payment_terms',
+                        'payment_period',
+                        'due_date',
+                        'type',
+                        'total_amount',
+                        'paid_amount',
+                        'payment_date',
+                        'status',
+                        'notes',
+                    ],
+                    uniqueBy: ['document_number', 'supplier_id'],
+                    defaults: [
+                        'paid_amount' => 0,
+                        'status' => 'pending',
+                    ],
+                    enumMaps: [
+                        'payment_terms' => [
+                            'cash' => 'cash',
+                            'efectivo' => 'cash',
+                            'credit' => 'credit',
+                            'credito' => 'credit',
+                            'crédito' => 'credit',
+                        ],
+                        'type' => [
+                            'invoice' => 'invoice',
+                            'factura' => 'invoice',
+                            'receipt' => 'receipt',
+                            'recibo' => 'receipt',
+                            'debit_note' => 'debit_note',
+                            'nota_debito' => 'debit_note',
+                            'nota de debito' => 'debit_note',
+                            'other' => 'other',
+                            'otro' => 'other',
+                        ],
+                        'status' => [
+                            'pending' => 'pending',
+                            'pendiente' => 'pending',
+                            'partial' => 'partial',
+                            'parcial' => 'partial',
+                            'paid' => 'paid',
+                            'pagado' => 'paid',
+                            'voided' => 'voided',
+                            'anulado' => 'voided',
+                        ],
+                    ],
+                    requiredFields: ['supplier_id', 'document_number', 'total_amount'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {

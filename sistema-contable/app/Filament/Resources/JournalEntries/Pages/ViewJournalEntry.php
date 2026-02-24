@@ -14,6 +14,11 @@ class ViewJournalEntry extends ViewRecord
 {
     protected static string $resource = JournalEntryResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Detalle del Asiento #' . $this->record->id;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

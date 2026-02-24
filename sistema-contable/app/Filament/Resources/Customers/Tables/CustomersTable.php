@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Customers\Tables;
 
+use App\Filament\Support\CrudImportExportActions;
+use App\Models\Customer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -116,6 +118,36 @@ class CustomersTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                ...CrudImportExportActions::make(
+                    modelClass: Customer::class,
+                    title: 'Clientes',
+                    filePrefix: 'clientes',
+                    fields: [
+                        'id',
+                        'name',
+                        'first_last_name',
+                        'second_last_name',
+                        'id_type',
+                        'identification',
+                        'email',
+                        'phone',
+                        'address',
+                        'customer_type',
+                        'status',
+                        'notes',
+                    ],
+                    uniqueBy: ['identification'],
+                    defaults: ['status' => true],
+                    enumMaps: [
+                        'customer_type' => [
+                            'persona fisica' => 'individual',
+                            'individual' => 'individual',
+                            'persona juridica' => 'legal_person',
+                            'legal_person' => 'legal_person',
+                        ],
+                    ],
+                    requiredFields: ['name', 'identification'],
+                ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {

@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFallbackService;
 
 class BalanceGeneralPDF
 {
@@ -21,7 +21,7 @@ class BalanceGeneralPDF
     /**
      * Construye el PDF con configuración personalizada
      */
-    protected function buildPdf()
+    protected function viewData(): array
     {
         return Pdf::loadView('exports.balance-general-pdf', [
                 'data' => $this->data,
@@ -43,8 +43,19 @@ class BalanceGeneralPDF
      */
     public function stream()
     {
-        return $this->buildPdf()
-            ->stream($this->fileName());
+        return app(PdfFallbackService::class)->stream(
+            view: 'exports.balance-general-pdf',
+            data: $this->viewData(),
+            baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
+            paper: 'a4',
+            orientation: 'portrait',
+            options: [
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 110,
+            ],
+        );
     }
 
     /**
@@ -52,8 +63,19 @@ class BalanceGeneralPDF
      */
     public function download()
     {
-        return $this->buildPdf()
-            ->download($this->fileName());
+        return app(PdfFallbackService::class)->download(
+            view: 'exports.balance-general-pdf',
+            data: $this->viewData(),
+            baseFileName: pathinfo($this->fileName(), PATHINFO_FILENAME),
+            paper: 'a4',
+            orientation: 'portrait',
+            options: [
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 110,
+            ],
+        );
     }
 
     /**
