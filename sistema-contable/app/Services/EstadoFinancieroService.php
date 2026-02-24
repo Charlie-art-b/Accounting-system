@@ -156,10 +156,6 @@ class EstadoFinancieroService
             'fecha' => $this->fechaFin->format('Y-m-d'),
         ];
     }
-
-    /**
-     * ESTADO DE RESULTADOS - SIN CAMBIOS RELEVANTES
-     */
     public function estadoResultados(): array
     {
         $saldos = $this->obtenerSaldoCuentas();
@@ -213,9 +209,7 @@ class EstadoFinancieroService
         ];
     }
 
-    /**
-     * BALANCE DE COMPROBACIÓN - SIN CAMBIOS
-     */
+
     public function balanceComprobacion(): array
     {
         $saldos = $this->obtenerSaldoCuentas();
@@ -250,41 +244,7 @@ class EstadoFinancieroService
         ];
     }
 
-    /**
-     * RATIOS FINANCIEROS - SIN CAMBIOS
-     */
-    public function ratiosFinancieros(): array
-    {
-        $balance = $this->balanceGeneral();
-        $estado = $this->estadoResultados();
-
-        $activos = $balance['total_activos'] ?? 0;
-        $pasivos = $balance['pasivos']['total'] ?? 0;
-        $patrimonio = $balance['patrimonio']['total'] ?? 0;
-        $utilidad = $estado['utilidad_neta'] ?? 0;
-        $ingresos = $estado['ingresos']['total'] ?? 0;
-
-        return [
-            'liquidez' => [
-                'razon_corriente' => $pasivos > 0 ? $activos / $pasivos : ($activos > 0 ? 999.99 : 0),
-            ],
-            'solvencia' => [
-                'razon_deuda' => $activos > 0 ? $pasivos / $activos : 0,
-            ],
-            'rentabilidad' => [
-                'margen_neto' => $estado['margen_neto'] ?? 0,
-                'roa' => $activos > 0 ? ($utilidad / $activos) * 100 : 0,
-                'roe' => $patrimonio > 0 ? ($utilidad / $patrimonio) * 100 : 0,
-            ],
-            'eficiencia' => [
-                'rotacion_activo' => $activos > 0 ? $ingresos / $activos : 0,
-            ],
-        ];
-    }
-
-    /**
-     * FLUJO DE EFECTIVO - SIN CAMBIOS
-     */
+  
     public function flujoEfectivo(): array
     {
         $estado = $this->estadoResultados();
@@ -317,9 +277,7 @@ class EstadoFinancieroService
         ];
     }
 
-    /**
-     * CAMBIOS EN PATRIMONIO - SIN CAMBIOS
-     */
+    
     public function cambiosPatrimonio(): array
     {
         $saldos = $this->obtenerSaldoCuentas();
