@@ -48,7 +48,7 @@ class InventoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\Inventories\RelationManagers\InventoryProductsRelationManager::class,
         ];
     }
 

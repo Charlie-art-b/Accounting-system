@@ -7,7 +7,6 @@ use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions\Action;
 use App\Filament\Resources\Products\ProductResource;
-use App\Filament\Resources\InventoryProducts\InventoryProductResource;
 
 class ListInventories extends ListRecords
 {
@@ -16,18 +15,16 @@ class ListInventories extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Crear Inventario')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->keyBindings(['mod+n']),
 
             Action::make('productos')
                 ->label('Catálogo de Productos')
                 ->icon('heroicon-o-cube')
                 ->url(ProductResource::getUrl('index')),
-
-            Action::make('inventario productos')
-                ->label('Ver Existencias en Inventarios')
-                
-                ->url(InventoryProductResource::getUrl('index')),
-
         ];
     }
 }

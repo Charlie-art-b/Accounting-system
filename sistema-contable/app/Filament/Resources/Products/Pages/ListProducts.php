@@ -15,14 +15,11 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
-
-            Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url(InventoryResource::getUrl('index'))  
-                ->tooltip('Volver'),
+            CreateAction::make()
+                ->label('Crear cliente')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->keyBindings(['mod+n']),
         ];
     }
 }

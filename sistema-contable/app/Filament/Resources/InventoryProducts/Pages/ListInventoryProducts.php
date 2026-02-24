@@ -16,10 +16,12 @@ class ListInventoryProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-          CreateAction::make()
-                ->label('Agregar Existencias'),
+            CreateAction::make()
+                ->label('Agregar Producto al Inventario')
+                ->icon('heroicon-o-plus')
+                ->color('success'),
                 
-             Action::make('back')
+            Action::make('back')
                 ->label('')
                 ->icon('heroicon-o-x-mark')
                 ->color('gray')

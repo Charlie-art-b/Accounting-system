@@ -73,7 +73,52 @@ class InventoriesTable
                 uniqueBy: ['customer_id', 'name'],
             ),
             BulkActionGroup::make([
-                DeleteBulkAction::make(),
+                DeleteBulkAction::make()
+                    ->modalHeading('Eliminar inventarios')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar los inventarios seleccionados? Solo se eliminarán inventarios vacíos sin movimientos. Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->successNotificationTitle('Inventario(s) eliminado(s) correctamente')
+                    ->before(function ($action, $records) {
+                        $blockedInventories = [];
+
+                        foreach ($records as $record) {
+                            // Verificar productos con existencias
+                            $productsWithStock = $record->inventoryProducts()
+                                ->get()
+                                ->filter(function ($product) {
+                                    $existence = $product->stock_initial + $product->entries - $product->exits;
+                                    return $existence > 0;
+                                });
+
+                            if ($productsWithStock->count() > 0) {
+                                $blockedInventories[] = "• {$record->name}: {$productsWithStock->count()} producto(s) con existencias";
+                                continue;
+                            }
+
+                            // Verificar productos con movimientos
+                            $productsWithMovements = $record->inventoryProducts()
+                                ->where(function ($query) {
+                                    $query->where('entries', '>', 0)
+                                          ->orWhere('exits', '>', 0);
+                                })
+                                ->count();
+
+                            if ($productsWithMovements > 0) {
+                                $blockedInventories[] = "• {$record->name}: {$productsWithMovements} producto(s) con movimientos";
+                            }
+                        }
+
+                        if (count($blockedInventories) > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('No se pueden eliminar inventarios')
+                                ->body('Solo se pueden eliminar inventarios vacíos y sin movimientos registrados.')
+                                ->persistent()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
             ]),
         ]);
     }
