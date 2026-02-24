@@ -104,7 +104,6 @@ class EstadoFinancieroService
         $detalles = [];
 
         foreach ($saldos as $cuenta) {
-            // ✅ MEJORADO: Usar classification en lugar de códigos
             $saldo = $cuenta->normal_balance === 'debit'
                 ? $cuenta->total_debe - $cuenta->total_haber
                 : $cuenta->total_haber - $cuenta->total_debe;
@@ -117,7 +116,6 @@ class EstadoFinancieroService
                 'saldo' => $saldo,
             ];
 
-            // ✅ NUEVO: Usar classification para agrupar
             match ($cuenta->classification) {
                 'activo_corriente' => $activosCirculantes += $saldo,
                 'activo_no_corriente' => $activosNoCirculantes += $saldo,

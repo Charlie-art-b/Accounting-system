@@ -16,80 +16,68 @@ class EstadosFinancierosController extends Controller
     {
         $this->estadoService = $estadoService;
     }
-
-    /**
-     * Configura el servicio con cliente y fechas
-     */
-    private function configurarServicio(Request $request, int $customerId): EstadoFinancieroService
+     private function configurarServicio(Request $request, int $customerId): EstadoFinancieroService
     {
         $cliente = Customer::findOrFail($customerId);
-
-        $inicio = $request->input('inicio')
-            ? Carbon::parse($request->input('inicio'))
-            : Carbon::now()->startOfYear();
-
-        $fin = $request->input('fin')
-            ? Carbon::parse($request->input('fin'))
-            : Carbon::now();
-
         $tasa = $request->input('tasa_impuestos', 0);
-
         $servicio = $this->estadoService
             ->setCliente($cliente)
-            ->setFechas($inicio, $fin)
             ->setTasaImpuestos((float) $tasa);
-
         return $servicio;
     }
 
-    /**
-     * ✅ BALANCE GENERAL - JSON
-     * GET /api/estados-financieros/{customerId}/balance-general
-     */
-    public function balanceGeneral(Request $request, int $customerId)
-    {
-        try {
-            $balance = $this
-                ->configurarServicio($request, $customerId)
-                ->balanceGeneral();
+   
+   public function balanceGeneral(Request $request, int $customerId)
+{
+    try {
 
-            return response()->json([
-                'success' => true,
-                'data' => $balance,
-                'message' => 'Balance General generado correctamente',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
+        $fechaInicio   = $request->query('fecha_inicio');
+        $fechaFin      = $request->query('fecha_fin');
+        $balance = $this
+            ->configurarServicio($request, $customerId)
+            ->setFechas($fechaInicio, $fechaFin)
+            ->setTasaImpuestos((float) $tasaImpuestos)
+            ->balanceGeneral();
+
+        return response()->json([
+            'success' => true,
+            'data' => $balance,
+            'message' => 'Balance General generado correctamente',
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 400);
     }
+}
+public function balanceGeneralPDF(Request $request, int $customerId)
+{
+    try {
 
-    /**
-     * ✅ BALANCE GENERAL - PDF
-     * GET /api/estados-financieros/{customerId}/balance-general-pdf
-     */
-    public function balanceGeneralPDF(Request $request, int $customerId)
-    {
-        try {
-            $data = $this
-                ->configurarServicio($request, $customerId)
-                ->balanceGeneral();
+        $fechaInicio   = $request->query('fecha_inicio');
+        $fechaFin      = $request->query('fecha_fin');
+        $data = $this
+            ->configurarServicio($request, $customerId)
+            ->setFechas($fechaInicio, $fechaFin)
+            ->balanceGeneral();
+       $cliente = Customer::findOrFail($customerId);
+        return (new BalanceGeneralPDF(
+        $data,
+        $request->input('fecha_inicio'),
+        $request->input('fecha_fin'),
+        $cliente
+    ))->stream();
 
-            return (new BalanceGeneralPDF($data))->stream();
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 400);
     }
-
-    /**
-     * ✅ ESTADO DE RESULTADOS - JSON
-     * GET /api/estados-financieros/{customerId}/estado-resultados
-     */
+}
+   
     public function estadoResultados(Request $request, int $customerId)
     {
         try {
@@ -110,10 +98,7 @@ class EstadosFinancierosController extends Controller
         }
     }
 
-    /**
-     * ✅ BALANCE DE COMPROBACIÓN - JSON
-     * GET /api/estados-financieros/{customerId}/balance-comprobacion
-     */
+    
     public function balanceComprobacion(Request $request, int $customerId)
     {
         try {

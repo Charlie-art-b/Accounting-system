@@ -74,32 +74,17 @@
         }
     </style>
 </head>
+@php
+    use Carbon\Carbon;
+    
+    $fechaActual = Carbon::parse($fechaFin)
+        ->locale('es')
+        ->translatedFormat('d \d\e F Y');
 
-<body>
-<div class="container">
-
-    <!-- ENCABEZADO -->
-    <div class="header">
-        <h1>TRANSPORTES Y SERVICIOS PEREZ Y ORTIZ DEL ATLANTICO S.A.</h1>
-        <strong>Cédula 3-101-752653</strong>
-        <strong>ESTADO DE SITUACIÓN FINANCIERA</strong>
-        <strong>AL 31 DE ENERO DEL 2026</strong>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="left">Descripción</th>
-                <th class="center">Notas</th>
-                <th class="right">31-ene-26</th>
-                <th class="right">31-dic-25</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-        @php
-            $activosCorrientes = 0;
+    $fechaAnterior = Carbon::parse($fechaInicio)
+        ->locale('es')
+        ->translatedFormat('d \d\e F Y');
+         $activosCorrientes = 0;
             $activosNoCorrientes = 0;
             $pasivosCorrientes = 0;
             $pasivosNoCorrientes = 0;
@@ -110,9 +95,30 @@
             $pasivosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_corriente');
             $pasivosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_no_corriente');
             $patrimonioList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Patrimonio');
-        @endphp
 
-        <!-- ACTIVOS -->
+@endphp
+<body>
+<div class="container">
+
+    <!-- ENCABEZADO -->
+    <div class="header">
+        <h1>{{ strtoupper($cliente->nombre) }}</h1>
+        <strong>Cédula {{ $cliente->cedula }}</strong>
+        <strong>ESTADO DE SITUACIÓN FINANCIERA</strong>
+        <strong>AL {{ strtolower($fechaActual) }}</strong>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th class="left">Descripción</th>
+                <th class="center">Notas</th>
+                <th class="right">{{ strtolower($fechaAnterior) }}</th>
+                <th class="right">{{ strtolower($fechaActual) }}</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
         <tr><td colspan="4" class="section">ACTIVOS</td></tr>
         <tr><td colspan="4" class="section">ACTIVOS CORRIENTES</td></tr>
 

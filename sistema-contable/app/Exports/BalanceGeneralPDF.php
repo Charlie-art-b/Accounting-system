@@ -6,13 +6,16 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class BalanceGeneralPDF
 {
-    protected array $data;
-    protected string $fecha;
-
-    public function __construct(array $data)
+    protected $data;
+    protected $fechaInicio;
+    protected $fechaFin;
+    protected $cliente;
+    public function __construct($data, $fechaInicio, $fechaFin, $cliente)
     {
         $this->data = $data;
-        $this->fecha = $data['fecha'] ?? now()->format('Y-m-d');
+        $this->fechaInicio = $fechaInicio;
+        $this->fechaFin = $fechaFin;
+        $this->cliente = $cliente;
     }
 
     /**
@@ -22,7 +25,9 @@ class BalanceGeneralPDF
     {
         return Pdf::loadView('exports.balance-general-pdf', [
                 'data' => $this->data,
-                'fecha' => $this->fecha,
+                'fechaInicio' => $this->fechaInicio,
+                'fechaFin' => $this->fechaFin,
+                'cliente' => $this->cliente,
             ])
             ->setPaper('a4', 'portrait')
             ->setOptions([
