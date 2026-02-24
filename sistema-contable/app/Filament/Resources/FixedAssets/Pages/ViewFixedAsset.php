@@ -14,11 +14,14 @@ class ViewFixedAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()
-                ->label('Editar')
-                ->icon('heroicon-o-pencil')
-                ->color('primary')
-                ->url($this->getResource()::getUrl('edit', ['record' => $this->record])),
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
+
+            EditAction::make(),
         ];
     }
 }

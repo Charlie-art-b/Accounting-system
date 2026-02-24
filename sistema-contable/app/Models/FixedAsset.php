@@ -32,6 +32,17 @@ class FixedAsset extends Model
 
     protected static function booted(): void
     {
+        static::deleting(function (self $asset): void {
+            $hasDepreciation = (float) $asset->accumulated_depreciation > 0;
+            $isDisposed = $asset->status === 'disposed' || $asset->disposal_date || $asset->disposal_reason;
+
+            if ($isDisposed || $hasDepreciation) {
+                throw ValidationException::withMessages([
+                    'asset' => 'Solo se pueden eliminar activos activos sin depreciación registrada.',
+                ]);
+            }
+        });
+
         static::saving(function (self $asset): void {
 
             /*

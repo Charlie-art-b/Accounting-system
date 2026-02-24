@@ -7,6 +7,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 
 class EditProduct extends EditRecord
 {
@@ -23,8 +25,43 @@ class EditProduct extends EditRecord
             ->tooltip('Volver a la lista'),
             
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->before(function (DeleteAction $action) {
+                    $inventoryCount = $this->record->inventoryProduct()->count();
+
+                    if ($inventoryCount > 0) {
+                        Notification::make()
+                            ->title('NO SE PUEDE ELIMINAR')
+                            ->body('Este producto está registrado en el inventario. Elimínalo del inventario primero.')
+                            ->danger()
+                            ->send();
+
+                        throw new Halt();
+                    }
+                })
+                ->successNotification(
+                    Notification::make()
+                        ->success()
+                        ->title('¡Producto eliminado!')
+                        ->body('El producto ha sido eliminado correctamente.')
+                )
+                ->after(function () {
+                    return redirect()->to($this->getResource()::getUrl('index'));
+                }),
         ];
+    }
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Cambios guardados!')
+            ->body('Los cambios del producto se han guardado correctamente.');
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 
     protected function getFormActions(): array

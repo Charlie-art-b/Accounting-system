@@ -160,7 +160,35 @@ class FixedAssetsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->modalHeading('Eliminar activos fijos')
+                        ->modalDescription('Solo se pueden eliminar activos activos sin depreciación registrada. Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->successNotificationTitle('Activos fijos eliminados')
+                        ->before(function ($action, $records) {
+                            $hasBlocked = false;
+
+                            foreach ($records as $record) {
+                                $hasDepreciation = (float) $record->accumulated_depreciation > 0;
+                                $isDisposed = $record->status === 'disposed' || $record->disposal_date || $record->disposal_reason;
+
+                                if ($isDisposed || $hasDepreciation) {
+                                    $hasBlocked = true;
+                                    break;
+                                }
+                            }
+
+                            if ($hasBlocked) {
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('No se pueden eliminar activos fijos')
+                                    ->body('Solo se pueden eliminar activos activos sin depreciación registrada.')
+                                    ->persistent()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ]),
             ]);
     }

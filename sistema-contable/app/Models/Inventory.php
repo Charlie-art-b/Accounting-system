@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Validation\ValidationException;
 
 class Inventory extends Model
 {
@@ -15,6 +16,39 @@ class Inventory extends Model
         'customer_id',
         'name',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($inventory) {
+            // Verificar si tiene productos con existencias activas
+            $productsWithStock = $inventory->inventoryProducts()
+                ->get()
+                ->filter(function ($product) {
+                    $existence = $product->stock_initial + $product->entries - $product->exits;
+                    return $existence > 0;
+                });
+
+            if ($productsWithStock->count() > 0) {
+                throw ValidationException::withMessages([
+                    'inventory' => "No se puede eliminar el inventario '{$inventory->name}' porque tiene {$productsWithStock->count()} producto(s) con existencias activas."
+                ]);
+            }
+
+            // Verificar si tiene productos con movimientos registrados
+            $productsWithMovements = $inventory->inventoryProducts()
+                ->where(function ($query) {
+                    $query->where('entries', '>', 0)
+                          ->orWhere('exits', '>', 0);
+                })
+                ->count();
+
+            if ($productsWithMovements > 0) {
+                throw ValidationException::withMessages([
+                    'inventory' => "No se puede eliminar el inventario '{$inventory->name}' porque tiene {$productsWithMovements} producto(s) con movimientos registrados (entradas o salidas)."
+                ]);
+            }
+        });
+    }
 
     
     public function customer()

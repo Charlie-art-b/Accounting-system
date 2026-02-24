@@ -4,38 +4,78 @@ namespace App\Filament\Resources\InventoryProducts\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class InventoryProductForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema->components([
-            Select::make('inventory_id')
-                ->relationship('inventory', 'name')
-                ->label('Inventario')
-                ->required(),
+        $isFromQuickAdd = request()->has('inventory_id');
 
-            Select::make('product_id')
-                ->relationship('product', 'name')
-                ->label('Producto')
-                ->required(),
+        return $schema
+            ->columns(1)
+            ->components([
+                Section::make('Identificación')
+                    ->description('Selecciona el inventario y producto')
+                    ->icon('heroicon-o-tag')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('inventory_id')
+                            ->relationship('inventory', 'name')
+                            ->label('Inventario')
+                            ->placeholder($isFromQuickAdd ? 'Pre-seleccionado' : 'Selecciona un inventario')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->disabled($isFromQuickAdd)
+                            ->dehydrated(!$isFromQuickAdd),
 
-            TextInput::make('stock_initial')
-                ->label('Stock inicial')
-                ->numeric()
-                ->default(0)
-                ->required(),
+                        Select::make('product_id')
+                            ->relationship('product', 'name')
+                            ->label('Producto')
+                            ->placeholder('Selecciona un producto')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                    ]),
 
-            TextInput::make('entries')
-                ->label('Entradas')
-                ->numeric()
-                ->default(0),
+                Section::make('Cantidades')
+                    ->description('Registro de stock, entradas y salidas')
+                    ->icon('heroicon-o-calculator')
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('stock_initial')
+                            ->label('Stock Inicial')
+                            ->placeholder('0')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->required()
+                            ->suffix('unidades'),
 
-            TextInput::make('exits')
-                ->label('Salidas')
-                ->numeric()
-                ->default(0),
-        ]);
+                        TextInput::make('entries')
+                            ->label('Entradas')
+                            ->placeholder('0')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->required()
+                            ->dehydrateStateUsing(fn ($state) => $state ?? 0)
+                            ->suffix('unidades')
+                            ->helperText('Productos que ingresan'),
+
+                        TextInput::make('exits')
+                            ->label('Salidas')
+                            ->placeholder('0')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->required()
+                            ->dehydrateStateUsing(fn ($state) => $state ?? 0)
+                            ->suffix('unidades')
+                            ->helperText('Productos que salen'),
+                    ]),
+            ]);
     }
 }

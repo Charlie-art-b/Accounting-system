@@ -5,10 +5,19 @@ namespace App\Filament\Resources\Inventories\Pages;
 use App\Filament\Resources\Inventories\InventoryResource;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 
 class CreateInventory extends CreateRecord
 {
     protected static string $resource = InventoryResource::class;
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Inventario creado!')
+            ->body('El inventario se ha creado correctamente.');
+    }
 
     protected function getFormActions(): array
     {

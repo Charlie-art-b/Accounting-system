@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -18,17 +19,20 @@ class ProductsTable
                 TextColumn::make('name')
                     ->label('Nombre')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->weight('bold'),
                 TextColumn::make('supplier.nombre_razon_social')
                     ->label('Proveedor')
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
                 TextColumn::make('created_at')
-                    ->label('Creado el')
+                    ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('Actualizado el')
+                    ->label('Actualizado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -42,7 +46,37 @@ class ProductsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function ($records, DeleteBulkAction $action) {
+                            $blockedCount = 0;
+                            $blockedReasons = [];
+
+                            foreach ($records as $product) {
+                                $inventoryCount = $product->inventoryProduct()->count();
+
+                                if ($inventoryCount > 0) {
+                                    $blockedCount++;
+                                    $blockedReasons[] = "{$product->name}: Está en inventario";
+                                }
+                            }
+
+                            if ($blockedCount > 0) {
+                                $reasonsList = implode("\n• ", $blockedReasons);
+                                Notification::make()
+                                    ->danger()
+                                    ->title('NO SE PUEDE ELIMINAR')
+                                    ->body("No se pueden eliminar {$blockedCount} producto(s):\n\n• {$reasonsList}\n\nElimínalos del inventario primero.")
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('¡Producto(s) eliminado(s)!')
+                                ->body('Los productos seleccionados han sido eliminados correctamente.')
+                        ),
                 ]),
             ]);
     }
