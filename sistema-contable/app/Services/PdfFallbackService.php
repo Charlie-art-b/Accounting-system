@@ -19,7 +19,13 @@ class PdfFallbackService
             if (! empty($options)) {
                 $pdf->setOptions($options);
             }
-            return $pdf->download($baseFileName . '.pdf');
+            $pdfBytes = $pdf->output();
+
+            return response()->streamDownload(function () use ($pdfBytes) {
+                echo $pdfBytes;
+            }, $baseFileName . '.pdf', [
+                'Content-Type' => 'application/pdf',
+            ]);
         }
 
         $pdfBytes = app(SimplePdfService::class)->fromText(

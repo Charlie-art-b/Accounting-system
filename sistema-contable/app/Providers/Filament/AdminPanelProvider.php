@@ -28,6 +28,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->globalSearch(false)
             ->path('admin')
+            ->brandName('CAHEN Servicios Contables')
+            ->brandLogo(asset('images/logo.png'))
+            ->brandLogoHeight('3.5rem')
+            ->favicon(asset('images/logo.png'))
             // ->login()
             ->colors([
                 'primary' => Color::Amber,

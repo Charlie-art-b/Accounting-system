@@ -6,7 +6,7 @@ return [
     'panels' => [
         'default' => [
             'path' => 'admin',
-            'brand' => 'Sistema Contable',
+            'brand' => 'CAHEN Servicios Contables',
             'favicon' => null,
             'navigation_groups' => [
                 'default',
