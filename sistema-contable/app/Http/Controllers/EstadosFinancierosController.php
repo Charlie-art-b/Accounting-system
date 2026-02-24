@@ -33,10 +33,11 @@ public function statementOfComprehensiveIncomePDF(Request $request, int $custome
 {
     $fechaInicio = $request->query('fecha_inicio');
     $fechaFin    = $request->query('fecha_fin');
-
+    $tasaImpuestos = $request->input('tasa_impuestos', 0);
     $data = $this
         ->configurarServicio($request, $customerId)
         ->setFechas($fechaInicio, $fechaFin)
+        ->setTasaImpuestos((float) $tasaImpuestos)
         ->estadoResultadosIntegral();
 
     $cliente = Customer::findOrFail($customerId);
@@ -161,25 +162,6 @@ public function balanceGeneralPDF(Request $request, int $customerId)
     ))->stream();
 }
    
-    public function ratiosFinancieros(Request $request, int $customerId)
-    {
-        try {
-            $ratios = $this
-                ->configurarServicio($request, $customerId)
-                ->ratiosFinancieros();
-
-            return response()->json([
-                'success' => true,
-                'data' => $ratios,
-                'message' => 'Ratios Financieros generados correctamente',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 400);
-        }
-    }
 
     public function cambiosPatrimonioPDF(Request $request, int $customerId)
 {

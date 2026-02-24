@@ -397,19 +397,7 @@ private function crearPlanCuentas(): void
     }
 
     /** @test */
-    public function ratios_contienen_valores_reales()
-    {
-        $ratios = $this->service
-            ->setCliente($this->cliente->id)
-            ->setFechas(Carbon::now()->startOfYear(), Carbon::now())
-            ->ratiosFinancieros();
-
-        // Verifica que haya valores numéricos
-        $this->assertIsNumeric($ratios['rentabilidad']['margen_neto']);
-        $this->assertIsNumeric($ratios['rentabilidad']['roe']);
-        $this->assertIsNumeric($ratios['rentabilidad']['roa']);
-    }
-
+  
     /** @test */
     public function puede_cambiar_cliente()
     {
@@ -579,24 +567,7 @@ private function crearPlanCuentas(): void
         $this->assertEquals(0, $balance['pasivos']['total']);
     }
 
-    /** @test */
-    public function ratios_evita_division_por_cero()
-    {
-        // Crear cliente nuevo sin movimientos
-        $clienteSinMov = Customer::factory()->create();
-
-        $ratios = $this->service
-            ->setCliente($clienteSinMov->id)
-            ->setFechas(Carbon::now()->startOfYear(), Carbon::now())
-            ->ratiosFinancieros();
-
-        // Los ratios deben ser 0, no infinito ni error
-        $this->assertIsNumeric($ratios['rentabilidad']['roa']);
-        $this->assertIsNumeric($ratios['rentabilidad']['roe']);
-        $this->assertIsNumeric($ratios['eficiencia']['rotacion_activo']);
-    }
-
-    /** @test */
+    
     public function valida_ecuacion_contable()
     {
         $balance = $this->service

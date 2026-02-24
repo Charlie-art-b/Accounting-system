@@ -7,7 +7,7 @@ Route::prefix('estados-financieros')->group(function () {
     Route::get(
     '{customerId}/estado-resultados-integral-pdf',
     [EstadosFinancierosController::class, 'statementOfComprehensiveIncomePDF']
-);
+    );  
     Route::get('{customerId}/balance-general', [EstadosFinancierosController::class, 'balanceGeneral']);
     Route::get('{customerId}/balance-general-pdf', [EstadosFinancierosController::class, 'balanceGeneralPDF']);
     Route::get('{customerId}/estado-resultados', [EstadosFinancierosController::class, 'estadoResultados']);
