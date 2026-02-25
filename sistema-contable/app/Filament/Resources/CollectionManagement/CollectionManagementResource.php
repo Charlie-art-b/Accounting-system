@@ -17,7 +17,7 @@ class CollectionManagementResource extends Resource
 {
     protected static ?string $model = CollectionManagement::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBellAlert;
 
     protected static ?string $recordTitleAttribute = 'title';
 
@@ -61,3 +61,4 @@ class CollectionManagementResource extends Resource
         ];
     }
 }
+

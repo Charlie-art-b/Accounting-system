@@ -22,7 +22,7 @@ class ProductResource extends Resource
 
     protected static bool $shouldRegisterNavigation = true;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -69,3 +69,4 @@ class ProductResource extends Resource
         ];
     }
 }
+

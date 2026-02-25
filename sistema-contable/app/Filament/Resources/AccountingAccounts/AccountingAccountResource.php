@@ -19,7 +19,7 @@ class AccountingAccountResource extends Resource
 {
     protected static ?string $model = AccountingAccount::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -59,3 +59,4 @@ class AccountingAccountResource extends Resource
         ];
     }
 }
+

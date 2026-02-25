@@ -20,7 +20,7 @@ class FixedAssetResource extends Resource
 {
     protected static ?string $model = FixedAsset::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
     protected static ?string $recordTitleAttribute = 'Activos fijos';
 
@@ -64,3 +64,4 @@ class FixedAssetResource extends Resource
         ];
     }
 }
+

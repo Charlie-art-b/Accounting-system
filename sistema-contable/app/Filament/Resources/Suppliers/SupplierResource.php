@@ -26,7 +26,7 @@ class SupplierResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Proveedores';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
 
     protected static ?string $recordTitleAttribute = 'nombre_razon_social';
 
@@ -62,3 +62,4 @@ class SupplierResource extends Resource
         ];
     }
 }
+

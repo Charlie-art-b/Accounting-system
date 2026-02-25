@@ -20,7 +20,7 @@ class AccountReceivableResource extends Resource
 {
     protected static ?string $model = AccountReceivable::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowTrendingUp;
 
     protected static ?string $recordTitleAttribute = 'Cuentas por cobrar';
 
@@ -63,3 +63,4 @@ class AccountReceivableResource extends Resource
         ];
     }
 }
+

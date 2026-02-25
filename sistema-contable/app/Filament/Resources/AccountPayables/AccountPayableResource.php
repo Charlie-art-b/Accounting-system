@@ -20,7 +20,7 @@ class AccountPayableResource extends Resource
 {
     protected static ?string $model = AccountPayable::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowTrendingDown;
 
     protected static ?string $recordTitleAttribute = 'document_number';
 
@@ -66,3 +66,4 @@ class AccountPayableResource extends Resource
         ];
     }
 }
+
