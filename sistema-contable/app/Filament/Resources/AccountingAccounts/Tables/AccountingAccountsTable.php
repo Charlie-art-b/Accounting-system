@@ -72,7 +72,7 @@ class AccountingAccountsTable
                 TextColumn::make('saldo')
                     ->label('Saldo')
                     ->getStateUsing(fn ($record) => $record->getSaldo())
-                    ->money('USD', true),
+                    ->money('CRC', true),
 
                 TextColumn::make('status')
                     ->label('Estado')

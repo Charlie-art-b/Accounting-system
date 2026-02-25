@@ -22,7 +22,7 @@ class AccountingAccount extends Model
         'status',
     ];
 
-    // ✅ NUEVO: Definir constantes para clasificaciones
+    
     public const CLASSIFICATIONS = [
         'activo_corriente' => 'Activo Corriente',
         'activo_no_corriente' => 'Activo No Corriente',
@@ -75,37 +75,37 @@ class AccountingAccount extends Model
         return $this->hasMany(AccountingAccount::class, 'parent_id');
     }
 
-    // ✅ NUEVO: Scope para filtrar por clasificación
+    //Scope para filtrar por clasificación
     public function scopeByClassification($query, $classification)
     {
         return $query->where('classification', $classification);
     }
 
-    // ✅ NUEVO: Scope para activos
+    //Scope para activos
     public function scopeActivos($query)
     {
         return $query->where('type', 'Activo');
     }
 
-    // ✅ NUEVO: Scope para pasivos
+    //Scope para pasivos
     public function scopePasivos($query)
     {
         return $query->where('type', 'Pasivo');
     }
 
-    // ✅ NUEVO: Scope para patrimonio
+    //Scope para patrimonio
     public function scopePatrimonio($query)
     {
         return $query->where('type', 'Patrimonio');
     }
 
-    // ✅ NUEVO: Scope para ingresos
+    //Scope para ingresos
     public function scopeIngresos($query)
     {
         return $query->where('type', 'Ingreso');
     }
 
-    // ✅ NUEVO: Scope para gastos
+    //Scope para gastos
     public function scopeGastos($query)
     {
         return $query->where('type', 'Gasto');

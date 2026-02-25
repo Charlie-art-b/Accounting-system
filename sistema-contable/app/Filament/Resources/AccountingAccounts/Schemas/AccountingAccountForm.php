@@ -50,20 +50,17 @@ class AccountingAccountForm
                     ->required()
                     ->reactive(),
 
-                // ✅ NUEVO: Clasificación detallada
                 Select::make('classification')
                     ->label('Clasificación')
                     ->options(AccountingAccount::CLASSIFICATIONS)
                     ->searchable()
                     ->nullable(),
 
-                // ✅ NUEVO: Sección del reporte (flujo de efectivo u otros)
                 TextInput::make('report_section')
                     ->label('Sección del Reporte')
                     ->maxLength(100)
                     ->nullable(),
 
-                // ✅ NUEVO: Cuenta Padre (Jerarquía)
                 Select::make('parent_id')
                     ->label('Cuenta Padre')
                     ->relationship('parent', 'display')

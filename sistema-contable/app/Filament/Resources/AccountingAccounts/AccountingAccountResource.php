@@ -23,6 +23,16 @@ class AccountingAccountResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getPluralModelLabel(): string
+    {
+        return 'Cuentas Contables';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Cuenta Contable';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return AccountingAccountForm::configure($schema);
