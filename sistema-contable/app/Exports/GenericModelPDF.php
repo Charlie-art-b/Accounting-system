@@ -13,6 +13,7 @@ class GenericModelPDF
         private readonly array $fields,
         private readonly string $title,
         private readonly string $filePrefix,
+        private readonly array $fieldLabels = [],
     ) {}
 
     public function download()
@@ -20,14 +21,40 @@ class GenericModelPDF
         /** @var Model $model */
         $model = new $this->modelClass();
 
-        $records = $model->newQuery()
-            ->select($this->fields)
-            ->orderBy('id')
-            ->get();
+        // Detectar relaciones necesarias (campos con puntos)
+        $relations = [];
+        $selectFields = [];
+        
+        foreach ($this->fields as $field) {
+            if (str_contains($field, '.')) {
+                $relation = explode('.', $field)[0];
+                $relations[] = $relation;
+            } else {
+                $selectFields[] = $field;
+            }
+        }
+
+        $query = $model->newQuery();
+        
+        if (!empty($relations)) {
+            $query->with(array_unique($relations));
+        }
+        
+        // Si hay relaciones, necesitamos cargar todos los campos
+        if (!empty($relations)) {
+            $records = $query->orderBy('id')->get();
+        } else {
+            $records = $query->select($selectFields)->orderBy('id')->get();
+        }
+
+        $displayFields = empty($this->fieldLabels) 
+            ? $this->fields 
+            : array_map(fn($field) => $this->fieldLabels[$field] ?? $field, $this->fields);
 
         $viewData = [
             'title' => $this->title,
             'fields' => $this->fields,
+            'displayFields' => $displayFields,
             'records' => $records,
         ];
 
@@ -36,7 +63,7 @@ class GenericModelPDF
             $lines = [];
             $lines[] = $this->title;
             $lines[] = 'FORMATO IMPORTABLE';
-            $lines[] = implode('|', $this->fields);
+            $lines[] = implode('|', $displayFields);
 
             foreach ($records as $record) {
                 $row = [];

@@ -92,7 +92,6 @@ class InventoryProductsTable
                     title: 'Productos por Inventario',
                     filePrefix: 'inventario-productos',
                     fields: [
-                        'id',
                         'inventory_id',
                         'product_id',
                         'stock_initial',
@@ -106,6 +105,20 @@ class InventoryProductsTable
                         'exits' => 0,
                     ],
                     requiredFields: ['inventory_id', 'product_id'],
+                    fieldLabels: [
+                        'inventory.name' => 'Inventario',
+                        'product.name' => 'Producto',
+                        'stock_initial' => 'Stock Inicial',
+                        'entries' => 'Entradas',
+                        'exits' => 'Salidas',
+                    ],
+                    exportFields: [
+                        'inventory.name',
+                        'product.name',
+                        'stock_initial',
+                        'entries',
+                        'exits',
+                    ],
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

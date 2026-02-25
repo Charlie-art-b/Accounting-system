@@ -23,8 +23,12 @@ class CrudImportExportActions
         array $uniqueBy = ['id'],
         array $defaults = [],
         array $enumMaps = [],
-        array $requiredFields = []
+        array $requiredFields = [],
+        array $fieldLabels = [],
+        array $exportFields = []
     ): array {
+        // Si no se especifican exportFields, usar fields
+        $exportFields = empty($exportFields) ? $fields : $exportFields;
         return [
             Action::make('import_excel')
                 ->label('Importar Excel')
@@ -123,17 +127,17 @@ class CrudImportExportActions
                 ->label('Exportar Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->action(function () use ($modelClass, $fields, $filePrefix) {
+                ->action(function () use ($modelClass, $exportFields, $filePrefix, $fieldLabels) {
                     $excelFacade = '\Maatwebsite\Excel\Facades\Excel';
 
                     if (class_exists($excelFacade)) {
                         return $excelFacade::download(
-                            new GenericModelExport($modelClass, $fields),
+                            new GenericModelExport($modelClass, $exportFields, $fieldLabels),
                             $filePrefix . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx'
                         );
                     }
 
-                    return app(CsvExportService::class)->downloadFromModel($modelClass, $fields, $filePrefix);
+                    return app(CsvExportService::class)->downloadFromModel($modelClass, $exportFields, $filePrefix, $fieldLabels);
                 }),
 
             Action::make('export_pdf')
@@ -142,9 +146,10 @@ class CrudImportExportActions
                 ->color('warning')
                 ->action(fn () => app(GenericModelPDF::class, [
                     'modelClass' => $modelClass,
-                    'fields' => $fields,
+                    'fields' => $exportFields,
                     'title' => $title,
                     'filePrefix' => $filePrefix,
+                    'fieldLabels' => $fieldLabels,
                 ])->download()),
         ];
     }

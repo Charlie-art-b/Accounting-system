@@ -153,7 +153,6 @@ class AccountReceivablesTable
                     title: 'Cuentas por Cobrar',
                     filePrefix: 'cuentas-por-cobrar',
                     fields: [
-                        'id',
                         'customer_id',
                         'invoice_number',
                         'issue_date',
@@ -179,6 +178,26 @@ class AccountReceivablesTable
                         ],
                     ],
                     requiredFields: ['customer_id', 'invoice_number', 'total_amount'],
+                    fieldLabels: [
+                        'customer.name' => 'Cliente',
+                        'invoice_number' => 'Número de Factura',
+                        'issue_date' => 'Fecha de Emisión',
+                        'due_date' => 'Fecha de Vencimiento',
+                        'description' => 'Descripción',
+                        'total_amount' => 'Monto Total',
+                        'paid_amount' => 'Monto Pagado',
+                        'status' => 'Estado',
+                    ],
+                    exportFields: [
+                        'customer.name',
+                        'invoice_number',
+                        'issue_date',
+                        'due_date',
+                        'description',
+                        'total_amount',
+                        'paid_amount',
+                        'status',
+                    ],
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

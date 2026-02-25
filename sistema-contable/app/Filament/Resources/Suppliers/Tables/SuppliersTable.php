@@ -100,7 +100,6 @@ class SuppliersTable
                     title: 'Proveedores',
                     filePrefix: 'proveedores',
                     fields: [
-                        'id',
                         'tipo_proveedor',
                         'nombre_razon_social',
                         'identificacion',
@@ -122,6 +121,14 @@ class SuppliersTable
                         ],
                     ],
                     requiredFields: ['nombre_razon_social', 'identificacion'],
+                    fieldLabels: [
+                        'tipo_proveedor' => 'Tipo de Proveedor',
+                        'nombre_razon_social' => 'Nombre / Razón Social',
+                        'identificacion' => 'Identificación',
+                        'correo' => 'Correo Electrónico',
+                        'telefono' => 'Teléfono',
+                        'estado' => 'Estado',
+                    ],
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

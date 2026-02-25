@@ -21,8 +21,8 @@
     <table>
         <thead>
             <tr>
-                @foreach($fields as $field)
-                    <th>{{ $field }}</th>
+                @foreach($displayFields ?? $fields as $fieldLabel)
+                    <th>{{ $fieldLabel }}</th>
                 @endforeach
             </tr>
         </thead>
@@ -46,7 +46,7 @@
 
     <div class="import-box">
         <div class="small">Plantilla para importacion PDF delimitada por "|"</div>
-        <div class="small">{{ implode('|', $fields) }}</div>
+        <div class="small">{{ implode('|', $displayFields ?? $fields) }}</div>
         @foreach($records as $record)
             <div class="small">
                 @php $line = []; @endphp

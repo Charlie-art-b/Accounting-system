@@ -387,7 +387,6 @@ class CollectionManagementTable
                     title: 'Gestion de Cobro',
                     filePrefix: 'gestion-cobro',
                     fields: [
-                        'id',
                         'account_receivable_id',
                         'customer_id',
                         'next_reminder_at',
@@ -397,6 +396,22 @@ class CollectionManagementTable
                     ],
                     uniqueBy: ['account_receivable_id'],
                     defaults: ['reminder_attempts' => 0],
+                    fieldLabels: [
+                        'accountReceivable.invoice_number' => 'Factura',
+                        'customer.name' => 'Cliente',
+                        'next_reminder_at' => 'Próximo Recordatorio',
+                        'reminder_attempts' => 'Intentos de Recordatorio',
+                        'last_action' => 'Última Acción',
+                        'notes' => 'Notas',
+                    ],
+                    exportFields: [
+                        'accountReceivable.invoice_number',
+                        'customer.name',
+                        'next_reminder_at',
+                        'reminder_attempts',
+                        'last_action',
+                        'notes',
+                    ],
                 ),
             ])
             ->defaultSort('next_reminder_at', 'asc');
