@@ -166,7 +166,6 @@ class FixedAssetsTable
                     title: 'Activos Fijos',
                     filePrefix: 'activos-fijos',
                     fields: [
-                        'id',
                         'asset_name',
                         'description',
                         'acquisition_value',
@@ -193,6 +192,18 @@ class FixedAssetsTable
                             'under_maintenance' => 'under_maintenance',
                             'mantenimiento' => 'under_maintenance',
                         ],
+                    ],
+                    fieldLabels: [
+                        'asset_name' => 'Nombre del Activo',
+                        'description' => 'Descripción',
+                        'acquisition_value' => 'Valor de Adquisición',
+                        'acquisition_date' => 'Fecha de Adquisición',
+                        'useful_life_years' => 'Vida Útil (años)',
+                        'residual_value' => 'Valor Residual',
+                        'accumulated_depreciation' => 'Depreciación Acumulada',
+                        'status' => 'Estado',
+                        'disposal_date' => 'Fecha de Baja',
+                        'disposal_reason' => 'Motivo de Baja',
                     ],
                 ),
                 BulkActionGroup::make([

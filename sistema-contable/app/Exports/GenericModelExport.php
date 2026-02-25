@@ -13,6 +13,7 @@ class GenericModelExport implements FromCollection, WithHeadings, WithMapping, S
     public function __construct(
         private readonly string $modelClass,
         private readonly array $fields,
+        private readonly array $fieldLabels = [],
     ) {}
 
     public function collection()
@@ -20,15 +21,43 @@ class GenericModelExport implements FromCollection, WithHeadings, WithMapping, S
         /** @var Model $model */
         $model = new $this->modelClass();
 
-        return $model->newQuery()
-            ->select($this->fields)
-            ->orderBy('id')
-            ->get();
+        // Detectar relaciones necesarias (campos con puntos)
+        $relations = [];
+        $selectFields = [];
+        
+        foreach ($this->fields as $field) {
+            if (str_contains($field, '.')) {
+                $relation = explode('.', $field)[0];
+                $relations[] = $relation;
+            } else {
+                $selectFields[] = $field;
+            }
+        }
+
+        $query = $model->newQuery();
+        
+        if (!empty($relations)) {
+            $query->with(array_unique($relations));
+        }
+        
+        // Si hay relaciones, necesitamos seleccionar el ID y las foreign keys también
+        if (!empty($relations)) {
+            return $query->orderBy('id')->get();
+        }
+        
+        return $query->select($selectFields)->orderBy('id')->get();
     }
 
     public function headings(): array
     {
-        return $this->fields;
+        if (empty($this->fieldLabels)) {
+            return $this->fields;
+        }
+
+        return array_map(
+            fn($field) => $this->fieldLabels[$field] ?? $field,
+            $this->fields
+        );
     }
 
     public function map($row): array

@@ -52,13 +52,22 @@ class ProductsTable
                     title: 'Productos',
                     filePrefix: 'productos',
                     fields: [
-                        'id',
                         'name',
                         'description',
                         'supplier_id',
                     ],
                     uniqueBy: ['name', 'supplier_id'],
                     requiredFields: ['name', 'supplier_id'],
+                    fieldLabels: [
+                        'name' => 'Nombre',
+                        'description' => 'Descripción',
+                        'supplier.nombre_razon_social' => 'Proveedor',
+                    ],
+                    exportFields: [
+                        'name',
+                        'description',
+                        'supplier.nombre_razon_social',
+                    ],
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

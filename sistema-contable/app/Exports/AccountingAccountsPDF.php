@@ -23,16 +23,16 @@ class AccountingAccountsPDF
         $pdfFacade = '\Barryvdh\DomPDF\Facade\Pdf';
         if (! class_exists($pdfFacade)) {
             $fields = [
-                'customer_id',
-                'code',
-                'name',
-                'type',
-                'classification',
-                'report_section',
-                'normal_balance',
-                'parent_code',
-                'level',
-                'status',
+                'Cliente',
+                'Código',
+                'Nombre',
+                'Tipo',
+                'Clasificación',
+                'Sección Reporte',
+                'Naturaleza',
+                'Código Padre',
+                'Nivel',
+                'Estado',
             ];
 
             $lines = [];

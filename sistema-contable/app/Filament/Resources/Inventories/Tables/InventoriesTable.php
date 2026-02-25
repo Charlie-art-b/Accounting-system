@@ -66,11 +66,18 @@ class InventoriesTable
                 title: 'Inventarios',
                 filePrefix: 'inventarios',
                 fields: [
-                    'id',
                     'customer_id',
                     'name',
                 ],
                 uniqueBy: ['customer_id', 'name'],
+                fieldLabels: [
+                    'customer.name' => 'Cliente',
+                    'name' => 'Nombre del Inventario',
+                ],
+                exportFields: [
+                    'customer.name',
+                    'name',
+                ],
             ),
             BulkActionGroup::make([
                 DeleteBulkAction::make()
