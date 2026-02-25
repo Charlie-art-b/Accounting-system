@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Users\Pages;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-
+use Illuminate\Database\Eloquent\Builder;
 class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
@@ -13,7 +13,19 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+            ->label ('Crear usuario')
+            ->icon('heroicon-o-plus')
+            ->color('primary')
+            ->keyBindings(['mod+n']),  
+            
         ];
+        
     }
+      protected function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->where('id', '!=', auth()->id());
+    }
+
 }
