@@ -28,11 +28,17 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->globalSearch(false)
             ->path('admin')
+<<<<<<< HEAD
             ->brandName('CAHEN Servicios Contables')
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('3.5rem')
             ->favicon(asset('images/logo.png'))
             // ->login()
+=======
+            ->login()
+            ->authGuard('web')
+            ->authPasswordBroker('users')
+>>>>>>> 573dcbf (Implementación de Spatie. Migraciones de usuario, roles y permisos)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -58,7 +64,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                // Authenticate::class,
+                Authenticate::class,
             ]);
     }
 }

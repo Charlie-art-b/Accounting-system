@@ -1,8 +1,6 @@
 <?php
 
 namespace Database\Seeders;
-
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,6 +14,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            RolePermissionSeeder::class,
+            UsersSeeder::class,
             CustomerSeeder::class,
             SupplierSeeder::class,
             ProductSeeder::class,
@@ -27,14 +27,5 @@ class DatabaseSeeder extends Seeder
             FixedAssetsSeeder::class,
             AccountingAccountSeeder::class,
         ]);
-
- User::updateOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-                'password' => bcrypt('password'),
-            ]
-        );
     }
 }
