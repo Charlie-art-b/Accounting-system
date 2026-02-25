@@ -13,6 +13,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
+use App\Models\JournalEntry;
+use App\Models\JournalLine;
 
 class FinancialStatements extends Page
 {
@@ -29,7 +31,9 @@ class FinancialStatements extends Page
 
     public array $balance = [];
 
-    // para ver conteos
+    public array $estadoResultados = [];
+
+    // ver conteos
     public array $debug = [];
 
     public function mount(): void
@@ -82,23 +86,18 @@ class FinancialStatements extends Page
     {
         $this->form->validate();
 
-        $customerId = (int) $this->data['customer_id'];
-
-        // Debug SIN dd() para no romper Livewire
-        $this->debug = [
-            'customerId' => $customerId,
-            'cuentas_total_cliente' => AccountingAccount::where('customer_id', $customerId)->count(),
-            'cuentas_activas' => AccountingAccount::where('customer_id', $customerId)->where('status', 'Activa')->count(),
-            'statuses_distintos' => AccountingAccount::select('status')->distinct()->pluck('status')->toArray(),
-        ];
-
         $service = app(EstadoFinancieroService::class)
-            ->setCliente($customerId)
+            ->setCliente((int) $this->data['customer_id'])
             ->setTasaImpuestos((float) $this->data['tasa_impuestos'])
             ->setFechas($this->data['fecha_inicio'], $this->data['fecha_fin']);
 
-        // Aquí sí se define el balance
+        // Generar balance
         $this->balance = $service->balanceGeneral();
+        
+        $this->estadoResultados = $service->estadoResultados();
+
+        // (Opcional) debug en pantalla, sin detener ejecución
+        $customerId = (int) $this->data['customer_id'];
 
         $this->generated = true;
     }

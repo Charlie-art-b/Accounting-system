@@ -67,7 +67,10 @@ class EstadoFinancieroService
                 SUM(CAST(credit AS DECIMAL(15,2))) as total_haber'
             )
             ->whereHas('journalEntry', function ($q) use ($fecha) {
-                $q->whereBetween('posted_at', [$this->fechaInicio, $fecha])
+                $q->whereBetween('posted_at', [
+                    $this->fechaInicio->copy()->startOfDay(),
+                    $fecha->copy()->endOfDay(),
+                ])
                   ->when($this->customerId, function ($query) {
                       return $query->where('customer_id', $this->customerId);
                   })
