@@ -21,6 +21,10 @@ class AccountingAccountResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 9;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function getPluralModelLabel(): string

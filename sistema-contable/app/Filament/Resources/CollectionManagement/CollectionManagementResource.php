@@ -21,6 +21,10 @@ class CollectionManagementResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 5;
+
     public static function form(Schema $schema): Schema
     {
         return CollectionManagementForm::configure($schema);

@@ -28,6 +28,10 @@ class InventoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBox;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 6;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

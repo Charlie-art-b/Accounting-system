@@ -15,6 +15,8 @@ use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
+use Filament\Schemas\Components\Grid;
+use App\Filament\Widgets\FinancialStatsOverview;
 
 class FinancialStatements extends Page
 {
@@ -23,6 +25,10 @@ class FinancialStatements extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationLabel = 'Estados Financieros';
     protected static ?string $title = 'Estados Financieros';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 11;
 
     protected string $view = 'filament.pages.financial-statements';
 
@@ -51,24 +57,28 @@ class FinancialStatements extends Page
         return $schema
             ->statePath('data')
             ->schema([
-                Select::make('customer_id')
-                    ->label('Cliente')
-                    ->options(Customer::query()->pluck('name', 'id'))
-                    ->searchable()
-                    ->required(),
+                Grid::make(4)
+                    ->schema([
+                        Select::make('customer_id')
+                            ->label('Cliente')
+                            ->options(Customer::query()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
 
-                DatePicker::make('fecha_inicio')
-                    ->label('Fecha Inicio')
-                    ->required(),
+                        DatePicker::make('fecha_inicio')
+                            ->label('Fecha Inicio')
+                            ->required(),
 
-                DatePicker::make('fecha_fin')
-                    ->label('Fecha Fin')
-                    ->required(),
+                        DatePicker::make('fecha_fin')
+                            ->label('Fecha Fin')
+                            ->required(),
 
-                TextInput::make('tasa_impuestos')
-                    ->label('Tasa de Impuestos (ej: 0.13)')
-                    ->numeric()
-                    ->default(0),
+                        TextInput::make('tasa_impuestos')
+                            ->label('Tasa de Impuestos (%)')
+                            ->numeric()
+                            ->default(0),
+
+                        ]),
             ]);
     }
 
@@ -78,7 +88,7 @@ class FinancialStatements extends Page
             Action::make('generar')
                 ->label('Generar Reportes')
                 ->action('generarReportes')
-                ->icon('heroicon-o-play'),
+                ->icon('heroicon-o-chart-bar'),
         ];
     }
 
@@ -96,9 +106,21 @@ class FinancialStatements extends Page
         
         $this->estadoResultados = $service->estadoResultados();
 
-        // (Opcional) debug en pantalla, sin detener ejecución
+        //debug en pantalla, sin detener ejecución
         $customerId = (int) $this->data['customer_id'];
 
         $this->generated = true;
+
+        $this->dispatch('financial-report-generated',
+            balance: $this->balance,
+            estadoResultados: $this->estadoResultados,
+        );
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+             \App\Filament\Widgets\FinancialStatsOverview::class,
+        ];
     }
 }

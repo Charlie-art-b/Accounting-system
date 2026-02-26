@@ -26,6 +26,10 @@ class ProductResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 7;
+
     public static function getNavigationLabel(): string
     {
         return 'Productos';

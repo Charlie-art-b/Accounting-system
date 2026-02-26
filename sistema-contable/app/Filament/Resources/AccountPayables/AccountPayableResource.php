@@ -22,6 +22,10 @@ class AccountPayableResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowTrendingDown;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $recordTitleAttribute = 'document_number';
 
     public static function form(Schema $schema): Schema

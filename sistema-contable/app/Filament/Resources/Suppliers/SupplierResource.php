@@ -20,13 +20,17 @@ class SupplierResource extends Resource
 {
     protected static ?string $model = Supplier::class;
 
-    protected static ?string $navigationLabel = 'Proveedores';
+    protected static ?string $navigationLabel = 'Gestión de Proveedores';
 
     protected static ?string $modelLabel = 'Proveedor';
 
     protected static ?string $pluralModelLabel = 'Proveedores';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'nombre_razon_social';
 

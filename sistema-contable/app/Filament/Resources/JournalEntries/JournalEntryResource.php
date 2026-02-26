@@ -24,6 +24,10 @@ class JournalEntryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'journal_type';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 10;
+
     public static function getNavigationLabel(): string
     {
         return 'Contabilidad General';
@@ -31,12 +35,12 @@ class JournalEntryResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'Libro diario';
+        return 'Contabilidad General';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Libro diario';
+        return 'Contabilidad General';
     }
 
     //protected static ?string $navigationGroup = 'Finanzas';
