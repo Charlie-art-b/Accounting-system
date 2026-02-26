@@ -24,6 +24,10 @@ class JournalEntryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'journal_type';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 10;
+
     public static function getNavigationLabel(): string
     {
         return 'Contabilidad General';

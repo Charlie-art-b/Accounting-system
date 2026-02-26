@@ -24,9 +24,13 @@ class CustomerResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 1;
+
     public static function getNavigationLabel(): string
     {
-        return 'Clientes';
+        return 'Gestión de Clientes';
     }
 
     public static function getModelLabel(): string

@@ -24,6 +24,10 @@ class FixedAssetResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Activos fijos';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 8;
+
     public static function form(Schema $schema): Schema
     {
         return FixedAssetForm::configure($schema);

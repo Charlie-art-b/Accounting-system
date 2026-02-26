@@ -26,6 +26,10 @@ class FinancialStatements extends Page
     protected static ?string $navigationLabel = 'Estados Financieros';
     protected static ?string $title = 'Estados Financieros';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'PRINCIPAL';
+
+    protected static ?int $navigationSort = 11;
+
     protected string $view = 'filament.pages.financial-statements';
 
     public ?array $data = [];
