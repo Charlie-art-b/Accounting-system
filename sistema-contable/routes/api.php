@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EstadosFinancierosController;
+use App\Http\Controllers\FinancialReportController;
+use App\Http\Controllers\FinancialReportExportController;
+
+Route::get('/financial-reports/{reportId}/excel', [FinancialReportExportController::class, 'excel']);
+
+Route::post('/financial-reports/generate', [FinancialReportController::class, 'generate']);
 
 Route::prefix('estados-financieros')->group(function () {
     Route::get(

@@ -8,6 +8,7 @@ use App\Exports\TrialBalancePDF;
 use App\Exports\CashFlowStatementPDF;
 use App\Exports\StatementOfChangesInEquityPDF;
 use App\Exports\StatementOfComprehensiveIncomePDF;
+use App\Exports\EstadoResultadosPDF;
 use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -56,6 +57,8 @@ public function statementOfComprehensiveIncomePDF(Request $request, int $custome
 
         $fechaInicio   = $request->query('fecha_inicio');
         $fechaFin      = $request->query('fecha_fin');
+        $tasaImpuestos = $request->input('tasa_impuestos', 0);
+
         $balance = $this
             ->configurarServicio($request, $customerId)
             ->setFechas($fechaInicio, $fechaFin)
@@ -103,9 +106,13 @@ public function balanceGeneralPDF(Request $request, int $customerId)
    
     public function estadoResultados(Request $request, int $customerId)
     {
-        try {
+        try {   
+            $fechaInicio   = $request->query('fecha_inicio');
+            $fechaFin      = $request->query('fecha_fin');
+
             $estado = $this
                 ->configurarServicio($request, $customerId)
+                ->setFechas($fechaInicio, $fechaFin)
                 ->estadoResultados();
 
             return response()->json([
@@ -121,26 +128,41 @@ public function balanceGeneralPDF(Request $request, int $customerId)
         }
     }
 
-    
-    public function balanceComprobacionPDF(Request $request, int $customerId)
+    public function estadoResultadosPDF(Request $request, int $customerId)
 {
     $fechaInicio = $request->query('fecha_inicio');
     $fechaFin    = $request->query('fecha_fin');
+    $tasaImpuestos = $request->input('tasa_impuestos', 0);
 
     $data = $this
         ->configurarServicio($request, $customerId)
         ->setFechas($fechaInicio, $fechaFin)
-        ->balanceComprobacion();
+        ->setTasaImpuestos((float) $tasaImpuestos)
+        ->estadoResultados();
 
-    $cliente = Customer::findOrFail($customerId);
-
-    return (new TrialBalancePDF(
-        $data,
-        $fechaInicio,
-        $fechaFin,
-        $cliente
-    ))->stream();
+    return (new EstadoResultadosPDF($data))->generate();
 }
+
+    
+    public function balanceComprobacionPDF(Request $request, int $customerId)
+    {
+        $fechaInicio = $request->query('fecha_inicio');
+        $fechaFin    = $request->query('fecha_fin');
+
+        $data = $this
+            ->configurarServicio($request, $customerId)
+            ->setFechas($fechaInicio, $fechaFin)
+            ->balanceComprobacion();
+
+        $cliente = Customer::findOrFail($customerId);
+
+        return (new TrialBalancePDF(
+            $data,
+            $fechaInicio,
+            $fechaFin,
+            $cliente
+        ))->stream();
+    }
 
    public function flujoEfectivoPDF(Request $request, int $customerId)
 {
@@ -187,8 +209,13 @@ public function balanceGeneralPDF(Request $request, int $customerId)
     public function reporteCompleto(Request $request, int $customerId)
     {
         try {
-            $servicio = $this->configurarServicio($request, $customerId);
+            $fechaInicio = $request->query('fecha_inicio');
+            $fechaFin    = $request->query('fecha_fin');
 
+            $servicio = $this
+            ->configurarServicio($request, $customerId)
+            ->setFechas($fechaInicio, $fechaFin);
+            
             $datos = [
                 'balance_general' => $servicio->balanceGeneral(),
                 'estado_resultados' => $servicio->estadoResultados(),
