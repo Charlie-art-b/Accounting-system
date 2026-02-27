@@ -177,6 +177,22 @@ class CollectionManagementTable
                         'notes',
                     ],
                     uniqueBy: ['account_receivable_id'],
+                    fieldLabels: [
+                        'accountReceivable.invoice_number' => 'Factura',
+                        'customer.name' => 'Cliente',
+                        'next_reminder_at' => 'Próximo Recordatorio',
+                        'reminder_attempts' => 'Intentos de Recordatorio',
+                        'last_action' => 'Última Acción',
+                        'notes' => 'Notas',
+                    ],
+                    exportFields: [
+                        'accountReceivable.invoice_number',
+                        'customer.name',
+                        'next_reminder_at',
+                        'reminder_attempts',
+                        'last_action',
+                        'notes',
+                    ],
                 )
      ])
 

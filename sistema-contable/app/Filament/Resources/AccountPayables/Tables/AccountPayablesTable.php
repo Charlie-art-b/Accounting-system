@@ -184,6 +184,24 @@ class AccountPayablesTable
                             'status',
                         ],
                         uniqueBy: ['document_number', 'supplier_id'],
+                        fieldLabels: [
+                            'supplier.nombre_razon_social' => 'Proveedor',
+                            'document_number' => 'N° Documento',
+                            'issue_date' => 'Fecha de Emisión',
+                            'due_date' => 'Fecha de Vencimiento',
+                            'total_amount' => 'Monto Total',
+                            'paid_amount' => 'Monto Pagado',
+                            'status' => 'Estado',
+                        ],
+                        exportFields: [
+                            'supplier.nombre_razon_social',
+                            'document_number',
+                            'issue_date',
+                            'due_date',
+                            'total_amount',
+                            'paid_amount',
+                            'status',
+                        ],
                     )
                     : []),
 
