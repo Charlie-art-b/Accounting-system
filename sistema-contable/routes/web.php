@@ -2,10 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PDFTestController;
+use App\Http\Controllers\FinancialExportController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/exports/financial/pdf', [FinancialExportController::class, 'pdf'])
+    ->name('exports.financial.pdf');
+
+Route::get('/exports/financial/excel', [FinancialExportController::class, 'excel'])
+    ->name('exports.financial.excel');
 
 Route::get('/test/estado-resultados/{cliente}', function (\App\Models\Customer $cliente) {
     $service = app(\App\Services\EstadoFinancieroService::class);
