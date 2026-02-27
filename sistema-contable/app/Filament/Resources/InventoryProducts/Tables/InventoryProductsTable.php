@@ -14,8 +14,31 @@ use Filament\Tables\Table;
 
 class InventoryProductsTable
 {
-    public static function configure(Table $table): Table
+    /**
+     * Configura la tabla con control de permisos
+     *
+     * @param Table $table
+     * @param array $permissions ['canView' => bool, 'canEdit' => bool, 'canDelete' => bool]
+     */
+    public static function configure(Table $table, array $permissions = []): Table
     {
+        $canView = $permissions['canView'] ?? true;
+        $canEdit = $permissions['canEdit'] ?? true;
+        $canDelete = $permissions['canDelete'] ?? true;
+
+        $recordActions = [];
+        if ($canView) $recordActions[] = ViewAction::make();
+        if ($canEdit) $recordActions[] = EditAction::make();
+
+        $bulkActions = [];
+        if ($canDelete) {
+            $bulkActions[] = DeleteBulkAction::make()
+                ->modalHeading('Eliminar productos del inventario')
+                ->modalDescription('¿Estás seguro de eliminar los productos seleccionados? Esta acción no se puede deshacer.')
+                ->modalSubmitActionLabel('Sí, eliminar')
+                ->successNotificationTitle('Productos eliminados correctamente');
+        }
+
         return $table
             ->columns([
                 TextColumn::make('inventory.name')
@@ -74,7 +97,7 @@ class InventoryProductsTable
                     ->relationship('inventory', 'name')
                     ->searchable()
                     ->preload(),
-                    
+
                 SelectFilter::make('product_id')
                     ->label('Filtrar por Producto')
                     ->relationship('product', 'name')
@@ -82,13 +105,11 @@ class InventoryProductsTable
                     ->preload(),
             ])
             ->defaultSort('inventory.name', 'asc')
-            ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
+            ->recordActions($recordActions)
             ->toolbarActions([
                 ...CrudImportExportActions::make(
                     modelClass: InventoryProduct::class,
+                    module: 'inventory_products',
                     title: 'Productos por Inventario',
                     filePrefix: 'inventario-productos',
                     fields: [
@@ -120,9 +141,7 @@ class InventoryProductsTable
                         'exits',
                     ],
                 ),
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                BulkActionGroup::make($bulkActions),
             ]);
     }
 }

@@ -14,8 +14,19 @@ use Filament\Tables\Table;
 
 class ProductsTable
 {
-    public static function configure(Table $table): Table
+    /**
+     * Configura la tabla de productos.
+     *
+     * @param Table $table
+     * @param array $permissions ['canView' => bool, 'canEdit' => bool, 'canDelete' => bool]
+     * @return Table
+     */
+    public static function configure(Table $table, array $permissions = []): Table
     {
+        $canView = $permissions['canView'] ?? true;
+        $canEdit = $permissions['canEdit'] ?? true;
+        $canDelete = $permissions['canDelete'] ?? true;
+
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -23,16 +34,19 @@ class ProductsTable
                     ->sortable()
                     ->searchable()
                     ->weight('bold'),
+
                 TextColumn::make('supplier.nombre_razon_social')
                     ->label('Proveedor')
                     ->sortable()
                     ->badge()
                     ->color('success'),
+
                 TextColumn::make('created_at')
                     ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->label('Actualizado en')
                     ->dateTime()
@@ -43,12 +57,13 @@ class ProductsTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                $canView ? ViewAction::make() : null,
+                $canEdit ? EditAction::make() : null,
             ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(
                     modelClass: Product::class,
+                    module: 'products',
                     title: 'Productos',
                     filePrefix: 'productos',
                     fields: [
@@ -69,7 +84,7 @@ class ProductsTable
                         'supplier.nombre_razon_social',
                     ],
                 ),
-                BulkActionGroup::make([
+                $canDelete ? BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {
                             $blockedCount = 0;
@@ -77,7 +92,6 @@ class ProductsTable
 
                             foreach ($records as $product) {
                                 $inventoryCount = $product->inventoryProduct()->count();
-
                                 if ($inventoryCount > 0) {
                                     $blockedCount++;
                                     $blockedReasons[] = "{$product->name}: Está en inventario";
@@ -101,7 +115,7 @@ class ProductsTable
                                 ->title('¡Producto(s) eliminado(s)!')
                                 ->body('Los productos seleccionados han sido eliminados correctamente.')
                         ),
-                ]),
+                ]) : null,
             ]);
     }
 }

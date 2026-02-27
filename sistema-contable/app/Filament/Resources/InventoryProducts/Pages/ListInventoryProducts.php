@@ -19,7 +19,9 @@ class ListInventoryProducts extends ListRecords
             CreateAction::make()
                 ->label('Agregar Producto al Inventario')
                 ->icon('heroicon-o-plus')
-                ->color('success'),
+                ->color('success')
+                 ->visible(fn () => auth()->user()?->can('inventory_products.create') ?? false),
+
                 
             Action::make('back')
                 ->label('')

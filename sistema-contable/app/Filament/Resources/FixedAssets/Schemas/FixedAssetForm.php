@@ -3,16 +3,21 @@
 namespace App\Filament\Resources\FixedAssets\Schemas;
 
 use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class FixedAssetForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $canEdit = Auth::user()?->can('fixed_assets.update') ?? false;
+        $canCreate = Auth::user()?->can('fixed_assets.create') ?? false;
+        $canSubmit = $canEdit || $canCreate;
+
         return $schema
             ->columns(1)
             ->components([
@@ -26,18 +31,22 @@ class FixedAssetForm
                             ->placeholder('Ej: Equipo de oficina')
                             ->required()
                             ->columnSpanFull()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->disabled(!$canSubmit),
 
                         Textarea::make('description')
                             ->label('Descripción')
                             ->placeholder('Describe el activo')
                             ->default(null)
                             ->columnSpanFull()
-                            ->rows(3),
+                            ->rows(3)
+                            ->maxLength(2000)
+                            ->disabled(!$canSubmit),
 
                         DatePicker::make('acquisition_date')
                             ->label('Fecha de Adquisición')
-                            ->required(),
+                            ->required()
+                            ->disabled(!$canSubmit),
 
                         Select::make('status')
                             ->label('Estado')
@@ -46,7 +55,8 @@ class FixedAssetForm
                                 'disposed' => 'Dado de Baja',
                             ])
                             ->default('active')
-                            ->required(),
+                            ->required()
+                            ->disabled(!$canSubmit),
                     ]),
 
                 Section::make('Valores y Vida Útil')
@@ -59,7 +69,8 @@ class FixedAssetForm
                             ->required()
                             ->numeric()
                             ->step(0.01)
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->disabled(!$canSubmit),
 
                         TextInput::make('residual_value')
                             ->label('Valor Residual')
@@ -67,7 +78,8 @@ class FixedAssetForm
                             ->numeric()
                             ->step(0.01)
                             ->minValue(0)
-                            ->default(0.0),
+                            ->default(0.0)
+                            ->disabled(!$canSubmit),
 
                         TextInput::make('accumulated_depreciation')
                             ->label('Depreciación Acumulada')
@@ -75,7 +87,8 @@ class FixedAssetForm
                             ->numeric()
                             ->step(0.01)
                             ->minValue(0)
-                            ->default(0.0),
+                            ->default(0.0)
+                            ->disabled(!$canSubmit),
 
                         TextInput::make('net_value')
                             ->label('Valor Neto')
@@ -83,7 +96,8 @@ class FixedAssetForm
                             ->step(0.01)
                             ->minValue(0)
                             ->default(null)
-                            ->helperText('Opcional si se calcula automáticamente'),
+                            ->helperText('Opcional si se calcula automáticamente')
+                            ->disabled(!$canSubmit),
 
                         TextInput::make('useful_life_years')
                             ->label('Vida Útil (años)')
@@ -91,7 +105,8 @@ class FixedAssetForm
                             ->numeric()
                             ->integer()
                             ->step(1)
-                            ->minValue(1),
+                            ->minValue(1)
+                            ->disabled(!$canSubmit),
                     ]),
 
                 Section::make('Baja del Activo')
@@ -102,14 +117,16 @@ class FixedAssetForm
                     ->schema([
                         DatePicker::make('disposal_date')
                             ->label('Fecha de Baja')
-                            ->required(fn (callable $get) => $get('status') === 'disposed'),
+                            ->required(fn (callable $get) => $get('status') === 'disposed')
+                            ->disabled(!$canSubmit),
 
                         TextInput::make('disposal_reason')
                             ->label('Motivo de Baja')
                             ->placeholder('Ej: Obsolescencia')
                             ->default(null)
                             ->maxLength(255)
-                            ->required(fn (callable $get) => $get('status') === 'disposed'),
+                            ->required(fn (callable $get) => $get('status') === 'disposed')
+                            ->disabled(!$canSubmit),
                     ]),
             ]);
     }

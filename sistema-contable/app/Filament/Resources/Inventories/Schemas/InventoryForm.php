@@ -2,15 +2,21 @@
 
 namespace App\Filament\Resources\Inventories\Schemas;
 
+use App\Models\Customer;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class InventoryForm
 {
     public static function configure(Schema $schema): Schema
     {
+        // Permisos del usuario
+        $canView = Auth::user()?->can('inventories.view') ?? false;
+        $canEdit = Auth::user()?->can('inventories.update') ?? false;
+
         return $schema
             ->columns(1)
             ->components([
@@ -25,7 +31,8 @@ class InventoryForm
                             ->required()
                             ->maxLength(255)
                             ->columnSpanFull()
-                            ->autocomplete(false),
+                            ->autocomplete(false)
+                            ->disabled(!$canEdit), // Si no tiene permiso de edición, se deshabilita
 
                         Select::make('customer_id')
                             ->relationship('customer', 'name')
@@ -35,7 +42,8 @@ class InventoryForm
                             ->preload()
                             ->helperText('Cliente asociado a este inventario')
                             ->required()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disabled(!$canEdit), 
                     ]),
             ]);
     }

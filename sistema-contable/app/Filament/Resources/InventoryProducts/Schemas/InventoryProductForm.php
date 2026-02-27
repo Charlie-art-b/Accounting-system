@@ -4,13 +4,19 @@ namespace App\Filament\Resources\InventoryProducts\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class InventoryProductForm
 {
-    public static function configure(Schema $schema): Schema
+
+    public static function configure(Schema $schema, array $permissions = []): Schema
     {
+        $canCreate = $permissions['canCreate'] ?? true;
+        $canEdit = $permissions['canEdit'] ?? true;
+        $canDelete = $permissions['canDelete'] ?? true;
+
         $isFromQuickAdd = request()->has('inventory_id');
 
         return $schema
@@ -76,6 +82,12 @@ class InventoryProductForm
                             ->suffix('unidades')
                             ->helperText('Productos que salen'),
                     ]),
-            ]);
+            ])
+            ->actions([
+                $canCreate ? Action::make('create')->label('Crear') : null,
+                $canEdit ? Action::make('save')->label('Guardar') : null,
+                $canDelete ? Action::make('delete')->label('Eliminar')->requiresConfirmation() : null,
+            ])
+            ->compact();
     }
 }

@@ -28,6 +28,36 @@ class JournalEntryResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('journal_entries.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return auth()->user()?->can('journal_entries.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('journal_entries.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('journal_entries.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('journal_entries.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('journal_entries.delete') ?? false;
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Contabilidad General';
@@ -43,11 +73,13 @@ class JournalEntryResource extends Resource
         return 'Contabilidad General';
     }
 
-    //protected static ?string $navigationGroup = 'Finanzas';
-
     public static function form(Schema $schema): Schema
     {
-        return JournalEntryForm::configure($schema);
+        return JournalEntryForm::configure($schema, [
+            'canCreate' => static::canCreate(),
+            'canEdit' => static::canEdit(null),
+            'canDelete' => static::canDelete(null),
+        ]);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -57,14 +89,15 @@ class JournalEntryResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return JournalEntriesTable::configure($table);
+        return JournalEntriesTable::configure($table, [
+            'canEdit' => static::canEdit(null),
+            'canDelete' => static::canDelete(null),
+        ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -77,4 +110,3 @@ class JournalEntryResource extends Resource
         ];
     }
 }
-

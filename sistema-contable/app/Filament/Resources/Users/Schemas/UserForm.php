@@ -38,10 +38,9 @@ class UserForm
                         'unique' => 'Este correo ya está registrado.',
                     ]),
 
-                
-
                 TextInput::make('password')
                     ->label('Contraseña')
+                    ->revealable()
                     ->password()
                     ->minLength(6)
                     ->required(fn ($livewire) => $livewire instanceof \App\Filament\Resources\Users\Pages\CreateUser)
@@ -51,7 +50,6 @@ class UserForm
                         'min' => 'La contraseña debe tener al menos 6 caracteres.',
                     ]),
 
-                
                 TextInput::make('password_confirmation')
                     ->label('Confirmar contraseña')
                     ->password()
@@ -75,10 +73,8 @@ class UserForm
                     ->rules([
                         function ($get, $record) {
                             return function (string $attribute, $value, $fail) use ($record) {
+                                if (!$record) return;
 
-                                if (!$record) {
-                                    return;
-                                }
                                 if ($record->hasRole('administrador') &&
                                     !in_array('administrador', $value)) {
 

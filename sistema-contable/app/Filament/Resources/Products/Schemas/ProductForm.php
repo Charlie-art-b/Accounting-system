@@ -7,11 +7,16 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class ProductForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $canCreate = Auth::user()?->can('products.create') ?? false;
+        $canUpdate = Auth::user()?->can('products.update') ?? false;
+        $isDisabled = ! ($canCreate || $canUpdate);
+
         return $schema
             ->components([
                 Section::make('Información del Producto')
@@ -25,7 +30,8 @@ class ProductForm
                             ->maxLength(100)
                             ->regex('/^[\p{L}\p{N}\s]+$/u')
                             ->helperText('Nombre del producto')
-                            ->placeholder('Ej: Laptop HP Pavilion'),
+                            ->placeholder('Ej: Laptop HP Pavilion')
+                            ->disabled($isDisabled),
                     ]),
 
                 Section::make('Descripción')
@@ -37,7 +43,8 @@ class ProductForm
                             ->placeholder('Descripción del producto (opcional)')
                             ->rows(4)
                             ->maxLength(500)
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disabled($isDisabled),
                     ]),
 
                 Section::make('Proveedor')
@@ -50,7 +57,8 @@ class ProductForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->helperText('Selecciona el proveedor del producto'),
+                            ->helperText('Selecciona el proveedor del producto')
+                            ->disabled($isDisabled),
                     ]),
             ]);
     }

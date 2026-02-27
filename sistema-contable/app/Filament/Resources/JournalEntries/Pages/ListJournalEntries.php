@@ -14,7 +14,8 @@ class ListJournalEntries extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Crear asiento'),
+                ->label('Crear asiento')
+                ->visible(fn () => auth()->user()?->can('journal_entries.create') ?? false),
                 //->preload(),
         ];
     }

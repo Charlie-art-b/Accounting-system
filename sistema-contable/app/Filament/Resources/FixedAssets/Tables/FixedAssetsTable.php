@@ -13,6 +13,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class FixedAssetsTable
 {
@@ -76,71 +77,39 @@ class FixedAssetsTable
                         'disposed' => 'Dado de Baja',
                         'under_maintenance' => 'En Mantenimiento',
                     ]),
-                
                 Filter::make('acquisition_date')
                     ->label('Fecha de Adquisición')
                     ->form([
-                        \Filament\Forms\Components\DatePicker::make('from')
-                            ->label('Desde'),
-                        \Filament\Forms\Components\DatePicker::make('until')
-                            ->label('Hasta'),
+                        \Filament\Forms\Components\DatePicker::make('from')->label('Desde'),
+                        \Filament\Forms\Components\DatePicker::make('until')->label('Hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('acquisition_date', '>=', $date),
-                            )
-                            ->when(
-                                $data['until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('acquisition_date', '<=', $date),
-                            );
+                            ->when($data['from'], fn (Builder $query, $date) => $query->whereDate('acquisition_date', '>=', $date))
+                            ->when($data['until'], fn (Builder $query, $date) => $query->whereDate('acquisition_date', '<=', $date));
                     }),
-                
                 Filter::make('useful_life_years')
                     ->label('Vida Útil (años)')
                     ->form([
-                        \Filament\Forms\Components\TextInput::make('min')
-                            ->label('Mínimo')
-                            ->numeric(),
-                        \Filament\Forms\Components\TextInput::make('max')
-                            ->label('Máximo')
-                            ->numeric(),
+                        \Filament\Forms\Components\TextInput::make('min')->label('Mínimo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('max')->label('Máximo')->numeric(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['min'],
-                                fn (Builder $query, $value): Builder => $query->where('useful_life_years', '>=', $value),
-                            )
-                            ->when(
-                                $data['max'],
-                                fn (Builder $query, $value): Builder => $query->where('useful_life_years', '<=', $value),
-                            );
+                            ->when($data['min'], fn (Builder $query, $value) => $query->where('useful_life_years', '>=', $value))
+                            ->when($data['max'], fn (Builder $query, $value) => $query->where('useful_life_years', '<=', $value));
                     }),
-                
                 Filter::make('acquisition_value')
                     ->label('Valor de Adquisición')
                     ->form([
-                        \Filament\Forms\Components\TextInput::make('min')
-                            ->label('Mínimo')
-                            ->numeric(),
-                        \Filament\Forms\Components\TextInput::make('max')
-                            ->label('Máximo')
-                            ->numeric(),
+                        \Filament\Forms\Components\TextInput::make('min')->label('Mínimo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('max')->label('Máximo')->numeric(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['min'],
-                                fn (Builder $query, $value): Builder => $query->where('acquisition_value', '>=', $value),
-                            )
-                            ->when(
-                                $data['max'],
-                                fn (Builder $query, $value): Builder => $query->where('acquisition_value', '<=', $value),
-                            );
+                            ->when($data['min'], fn (Builder $query, $value) => $query->where('acquisition_value', '>=', $value))
+                            ->when($data['max'], fn (Builder $query, $value) => $query->where('acquisition_value', '<=', $value));
                     }),
-                
                 SelectFilter::make('has_disposal')
                     ->label('Estado de Baja')
                     ->options([
@@ -157,12 +126,13 @@ class FixedAssetsTable
                     }),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()->visible(fn ($record) => Auth::user()?->can('fixed_assets.view') ?? false),
+                EditAction::make()->visible(fn ($record) => Auth::user()?->can('fixed_assets.update') ?? false),
             ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(
                     modelClass: FixedAsset::class,
+                    module: 'fixed_assets',
                     title: 'Activos Fijos',
                     filePrefix: 'activos-fijos',
                     fields: [
@@ -208,6 +178,7 @@ class FixedAssetsTable
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('fixed_assets.delete') ?? false)
                         ->modalHeading('Eliminar activos fijos')
                         ->modalDescription('Solo se pueden eliminar activos activos sin depreciación registrada. Esta acción no se puede deshacer.')
                         ->modalSubmitActionLabel('Sí, eliminar')

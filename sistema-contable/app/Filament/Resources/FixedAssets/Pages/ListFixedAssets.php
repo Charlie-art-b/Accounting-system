@@ -19,6 +19,7 @@ class ListFixedAssets extends ListRecords
                 ->label('Registrar Activo Fijo')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
+                ->visible(fn () => auth()->user()?->can('fixed_assets.create') ?? false)
                 ->url($this->getResource()::getUrl('create')),
         ];
     }

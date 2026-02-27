@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class InventoryProductResource extends Resource
 {
@@ -24,7 +25,6 @@ class InventoryProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
-   // protected static ?string $recordTitleAttribute = 'inventory_id.name';
 
     public static function getNavigationLabel(): string
     {
@@ -41,6 +41,37 @@ class InventoryProductResource extends Resource
         return 'Existencias';
     }
 
+    // Permisos
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('inventory_products.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return Auth::user()?->can('inventory_products.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('inventory_products.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('inventory_products.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()?->can('inventory_products.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('inventory_products.delete') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return InventoryProductForm::configure($schema);
@@ -53,14 +84,16 @@ class InventoryProductResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return InventoryProductsTable::configure($table);
+        return InventoryProductsTable::configure($table, [
+            'canView' => self::canViewAny(),
+            'canEdit' => self::canEdit(null),
+            'canDelete' => self::canDelete(null),
+        ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -73,4 +106,3 @@ class InventoryProductResource extends Resource
         ];
     }
 }
-

@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class InventoryResource extends Resource
 {
@@ -34,19 +35,49 @@ class InventoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('inventories.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return Auth::user()?->can('inventories.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('inventories.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('inventories.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()?->can('inventories.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('inventories.delete') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return InventoryForm::configure($schema);
     }
 
-    public static function infolist(Schema $schema): Schema
-    {
-        return InventoryInfolist::configure($schema);
-    }
-
     public static function table(Table $table): Table
     {
         return InventoriesTable::configure($table);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return InventoryInfolist::configure($schema);
     }
 
     public static function getRelations(): array
@@ -59,11 +90,10 @@ class InventoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListInventories::route('/'),
+            'index'  => ListInventories::route('/'),
             'create' => CreateInventory::route('/create'),
-            'view' => ViewInventory::route('/{record}'),
-            'edit' => EditInventory::route('/{record}/edit'),
+            'edit'   => EditInventory::route('/{record}/edit'),
+            'view'   => ViewInventory::route('/{record}'),
         ];
     }
 }
-

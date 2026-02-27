@@ -19,12 +19,14 @@ class ListInventories extends ListRecords
                 ->label('Crear Inventario')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->keyBindings(['mod+n']),
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('inventories.create') ?? false),
 
             Action::make('productos')
                 ->label('Catálogo de Productos')
                 ->icon('heroicon-o-cube')
-                ->url(ProductResource::getUrl('index')),
+                ->url(ProductResource::getUrl('index'))
+                ->visible(fn () => auth()->user()?->can('products.view') ?? false),
         ];
     }
 }

@@ -30,6 +30,36 @@ class ProductResource extends Resource
 
     protected static ?int $navigationSort = 7;
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('products.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return auth()->user()?->can('products.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('products.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('products.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('products.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('products.delete') ?? false;
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Productos';
@@ -40,15 +70,14 @@ class ProductResource extends Resource
         return 'Producto';
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return 'Productos';
+    }
 
     public static function form(Schema $schema): Schema
     {
         return ProductForm::configure($schema);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return ProductInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -56,11 +85,14 @@ class ProductResource extends Resource
         return ProductsTable::configure($table);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return ProductInfolist::configure($schema);
+    }
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -68,9 +100,8 @@ class ProductResource extends Resource
         return [
             'index' => ListProducts::route('/'),
             'create' => CreateProduct::route('/create'),
-            'view' => ViewProduct::route('/{record}'),
             'edit' => EditProduct::route('/{record}/edit'),
+            'view' => ViewProduct::route('/{record}'),
         ];
     }
 }
-

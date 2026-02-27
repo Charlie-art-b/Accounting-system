@@ -17,7 +17,7 @@ class CrudImportExportActions
 {
     public static function make(
         string $modelClass,
-        string $module, // 👈 nombre del módulo para permisos (ej: accounting_accounts)
+        string $module, 
         string $title,
         string $filePrefix,
         array $fields,
