@@ -5,7 +5,7 @@ use App\Http\Controllers\PDFTestController;
 use App\Http\Controllers\FinancialExportController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/admin/login');
 });
 
 Route::get('/exports/financial/pdf', [FinancialExportController::class, 'pdf'])
