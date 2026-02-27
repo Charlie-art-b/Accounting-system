@@ -184,6 +184,19 @@ class CustomersTable
                         ],
                     ],
                     requiredFields: ['name', 'identification'],
+                    fieldLabels: [
+                        'name' => 'Nombre',
+                        'first_last_name' => 'Primer Apellido',
+                        'second_last_name' => 'Segundo Apellido',
+                        'id_type' => 'Tipo de Identificación',
+                        'identification' => 'Identificación',
+                        'email' => 'Correo Electrónico',
+                        'phone' => 'Teléfono',
+                        'address' => 'Dirección',
+                        'customer_type' => 'Tipo de Cliente',
+                        'status' => 'Estado',
+                        'notes' => 'Notas',
+                    ],
                 ),
 
                 BulkActionGroup::make([
