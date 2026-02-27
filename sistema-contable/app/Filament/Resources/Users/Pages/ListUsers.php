@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
-
+   
     protected function getHeaderActions(): array
     {
         return [
@@ -17,15 +17,15 @@ class ListUsers extends ListRecords
             ->label ('Crear usuario')
             ->icon('heroicon-o-plus')
             ->color('primary')
-            ->keyBindings(['mod+n']),  
-            
+            ->keyBindings(['mod+n'])
+            ->visible(fn () => auth()->user()?->can('users.create'))            
         ];
-        
     }
+        
+    
       protected function getTableQuery(): Builder
     {
         return parent::getTableQuery()
             ->where('id', '!=', auth()->id());
     }
-
 }

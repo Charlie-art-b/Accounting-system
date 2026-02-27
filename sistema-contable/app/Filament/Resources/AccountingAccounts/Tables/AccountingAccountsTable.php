@@ -20,6 +20,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -90,6 +91,7 @@ class AccountingAccountsTable
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
                 SelectFilter::make('customer_id')
                     ->label('Cliente')
@@ -123,116 +125,21 @@ class AccountingAccountsTable
                         'Inactiva' => 'Inactiva',
                     ]),
             ])
+
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()
+                    ->visible(fn () => Auth::user()?->can('accounting_accounts.view')),
+
+                EditAction::make()
+                    ->visible(fn () => Auth::user()?->can('accounting_accounts.update')),
             ])
+
             ->toolbarActions([
-                Action::make('import_excel')
-                    ->label('Importar Excel')
-                    ->icon('heroicon-o-arrow-up-tray')
-                    ->color('primary')
-                    ->form([
-                        Select::make('customer_id')
-                            ->label('Cliente por defecto')
-                            ->options(Customer::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                            ->searchable()
-                            ->required(),
-                        FileUpload::make('file')
-                            ->label('Archivo Excel')
-                            ->disk('local')
-                            ->directory('imports/accounting-accounts')
-                            ->acceptedFileTypes([
-                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                'application/vnd.ms-excel',
-                                'text/csv',
-                            ])
-                            ->required(),
-                        Toggle::make('update_existing')
-                            ->label('Actualizar si el codigo ya existe')
-                            ->default(true),
-                    ])
-                    ->action(function (array $data) {
-                        try {
-                            $summary = app(AccountingAccountsImportService::class)->importFromExcel(
-                                Storage::disk('local')->path($data['file']),
-                                (int) $data['customer_id'],
-                                (bool) ($data['update_existing'] ?? true),
-                            );
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
+                ]),
 
-                            $errors = $summary['errors'];
-                            $errorText = empty($errors) ? '' : "\nErrores:\n- " . implode("\n- ", array_slice($errors, 0, 5));
-
-                            Notification::make()
-                                ->title('Importacion Excel completada')
-                                ->body("Creadas: {$summary['created']} | Actualizadas: {$summary['updated']} | Omitidas: {$summary['skipped']}" . $errorText)
-                                ->success()
-                                ->send();
-                        } catch (ValidationException $e) {
-                            Notification::make()
-                                ->title('No se pudo importar')
-                                ->body(implode("\n", $e->errors()['file'] ?? $e->errors()['customer_id'] ?? ['Validacion fallida']))
-                                ->danger()
-                                ->send();
-                        } catch (\Throwable $e) {
-                            Notification::make()
-                                ->title('Error al importar Excel')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
-                Action::make('import_pdf')
-                    ->label('Importar PDF')
-                    ->icon('heroicon-o-document-arrow-up')
-                    ->color('gray')
-                    ->form([
-                        Select::make('customer_id')
-                            ->label('Cliente por defecto')
-                            ->options(Customer::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                            ->searchable()
-                            ->required(),
-                        FileUpload::make('file')
-                            ->label('Archivo PDF')
-                            ->disk('local')
-                            ->directory('imports/accounting-accounts')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->helperText('Use PDF con lineas delimitadas por "|" o ";".')
-                            ->required(),
-                        Toggle::make('update_existing')
-                            ->label('Actualizar si el codigo ya existe')
-                            ->default(true),
-                    ])
-                    ->action(function (array $data) {
-                        try {
-                            $summary = app(AccountingAccountsImportService::class)->importFromPdf(
-                                Storage::disk('local')->path($data['file']),
-                                (int) $data['customer_id'],
-                                (bool) ($data['update_existing'] ?? true),
-                            );
-
-                            $errors = $summary['errors'];
-                            $errorText = empty($errors) ? '' : "\nErrores:\n- " . implode("\n- ", array_slice($errors, 0, 5));
-
-                            Notification::make()
-                                ->title('Importacion PDF completada')
-                                ->body("Creadas: {$summary['created']} | Actualizadas: {$summary['updated']} | Omitidas: {$summary['skipped']}" . $errorText)
-                                ->success()
-                                ->send();
-                        } catch (ValidationException $e) {
-                            Notification::make()
-                                ->title('No se pudo importar')
-                                ->body(implode("\n", $e->errors()['file'] ?? $e->errors()['customer_id'] ?? ['Validacion fallida']))
-                                ->danger()
-                                ->send();
-                        } catch (\Throwable $e) {
-                            Notification::make()
-                                ->title('Error al importar PDF')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
                 Action::make('export_excel')
                     ->label('Exportar Excel')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -264,14 +171,12 @@ class AccountingAccountsTable
                             'Plan_Cuentas'
                         );
                     }),
+
                 Action::make('export_pdf')
                     ->label('Exportar PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('warning')
                     ->action(fn () => app(AccountingAccountsPDF::class)->download()),
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
             ]);
     }
 }

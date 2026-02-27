@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class CollectionManagementResource extends Resource
 {
@@ -25,26 +26,58 @@ class CollectionManagementResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
+   
     public static function form(Schema $schema): Schema
     {
         return CollectionManagementForm::configure($schema);
     }
 
+   
     public static function infolist(Schema $schema): Schema
     {
         return CollectionManagementInfolist::configure($schema);
     }
 
+    
     public static function table(Table $table): Table
     {
         return CollectionManagementTable::configure($table);
     }
 
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('collection_management.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return Auth::user()?->can('collection_management.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPluralModelLabel(): string
@@ -65,4 +98,3 @@ class CollectionManagementResource extends Resource
         ];
     }
 }
-

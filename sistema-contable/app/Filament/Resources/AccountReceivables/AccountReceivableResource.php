@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class AccountReceivableResource extends Resource
 {
@@ -28,19 +29,54 @@ class AccountReceivableResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Cuentas por cobrar';
 
+   
     public static function form(Schema $schema): Schema
     {
         return AccountReceivableForm::configure($schema);
     }
 
+   
     public static function infolist(Schema $schema): Schema
     {
         return AccountReceivableInfolist::configure($schema);
     }
 
+    
     public static function table(Table $table): Table
     {
         return AccountReceivablesTable::configure($table);
+    }
+
+   
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('account_receivables.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return Auth::user()?->can('account_receivables.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('account_receivables.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('account_receivables.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()?->can('account_receivables.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('account_receivables.delete') ?? false;
     }
 
     public static function getRelations(): array
@@ -49,14 +85,19 @@ class AccountReceivableResource extends Resource
             \App\Filament\Resources\AccountReceivables\RelationManagers\PaymentsRelationManager::class,
         ];
     }
+
+    
     public static function getPluralModelLabel(): string
     {
         return 'Cuentas por cobrar';
     }
+
     public static function getModelLabel(): string
     {
         return 'Cuenta por cobrar';
     }
+
+   
     public static function getPages(): array
     {
         return [
@@ -67,4 +108,3 @@ class AccountReceivableResource extends Resource
         ];
     }
 }
-

@@ -64,7 +64,6 @@ class UsersTable
 
                         $currentUser = auth()->user();
 
-                        // 🔹 No eliminarse a sí mismo
                         if ($record->id === $currentUser->id) {
                             Notification::make()
                                 ->danger()

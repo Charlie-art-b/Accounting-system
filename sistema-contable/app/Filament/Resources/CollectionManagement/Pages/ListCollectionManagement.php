@@ -12,7 +12,7 @@ class ListCollectionManagement extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // No se permite crear gestiones de cobros manualmente
+            
         ];
     }
 }

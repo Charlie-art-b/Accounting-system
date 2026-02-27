@@ -9,10 +9,16 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Facades\Auth;
 
 class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return Auth::user()?->can('customers.update') ?? false;
+    }
 
     protected function getSavedNotification(): ?Notification
     {
@@ -31,14 +37,17 @@ class EditCustomer extends EditRecord
     {
         return [
             Action::make('back')
-            ->label('')
-            ->icon('heroicon-o-x-mark')
-            ->color('gray')
-            ->url($this->getResource()::getUrl('index'))
-            ->tooltip('Volver a la lista'),
-            
-            ViewAction::make(),
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista')
+                ->visible(fn () => Auth::user()?->can('customers.view')),
+
+            ViewAction::make()
+                ->visible(fn () => Auth::user()?->can('customers.view')),
+
             DeleteAction::make()
+                ->visible(fn () => Auth::user()?->can('customers.delete'))
                 ->before(function (DeleteAction $action) {
                     $pendingAccounts = $this->record->accountReceivables()
                         ->whereIn('status', ['pending', 'partial'])
@@ -60,15 +69,16 @@ class EditCustomer extends EditRecord
                         ->title('¡Cliente eliminado!')
                         ->body('El cliente ha sido eliminado correctamente.')
                 )
-                ->after(function () {
-                    return redirect()->to($this->getResource()::getUrl('index'));
-                }),
+                ->after(fn () => redirect()->to(
+                    $this->getResource()::getUrl('index')
+                )),
         ];
     }
 
     protected function getFormActions(): array
     {
         return [
+            
             Action::make('save')
                 ->label('Guardar cambios')
                 ->requiresConfirmation()
@@ -76,13 +86,14 @@ class EditCustomer extends EditRecord
                 ->modalDescription('¿Deseas guardar los cambios de este cliente?')
                 ->modalSubmitActionLabel('Sí, guardar')
                 ->modalCancelActionLabel('Cancelar')
-                ->action(fn () => $this->save()),
+                ->action(fn () => $this->save())
+                ->visible(fn () => Auth::user()?->can('customers.update')),
 
-            Action::make('cancel')
+             Action::make('cancel')
                 ->label('Cancelar')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index')),
+                ->url($this->getResource()::getUrl('index'))
+                ->visible(fn () => Auth::user()?->can('customers.view')),
         ];
     }
-
 }

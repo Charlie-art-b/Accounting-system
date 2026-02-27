@@ -28,6 +28,39 @@ class AccountPayableResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'document_number';
 
+    
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('account_payables.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return auth()->user()?->can('account_payables.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('account_payables.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('account_payables.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('account_payables.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('account_payables.delete') ?? false;
+    }
+
+  
     public static function form(Schema $schema): Schema
     {
         return AccountPayableForm::configure($schema);
@@ -70,4 +103,3 @@ class AccountPayableResource extends Resource
         ];
     }
 }
-

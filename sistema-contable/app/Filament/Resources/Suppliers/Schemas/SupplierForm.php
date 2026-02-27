@@ -12,8 +12,12 @@ class SupplierForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $canUpdate = auth()->user()?->can('suppliers.update') ?? false;
+        $canCreate = auth()->user()?->can('suppliers.create') ?? false;
+
         return $schema
             ->components([
+
                 Section::make('Información del Proveedor')
                     ->description('Datos básicos del proveedor')
                     ->collapsible()
@@ -27,15 +31,15 @@ class SupplierForm
                             ])
                             ->required()
                             ->default('persona')
-                            ->helperText('Selecciona el tipo de proveedor'),
-                        
+                            ->disabled(!$canUpdate && !$canCreate),
+
                         TextInput::make('nombre_razon_social')
                             ->label('Nombre / Razón Social')
                             ->required()
                             ->maxLength(255)
-                            ->helperText('Nombre completo o razón social del proveedor')
                             ->placeholder('Ej: Juan García López o Empresa XYZ S.A.')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disabled(!$canUpdate && !$canCreate),
                     ]),
 
                 Section::make('Identificación')
@@ -47,8 +51,8 @@ class SupplierForm
                             ->required()
                             ->unique('suppliers', 'identificacion', ignoreRecord: true)
                             ->maxLength(50)
-                            ->helperText('Cédula, pasaporte o número de identificación')
-                            ->placeholder('Ej: 1234567890'),
+                            ->placeholder('Ej: 1234567890')
+                            ->disabled(!$canUpdate && !$canCreate),
                     ]),
 
                 Section::make('Contacto')
@@ -59,18 +63,18 @@ class SupplierForm
                         TextInput::make('correo')
                             ->label('Correo Electrónico')
                             ->required()
-                            ->email('El correo debe ser válido')
+                            ->email()
                             ->unique('suppliers', 'correo', ignoreRecord: true)
                             ->maxLength(255)
-                            ->helperText('Correo de contacto del proveedor')
-                            ->placeholder('Ej: contacto@proveedor.com'),
-                        
+                            ->placeholder('Ej: contacto@proveedor.com')
+                            ->disabled(!$canUpdate && !$canCreate),
+
                         TextInput::make('telefono')
                             ->label('Teléfono')
                             ->tel()
                             ->maxLength(20)
-                            ->helperText('Número de teléfono del proveedor (opcional)')
-                            ->placeholder('Ej: +34 123 456789'),
+                            ->placeholder('Ej: +506 8888-8888')
+                            ->disabled(!$canUpdate && !$canCreate),
                     ]),
 
                 Section::make('Estado')
@@ -85,7 +89,7 @@ class SupplierForm
                             ])
                             ->required()
                             ->default('activo')
-                            ->helperText('Estado del proveedor'),
+                            ->disabled(!$canUpdate),
                     ]),
 
                 Section::make('Clientes Asociados')
@@ -96,11 +100,14 @@ class SupplierForm
                             ->label('Clientes Asociados')
                             ->multiple()
                             ->relationship('customers', 'identification')
-                            ->getOptionLabelFromRecordUsing(fn(Customer $record) => "{$record->name} {$record->first_last_name} - {$record->identification}")
+                            ->getOptionLabelFromRecordUsing(
+                                fn (Customer $record) =>
+                                "{$record->name} {$record->first_last_name} - {$record->identification}"
+                            )
                             ->searchable()
                             ->preload()
-                            ->helperText('Selecciona uno o más clientes para asociarlos con este proveedor')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disabled(!$canUpdate),
                     ]),
             ]);
     }

@@ -28,6 +28,39 @@ class CustomerResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('customers.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return auth()->user()?->can('customers.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('customers.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('customers.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('customers.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('customers.delete') ?? false;
+    }
+
+    
+
     public static function getNavigationLabel(): string
     {
         return 'Gestión de Clientes';
@@ -60,9 +93,7 @@ class CustomerResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -75,4 +106,3 @@ class CustomerResource extends Resource
         ];
     }
 }
-

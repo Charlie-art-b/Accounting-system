@@ -18,7 +18,8 @@ class ListAccountReceivables extends ListRecords
                 ->label('Crear cuenta por cobrar')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->keyBindings(['mod+n']),
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('account_receivables.create')),
         ];
     }
 }

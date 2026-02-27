@@ -17,8 +17,16 @@ class SuppliersTable
 {
     public static function configure(Table $table): Table
     {
+        $user = auth()->user();
+
+        $canView   = $user?->can('suppliers.view') ?? false;
+        $canUpdate = $user?->can('suppliers.update') ?? false;
+        $canDelete = $user?->can('suppliers.delete') ?? false;
+        $canCreate = $user?->can('suppliers.create') ?? false;
+
         return $table
-        ->defaultSort('nombre_razon_social', 'asc')//orden alfabetico por nombre de proveedor
+            ->defaultSort('nombre_razon_social', 'asc')
+
             ->columns([
                 TextColumn::make('tipo_proveedor')
                     ->label('Tipo')
@@ -29,19 +37,24 @@ class SuppliersTable
                         default => $state,
                     })
                     ->searchable(),
+
                 TextColumn::make('nombre_razon_social')
                     ->label('Nombre / Razón Social')
                     ->searchable()
                     ->sortable(),
+
                 TextColumn::make('identificacion')
                     ->label('Identificación')
                     ->searchable(),
+
                 TextColumn::make('correo')
                     ->label('Correo Electrónico')
                     ->searchable(),
+
                 TextColumn::make('telefono')
                     ->label('Teléfono')
                     ->searchable(),
+
                 TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
@@ -52,9 +65,10 @@ class SuppliersTable
                     })
                     ->colors([
                         'success' => 'activo',
-                        'danger' => 'inactivo',
+                        'danger'  => 'inactivo',
                     ])
                     ->searchable(),
+
                 TextColumn::make('customers_count')
                     ->label('Clientes')
                     ->counts('customers')
@@ -62,17 +76,20 @@ class SuppliersTable
                     ->color('success')
                     ->sortable()
                     ->toggleable(),
+
                 TextColumn::make('created_at')
                     ->label('Creado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->label('Actualizado en')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
                 SelectFilter::make('tipo_proveedor')
                     ->label('Tipo de Proveedor')
@@ -80,84 +97,100 @@ class SuppliersTable
                         'persona' => 'Persona Natural',
                         'empresa' => 'Empresa',
                     ]),
+
                 SelectFilter::make('estado')
                     ->label('Estado')
                     ->options([
                         'activo' => 'Activo',
                         'inactivo' => 'Inactivo',
                     ]),
+
                 SelectFilter::make('customers')
                     ->relationship('customers', 'name')
                     ->label('Cliente'),
             ])
+
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()
+                    ->visible(fn () => $canView),
+
+                EditAction::make()
+                    ->visible(fn () => $canUpdate),
             ])
-            ->toolbarActions([
-                ...CrudImportExportActions::make(
-                    modelClass: Supplier::class,
-                    title: 'Proveedores',
-                    filePrefix: 'proveedores',
-                    fields: [
-                        'tipo_proveedor',
-                        'nombre_razon_social',
-                        'identificacion',
-                        'correo',
-                        'telefono',
-                        'estado',
-                    ],
-                    uniqueBy: ['identificacion'],
-                    defaults: ['estado' => 'activo'],
-                    enumMaps: [
-                        'tipo_proveedor' => [
-                            'persona' => 'persona',
-                            'persona natural' => 'persona',
-                            'empresa' => 'empresa',
-                        ],
-                        'estado' => [
-                            'activo' => 'activo',
-                            'inactivo' => 'inactivo',
-                        ],
-                    ],
-                    requiredFields: ['nombre_razon_social', 'identificacion'],
-                    fieldLabels: [
-                        'tipo_proveedor' => 'Tipo de Proveedor',
-                        'nombre_razon_social' => 'Nombre / Razón Social',
-                        'identificacion' => 'Identificación',
-                        'correo' => 'Correo Electrónico',
-                        'telefono' => 'Teléfono',
-                        'estado' => 'Estado',
-                    ],
-                ),
+
+          ->toolbarActions([
+
+    ...CrudImportExportActions::make(
+        modelClass: Supplier::class,
+        module: 'suppliers',
+        title: 'Proveedores',
+        filePrefix: 'proveedores',
+        fields: [
+            'tipo_proveedor',
+            'nombre_razon_social',
+            'identificacion',
+            'correo',
+            'telefono',
+            'estado',
+        ],
+        uniqueBy: ['identificacion'],
+        defaults: ['estado' => 'activo'],
+        enumMaps: [
+            'tipo_proveedor' => [
+                'persona' => 'persona',
+                'persona natural' => 'persona',
+                'empresa' => 'empresa',
+            ],
+            'estado' => [
+                'activo' => 'activo',
+                'inactivo' => 'inactivo',
+            ],
+        ],
+        requiredFields: ['nombre_razon_social', 'identificacion'],
+        fieldLabels: [
+            'tipo_proveedor' => 'Tipo de Proveedor',
+            'nombre_razon_social' => 'Nombre / Razón Social',
+            'identificacion' => 'Identificación',
+            'correo' => 'Correo Electrónico',
+            'telefono' => 'Teléfono',
+            'estado' => 'Estado',
+        ],
+    ),
+
+
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->visible(fn () => $canDelete)
                         ->before(function ($records, DeleteBulkAction $action) {
+
                             $blockedCount = 0;
                             $blockedReasons = [];
 
                             foreach ($records as $supplier) {
-                                // Verificar cuentas por pagar con saldo pendiente
+
                                 $pendingAccounts = $supplier->cuentasPorPagar()
                                     ->whereIn('status', ['pending', 'partial'])
                                     ->count();
 
                                 if ($pendingAccounts > 0) {
                                     $blockedCount++;
-                                    $blockedReasons[] = "{$supplier->nombre_razon_social}: {$pendingAccounts} cuenta(s) por pagar pendiente(s)";
+                                    $blockedReasons[] =
+                                        "{$supplier->nombre_razon_social}: {$pendingAccounts} cuenta(s) pendiente(s)";
                                     continue;
                                 }
 
-                                // Verificar productos
                                 $productsCount = $supplier->productos()->count();
+
                                 if ($productsCount > 0) {
                                     $blockedCount++;
-                                    $blockedReasons[] = "{$supplier->nombre_razon_social}: {$productsCount} producto(s) asociado(s)";
+                                    $blockedReasons[] =
+                                        "{$supplier->nombre_razon_social}: {$productsCount} producto(s) asociado(s)";
                                 }
                             }
 
                             if ($blockedCount > 0) {
                                 $reasonsList = implode("\n• ", $blockedReasons);
+
                                 Notification::make()
                                     ->danger()
                                     ->title('NO SE PUEDE ELIMINAR')
@@ -166,13 +199,7 @@ class SuppliersTable
 
                                 $action->halt();
                             }
-                        })
-                        ->successNotification(
-                            Notification::make()
-                                ->success()
-                                ->title('¡Proveedor(es) eliminado(s)!')
-                                ->body('Los proveedores seleccionados han sido eliminados correctamente.')
-                        ),
+                        }),
                 ]),
             ]);
     }

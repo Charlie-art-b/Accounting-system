@@ -14,19 +14,31 @@ class EditSupplier extends EditRecord
 {
     protected static string $resource = SupplierResource::class;
 
+    /**
+     * Control de acceso a la página
+     */
+    public static function canAccess(array $parameters = []): bool
+    {
+        return auth()->user()->can('suppliers.update');
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('back')
-                ->label('')
                 ->icon('heroicon-o-x-mark')
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index'))
                 ->tooltip('Volver a la lista'),
-            ViewAction::make(),
+
+            ViewAction::make()
+                ->visible(fn () => auth()->user()->can('suppliers.view')),
+
             DeleteAction::make()
+                ->visible(fn () => auth()->user()->can('suppliers.delete'))
                 ->before(function (DeleteAction $action) {
-                    // Verificar cuentas por pagar con saldo pendiente
+
+                    // 🔎 Validación contable 1: Cuentas por pagar pendientes
                     $pendingAccounts = $this->record->cuentasPorPagar()
                         ->whereIn('status', ['pending', 'partial'])
                         ->count();
@@ -34,19 +46,20 @@ class EditSupplier extends EditRecord
                     if ($pendingAccounts > 0) {
                         Notification::make()
                             ->title('NO SE PUEDE ELIMINAR')
-                            ->body("Este proveedor tiene {$pendingAccounts} cuenta(s) por pagar con saldo pendiente. Solo se pueden eliminar proveedores sin deudas pendientes.")
+                            ->body("Este proveedor tiene {$pendingAccounts} cuenta(s) por pagar con saldo pendiente.")
                             ->danger()
                             ->send();
 
                         throw new Halt();
                     }
 
-                    // Verificar productos asociados
+                    // 🔎 Validación contable 2: Productos asociados
                     $productsCount = $this->record->productos()->count();
+
                     if ($productsCount > 0) {
                         Notification::make()
                             ->title('NO SE PUEDE ELIMINAR')
-                            ->body("Este proveedor tiene {$productsCount} producto(s) asociado(s). Elimina o cambia el proveedor de los productos antes de continuar.")
+                            ->body("Este proveedor tiene {$productsCount} producto(s) asociado(s).")
                             ->danger()
                             ->send();
 
@@ -59,9 +72,7 @@ class EditSupplier extends EditRecord
                         ->title('¡Proveedor eliminado!')
                         ->body('El proveedor ha sido eliminado correctamente.')
                 )
-                ->after(function () {
-                    return redirect()->to($this->getResource()::getUrl('index'));
-                }),
+                ->after(fn () => redirect()->to($this->getResource()::getUrl('index'))),
         ];
     }
 
@@ -83,6 +94,7 @@ class EditSupplier extends EditRecord
                 ->modalDescription('¿Deseas guardar los cambios de este proveedor?')
                 ->modalSubmitActionLabel('Sí, guardar')
                 ->modalCancelActionLabel('Cancelar')
+                ->visible(fn () => auth()->user()->can('suppliers.update'))
                 ->action(fn () => $this->save()),
 
             Action::make('cancel')

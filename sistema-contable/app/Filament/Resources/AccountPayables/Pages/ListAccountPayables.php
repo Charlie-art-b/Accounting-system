@@ -15,7 +15,10 @@ class ListAccountPayables extends ListRecords
         return [
             CreateAction::make()
                 ->label("Crear cuenta por pagar")
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('account_payables.create')),
         ];
     }
 }

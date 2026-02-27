@@ -34,6 +34,44 @@ class SupplierResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nombre_razon_social';
 
+    /*
+    |--------------------------------------------------------------------------
+    | 🔐 CONTROL DE RUTAS SEGÚN PERMISOS
+    |--------------------------------------------------------------------------
+    */
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('suppliers.view') ?? false;
+    }
+
+    public static function canView($record): bool
+    {
+        return auth()->user()?->can('suppliers.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('suppliers.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('suppliers.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->can('suppliers.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->can('suppliers.delete') ?? false;
+    }
+
+   
+
     public static function form(Schema $schema): Schema
     {
         return SupplierForm::configure($schema);
@@ -51,9 +89,7 @@ class SupplierResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -66,4 +102,3 @@ class SupplierResource extends Resource
         ];
     }
 }
-

@@ -17,6 +17,7 @@ class CrudImportExportActions
 {
     public static function make(
         string $modelClass,
+        string $module, // 👈 nombre del módulo para permisos (ej: accounting_accounts)
         string $title,
         string $filePrefix,
         array $fields,
@@ -27,13 +28,19 @@ class CrudImportExportActions
         array $fieldLabels = [],
         array $exportFields = []
     ): array {
-        // Si no se especifican exportFields, usar fields
+
         $exportFields = empty($exportFields) ? $fields : $exportFields;
+
         return [
+
+        
+
             Action::make('import_excel')
                 ->label('Importar Excel')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('primary')
+                ->visible(fn () => self::can($module, 'create'))
+                ->authorize(fn () => self::can($module, 'create'))
                 ->form([
                     FileUpload::make('file')
                         ->label('Archivo Excel')
@@ -45,11 +52,19 @@ class CrudImportExportActions
                             'text/csv',
                         ])
                         ->required(),
+
                     Toggle::make('update_existing')
                         ->label('Actualizar registros existentes')
                         ->default(true),
                 ])
-                ->action(function (array $data) use ($modelClass, $fields, $uniqueBy, $defaults, $enumMaps, $requiredFields) {
+                ->action(function (array $data) use (
+                    $modelClass,
+                    $fields,
+                    $uniqueBy,
+                    $defaults,
+                    $enumMaps,
+                    $requiredFields
+                ) {
                     try {
                         $summary = app(GenericModelImportService::class)->importFromExcel(
                             modelClass: $modelClass,
@@ -62,13 +77,15 @@ class CrudImportExportActions
                             requiredFields: $requiredFields,
                         );
 
-                        self::notifySummary('Importacion Excel completada', $summary);
+                        self::notifySummary('Importación Excel completada', $summary);
+
                     } catch (ValidationException $e) {
                         Notification::make()
                             ->title('No se pudo importar')
-                            ->body(implode("\n", $e->errors()['file'] ?? ['Validacion fallida']))
+                            ->body(implode("\n", $e->errors()['file'] ?? ['Validación fallida']))
                             ->danger()
                             ->send();
+
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Error al importar Excel')
@@ -82,6 +99,8 @@ class CrudImportExportActions
                 ->label('Importar PDF')
                 ->icon('heroicon-o-document-arrow-up')
                 ->color('gray')
+                ->visible(fn () => self::can($module, 'create'))
+                ->authorize(fn () => self::can($module, 'create'))
                 ->form([
                     FileUpload::make('file')
                         ->label('Archivo PDF')
@@ -90,11 +109,19 @@ class CrudImportExportActions
                         ->acceptedFileTypes(['application/pdf'])
                         ->helperText('El PDF debe incluir encabezado y filas delimitadas por "|" o ";".')
                         ->required(),
+
                     Toggle::make('update_existing')
                         ->label('Actualizar registros existentes')
                         ->default(true),
                 ])
-                ->action(function (array $data) use ($modelClass, $fields, $uniqueBy, $defaults, $enumMaps, $requiredFields) {
+                ->action(function (array $data) use (
+                    $modelClass,
+                    $fields,
+                    $uniqueBy,
+                    $defaults,
+                    $enumMaps,
+                    $requiredFields
+                ) {
                     try {
                         $summary = app(GenericModelImportService::class)->importFromPdf(
                             modelClass: $modelClass,
@@ -107,13 +134,15 @@ class CrudImportExportActions
                             requiredFields: $requiredFields,
                         );
 
-                        self::notifySummary('Importacion PDF completada', $summary);
+                        self::notifySummary('Importación PDF completada', $summary);
+
                     } catch (ValidationException $e) {
                         Notification::make()
                             ->title('No se pudo importar')
-                            ->body(implode("\n", $e->errors()['file'] ?? ['Validacion fallida']))
+                            ->body(implode("\n", $e->errors()['file'] ?? ['Validación fallida']))
                             ->danger()
                             ->send();
+
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Error al importar PDF')
@@ -123,11 +152,16 @@ class CrudImportExportActions
                     }
                 }),
 
+        
+
             Action::make('export_excel')
                 ->label('Exportar Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
+                ->visible(fn () => self::can($module, 'view'))
+                ->authorize(fn () => self::can($module, 'view'))
                 ->action(function () use ($modelClass, $exportFields, $filePrefix, $fieldLabels) {
+
                     $excelFacade = '\Maatwebsite\Excel\Facades\Excel';
 
                     if (class_exists($excelFacade)) {
@@ -137,31 +171,53 @@ class CrudImportExportActions
                         );
                     }
 
-                    return app(CsvExportService::class)->downloadFromModel($modelClass, $exportFields, $filePrefix, $fieldLabels);
+                    return app(CsvExportService::class)
+                        ->downloadFromModel($modelClass, $exportFields, $filePrefix, $fieldLabels);
                 }),
+
+         
 
             Action::make('export_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
+                ->visible(fn () => self::can($module, 'view'))
+                ->authorize(fn () => self::can($module, 'view'))
                 ->action(fn () => app(GenericModelPDF::class, [
-                    'modelClass' => $modelClass,
-                    'fields' => $exportFields,
-                    'title' => $title,
-                    'filePrefix' => $filePrefix,
+                    'modelClass'  => $modelClass,
+                    'fields'      => $exportFields,
+                    'title'       => $title,
+                    'filePrefix'  => $filePrefix,
                     'fieldLabels' => $fieldLabels,
                 ])->download()),
         ];
     }
 
+  
+
+    private static function can(string $module, string $action): bool
+    {
+        return auth()->check()
+            && auth()->user()->can("{$module}.{$action}");
+    }
+
+    
+
     private static function notifySummary(string $title, array $summary): void
     {
         $errors = $summary['errors'] ?? [];
-        $errorText = empty($errors) ? '' : "\nErrores:\n- " . implode("\n- ", array_slice($errors, 0, 5));
+        $errorText = empty($errors)
+            ? ''
+            : "\nErrores:\n- " . implode("\n- ", array_slice($errors, 0, 5));
 
         Notification::make()
             ->title($title)
-            ->body("Creados: {$summary['created']} | Actualizados: {$summary['updated']} | Omitidos: {$summary['skipped']}" . $errorText)
+            ->body(
+                "Creados: {$summary['created']} | " .
+                "Actualizados: {$summary['updated']} | " .
+                "Omitidos: {$summary['skipped']}" .
+                $errorText
+            )
             ->success()
             ->send();
     }

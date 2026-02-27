@@ -21,7 +21,8 @@ class ListSuppliers extends ListRecords
                 ->label('Crear cliente')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->keyBindings(['mod+n']),
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('suppliers.create'))            
         ];
     }
 

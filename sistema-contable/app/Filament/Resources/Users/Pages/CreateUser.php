@@ -17,7 +17,6 @@ class CreateUser extends CreateRecord
 {
     $currentUser = auth()->user();
 
-    // 🔹 1. Validar permiso para crear usuarios
     if (!$currentUser->can('users.create')) {
 
         Notification::make()

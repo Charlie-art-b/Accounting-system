@@ -38,10 +38,7 @@ class UserForm
                         'unique' => 'Este correo ya está registrado.',
                     ]),
 
-                DateTimePicker::make('email_verified_at')
-                    ->label('Correo verificado en')
-                    ->seconds(false)
-                    ->nullable(),
+                
 
                 TextInput::make('password')
                     ->label('Contraseña')

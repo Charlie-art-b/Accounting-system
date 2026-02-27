@@ -13,7 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-
+use Illuminate\Support\Facades\Auth;
 
 class AccountingAccountResource extends Resource
 {
@@ -37,6 +37,29 @@ class AccountingAccountResource extends Resource
         return 'Cuenta Contable';
     }
 
+   
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('accounting_accounts.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('accounting_accounts.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('accounting_accounts.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()?->can('accounting_accounts.delete') ?? false;
+    }
+
+    
+
     public static function form(Schema $schema): Schema
     {
         return AccountingAccountForm::configure($schema);
@@ -54,6 +77,8 @@ class AccountingAccountResource extends Resource
         ];
     }
 
+ 
+
     public static function getPages(): array
     {
         return [
@@ -63,4 +88,3 @@ class AccountingAccountResource extends Resource
         ];
     }
 }
-

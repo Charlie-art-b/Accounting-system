@@ -13,7 +13,12 @@ class ListAccountingAccounts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Crear cuenta contable')
+                ->icon('heroicon-o-plus')
+                ->color('primary')
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('accounting_accounts.create')),
         ];
     }
 }
