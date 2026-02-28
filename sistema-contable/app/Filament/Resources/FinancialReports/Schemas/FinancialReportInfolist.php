@@ -2,23 +2,24 @@
 
 namespace App\Filament\Resources\FinancialReports\Schemas;
 
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 
 class FinancialReportInfolist
 {
-    public static function make(Infolist $infolist): Infolist
+    public static function make(Schema $schema): Schema
     {
-        return $infolist
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Información general')
-                    ->schema([
-                        TextEntry::make('id')->label('#'),
+                    ->components([
+                        TextEntry::make('id')->label('Nº de Reporte'),
                         TextEntry::make('customer.name')->label('Cliente'),
                         TextEntry::make('report_type')
-                            ->label('Tipo')
+                            ->label('Tipo de Reporte')
+                            ->badge()
                             ->formatStateUsing(fn ($state) => match ($state) {
                                 'balance_general' => 'Balance General',
                                 'estado_resultados' => 'Estado de Resultados',
@@ -28,15 +29,21 @@ class FinancialReportInfolist
                                 'estado_resultados_integral' => 'Estado Resultados Integral',
                                 default => $state,
                             }),
-                        TextEntry::make('fecha_inicio')->date(),
-                        TextEntry::make('fecha_fin')->date(),
-                        TextEntry::make('generated_at')->dateTime(),
+                        TextEntry::make('fecha_inicio')
+                            ->label('Desde')
+                            ->date(),
+                        TextEntry::make('fecha_fin')
+                            ->label('Hasta')
+                            ->date(),
+                        TextEntry::make('generated_at')
+                            ->dateTime()
+                            ->label('Generado'),
                     ]),
 
-                Section::make('Payload (JSON)')
-                    ->schema([
+                Section::make('Detalle del Reporte')
+                    ->components([
                         ViewEntry::make('payload')
-                            ->view('filament.financial-reports.payload'),
+                            ->view('filament.financial-reports.details'),
                     ]),
             ]);
     }

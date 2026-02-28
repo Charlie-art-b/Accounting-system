@@ -12,6 +12,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Panel;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use App\Models\Customer;
+use Filament\Schemas\Schema;
+
+use App\Filament\Resources\FinancialReports\Pages\ViewFinancialReport;
+use App\Filament\Resources\FinancialReports\Schemas\FinancialReportInfolist;
 
 class FinancialReportResource extends Resource
 {
@@ -30,6 +38,11 @@ class FinancialReportResource extends Resource
         return 'historial-reportes';
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return FinancialReportInfolist::make($schema);
+    }
+
     public static function canCreate(): bool
     {
         return false;
@@ -43,7 +56,6 @@ class FinancialReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('generated_at', 'desc')
             ->columns([
                 TextColumn::make('id')
                     ->label('Nº de Reporte')
@@ -89,6 +101,41 @@ class FinancialReportResource extends Resource
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
             ])
+            ->filters([
+                SelectFilter::make('customer_id')
+                    ->label('Cliente')
+                    ->relationship('customer', 'name')
+                    ->preload()
+                    ->searchable(),
+
+                SelectFilter::make('report_type')
+                    ->label('Tipo de Reporte')
+                    ->options([
+                        'balance_general' => 'Balance General',
+                        'estado_resultados' => 'Estado de Resultados',
+                        'balance_comprobacion' => 'Balance de Comprobación',
+                        'flujo_efectivo' => 'Flujo de Efectivo',
+                        'cambios_patrimonio' => 'Cambios Patrimonio',
+                        'estado_resultados_integral' => 'Estado Resultados Integral',
+                    ]),
+
+
+                Filter::make('fecha_inicio')
+                    ->label('Fecha de Inicio')
+                    ->form([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('to')->label('Hasta'),
+                    ])
+                    ->query(function ($query, $data) {
+                        if ($data['from']) {
+                            $query->whereDate('fecha_inicio', '>=', $data['from']);
+                        }
+                        if ($data['to']) {
+                            $query->whereDate('fecha_inicio', '<=', $data['to']);
+                        }
+                    }),
+            ])
+
             ->actions([
                 ViewAction::make(),
 
