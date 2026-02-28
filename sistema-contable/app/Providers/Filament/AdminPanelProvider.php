@@ -5,14 +5,17 @@ namespace App\Providers\Filament;
 use App\Filament\Widgets\AccountsStatusChartWidget;
 use App\Filament\Widgets\AccountsTrendChartWidget;
 use App\Filament\Widgets\BusinessOverviewWidget;
+use App\Filament\Pages\Dashboard;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Enums\ThemeMode;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -35,9 +38,21 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('3.5rem')
             ->favicon(asset('images/logo.png'))
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->defaultThemeMode(ThemeMode::Dark)
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth(Width::Full)
             ->login()
             ->authGuard('web')
             ->authPasswordBroker('users')
+            ->userMenuItems([
+                'logout' => fn (Action $action): Action => $action
+                    ->requiresConfirmation()
+                    ->modalHeading('Confirmar salida')
+                    ->modalDescription('¿Deseas cerrar sesión ahora?')
+                    ->modalSubmitActionLabel('Sí, salir')
+                    ->modalCancelActionLabel('Cancelar'),
+            ])
             ->colors([
                 'primary' => Color::hex('#991FA6'),
                 'info' => Color::hex('#6F85FE'),

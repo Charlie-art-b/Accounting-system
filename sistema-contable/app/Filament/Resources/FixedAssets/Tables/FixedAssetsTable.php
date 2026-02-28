@@ -9,8 +9,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -22,51 +22,51 @@ class FixedAssetsTable
         return $table
             ->columns([
                 TextColumn::make('asset_name')
-                    ->label('Nombre del Activo')
-                    ->searchable(),
-                TextColumn::make('acquisition_value')
-                    ->label('Valor de Adquisición')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('acquisition_date')
-                    ->label('Fecha de Adquisición')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('useful_life_years')
-                    ->label('Vida Útil (años)')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('residual_value')
-                    ->label('Valor Residual')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('accumulated_depreciation')
-                    ->label('Depreciación Acumulada')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('net_value')
-                    ->label('Valor Neto')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Activo')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
+
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),
-                TextColumn::make('disposal_date')
-                    ->label('Fecha de Baja')
+
+                TextColumn::make('acquisition_date')
+                    ->label('Adquisicion')
                     ->date()
                     ->sortable(),
-                TextColumn::make('disposal_reason')
-                    ->label('Motivo de Baja')
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->label('Creado en')
-                    ->dateTime()
+
+                TextColumn::make('acquisition_value')
+                    ->label('Valor adquisicion')
+                    ->numeric()
+                    ->sortable(),
+
+                TextColumn::make('net_value')
+                    ->label('Valor neto')
+                    ->numeric()
+                    ->sortable(),
+
+                TextColumn::make('accumulated_depreciation')
+                    ->label('Depreciacion')
+                    ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->label('Actualizado en')
-                    ->dateTime()
+
+                TextColumn::make('useful_life_years')
+                    ->label('Vida util')
+                    ->numeric()
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('disposal_date')
+                    ->label('Fecha baja')
+                    ->date()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('disposal_reason')
+                    ->label('Motivo baja')
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -74,60 +74,49 @@ class FixedAssetsTable
                     ->label('Estado')
                     ->options([
                         'active' => 'Activo',
-                        'disposed' => 'Dado de Baja',
-                        'under_maintenance' => 'En Mantenimiento',
+                        'disposed' => 'Dado de baja',
+                        'under_maintenance' => 'En mantenimiento',
                     ]),
+
                 Filter::make('acquisition_date')
-                    ->label('Fecha de Adquisición')
+                    ->label('Fecha de adquisicion')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('from')->label('Desde'),
                         \Filament\Forms\Components\DatePicker::make('until')->label('Hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn (Builder $query, $date) => $query->whereDate('acquisition_date', '>=', $date))
-                            ->when($data['until'], fn (Builder $query, $date) => $query->whereDate('acquisition_date', '<=', $date));
+                            ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->whereDate('acquisition_date', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->whereDate('acquisition_date', '<=', $date));
                     }),
+
                 Filter::make('useful_life_years')
-                    ->label('Vida Útil (años)')
+                    ->label('Vida util')
                     ->form([
-                        \Filament\Forms\Components\TextInput::make('min')->label('Mínimo')->numeric(),
-                        \Filament\Forms\Components\TextInput::make('max')->label('Máximo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('min')->label('Minimo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('max')->label('Maximo')->numeric(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['min'], fn (Builder $query, $value) => $query->where('useful_life_years', '>=', $value))
-                            ->when($data['max'], fn (Builder $query, $value) => $query->where('useful_life_years', '<=', $value));
+                            ->when($data['min'] ?? null, fn (Builder $query, $value) => $query->where('useful_life_years', '>=', $value))
+                            ->when($data['max'] ?? null, fn (Builder $query, $value) => $query->where('useful_life_years', '<=', $value));
                     }),
+
                 Filter::make('acquisition_value')
-                    ->label('Valor de Adquisición')
+                    ->label('Valor adquisicion')
                     ->form([
-                        \Filament\Forms\Components\TextInput::make('min')->label('Mínimo')->numeric(),
-                        \Filament\Forms\Components\TextInput::make('max')->label('Máximo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('min')->label('Minimo')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('max')->label('Maximo')->numeric(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['min'], fn (Builder $query, $value) => $query->where('acquisition_value', '>=', $value))
-                            ->when($data['max'], fn (Builder $query, $value) => $query->where('acquisition_value', '<=', $value));
-                    }),
-                SelectFilter::make('has_disposal')
-                    ->label('Estado de Baja')
-                    ->options([
-                        'yes' => 'Dados de Baja',
-                        'no' => 'No Dados de Baja',
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        if ($data['value'] === 'yes') {
-                            return $query->whereNotNull('disposal_date');
-                        } elseif ($data['value'] === 'no') {
-                            return $query->whereNull('disposal_date');
-                        }
-                        return $query;
+                            ->when($data['min'] ?? null, fn (Builder $query, $value) => $query->where('acquisition_value', '>=', $value))
+                            ->when($data['max'] ?? null, fn (Builder $query, $value) => $query->where('acquisition_value', '<=', $value));
                     }),
             ])
             ->recordActions([
-                ViewAction::make()->visible(fn ($record) => Auth::user()?->can('fixed_assets.view') ?? false),
-                EditAction::make()->visible(fn ($record) => Auth::user()?->can('fixed_assets.update') ?? false),
+                ViewAction::make()->visible(fn () => Auth::user()?->can('fixed_assets.view') ?? false),
+                EditAction::make()->visible(fn () => Auth::user()?->can('fixed_assets.update') ?? false),
             ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(
@@ -165,12 +154,12 @@ class FixedAssetsTable
                     ],
                     fieldLabels: [
                         'asset_name' => 'Nombre del Activo',
-                        'description' => 'Descripción',
-                        'acquisition_value' => 'Valor de Adquisición',
-                        'acquisition_date' => 'Fecha de Adquisición',
-                        'useful_life_years' => 'Vida Útil (años)',
+                        'description' => 'Descripcion',
+                        'acquisition_value' => 'Valor de Adquisicion',
+                        'acquisition_date' => 'Fecha de Adquisicion',
+                        'useful_life_years' => 'Vida Util',
                         'residual_value' => 'Valor Residual',
-                        'accumulated_depreciation' => 'Depreciación Acumulada',
+                        'accumulated_depreciation' => 'Depreciacion Acumulada',
                         'status' => 'Estado',
                         'disposal_date' => 'Fecha de Baja',
                         'disposal_reason' => 'Motivo de Baja',
@@ -180,8 +169,8 @@ class FixedAssetsTable
                     DeleteBulkAction::make()
                         ->visible(fn () => Auth::user()?->can('fixed_assets.delete') ?? false)
                         ->modalHeading('Eliminar activos fijos')
-                        ->modalDescription('Solo se pueden eliminar activos activos sin depreciación registrada. Esta acción no se puede deshacer.')
-                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalDescription('Solo se pueden eliminar activos activos sin depreciacion registrada.')
+                        ->modalSubmitActionLabel('Si, eliminar')
                         ->successNotificationTitle('Activos fijos eliminados')
                         ->before(function ($action, $records) {
                             $hasBlocked = false;
@@ -200,7 +189,7 @@ class FixedAssetsTable
                                 \Filament\Notifications\Notification::make()
                                     ->danger()
                                     ->title('No se pueden eliminar activos fijos')
-                                    ->body('Solo se pueden eliminar activos activos sin depreciación registrada.')
+                                    ->body('Solo se pueden eliminar activos activos sin depreciacion registrada.')
                                     ->persistent()
                                     ->send();
 
@@ -211,3 +200,4 @@ class FixedAssetsTable
             ]);
     }
 }
+

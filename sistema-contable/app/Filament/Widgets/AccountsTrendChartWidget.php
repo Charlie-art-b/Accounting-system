@@ -5,19 +5,27 @@ namespace App\Filament\Widgets;
 use App\Models\AccountPayable;
 use App\Models\AccountReceivable;
 use Carbon\Carbon;
-use Filament\Widgets\LineChartWidget;
+use Filament\Widgets\ChartWidget;
 
-class AccountsTrendChartWidget extends LineChartWidget
+class AccountsTrendChartWidget extends ChartWidget
 {
     protected static bool $isDiscovered = false;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = [
+        'md' => 2,
+        'xl' => 2,
+    ];
 
     protected ?string $heading = 'Tendencia mensual de cuentas';
 
-    protected ?string $description = 'Montos emitidos de CxC vs CxP (ultimos 6 meses)';
+    protected ?string $description = 'CxC vs CxP - ultimos 6 meses';
 
-    protected ?string $maxHeight = '320px';
+    protected ?string $maxHeight = '280px';
+
+    protected function getType(): string
+    {
+        return 'bar';
+    }
 
     protected function getData(): array
     {
@@ -54,23 +62,70 @@ class AccountsTrendChartWidget extends LineChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Cuentas por cobrar',
+                    'label' => 'CxC',
                     'data' => array_values($receivablesByMonth->all()),
-                    'borderColor' => '#991FA6',
-                    'backgroundColor' => 'rgba(153, 31, 166, 0.22)',
-                    'tension' => 0.35,
-                    'fill' => true,
+                    'backgroundColor' => '#d946ef',
+                    'borderRadius' => [4, 4, 0, 0],
+                    'maxBarThickness' => 28,
                 ],
                 [
-                    'label' => 'Cuentas por pagar',
+                    'label' => 'CxP',
                     'data' => array_values($payablesByMonth->all()),
-                    'borderColor' => '#2441E1',
-                    'backgroundColor' => 'rgba(36, 65, 225, 0.22)',
-                    'tension' => 0.35,
-                    'fill' => true,
+                    'backgroundColor' => '#6366f1',
+                    'borderRadius' => [4, 4, 0, 0],
+                    'maxBarThickness' => 28,
                 ],
             ],
             'labels' => $labels,
+        ];
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'interaction' => [
+                'mode' => 'index',
+                'intersect' => false,
+            ],
+            'scales' => [
+                'x' => [
+                    'grid' => [
+                        'display' => false,
+                    ],
+                    'ticks' => [
+                        'color' => '#8b8fb5',
+                        'font' => [
+                            'size' => 11,
+                        ],
+                    ],
+                ],
+                'y' => [
+                    'beginAtZero' => true,
+                    'grid' => [
+                        'color' => 'rgba(45, 48, 101, 0.4)',
+                        'borderDash' => [3, 3],
+                    ],
+                    'ticks' => [
+                        'color' => '#8b8fb5',
+                        'font' => [
+                            'size' => 10,
+                        ],
+                    ],
+                ],
+            ],
+            'plugins' => [
+                'legend' => [
+                    'labels' => [
+                        'color' => '#8b8fb5',
+                        'usePointStyle' => true,
+                        'pointStyle' => 'circle',
+                        'boxWidth' => 6,
+                        'boxHeight' => 6,
+                    ],
+                ],
+            ],
         ];
     }
 }

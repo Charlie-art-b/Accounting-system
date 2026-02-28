@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InventoryProducts\Pages;
 
 use App\Filament\Resources\Inventories\InventoryResource;
+use App\Filament\Widgets\InventoryProductSummaryWidget;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\InventoryProducts\InventoryProductResource;
@@ -12,6 +13,18 @@ class ListInventoryProducts extends ListRecords
 {
     protected static string $resource = InventoryProductResource::class;
     protected static ?string $title = 'Existencias';
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            InventoryProductSummaryWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 1;
+    }
 
     protected function getHeaderActions(): array
     {

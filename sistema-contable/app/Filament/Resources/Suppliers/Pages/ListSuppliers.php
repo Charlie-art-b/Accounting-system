@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Suppliers\Pages;
 
 use App\Filament\Resources\Suppliers\SupplierResource;
+use App\Filament\Widgets\SupplierSummaryWidget;
 use App\Models\Customer;
 use Filament\Actions\BulkAction;
 use Filament\Actions\CreateAction;
@@ -13,6 +14,18 @@ use Filament\Notifications\Notification;
 class ListSuppliers extends ListRecords
 {
     protected static string $resource = SupplierResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            SupplierSummaryWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 1;
+    }
 
     protected function getHeaderActions(): array
     {

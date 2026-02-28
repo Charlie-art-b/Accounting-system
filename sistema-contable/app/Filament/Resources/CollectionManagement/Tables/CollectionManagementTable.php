@@ -4,21 +4,18 @@ namespace App\Filament\Resources\CollectionManagement\Tables;
 
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\CollectionManagement;
+use App\Services\PaymentService;
 use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Tables\Filters\Filter;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
-use App\Services\PaymentService;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class CollectionManagementTable
@@ -43,13 +40,13 @@ class CollectionManagementTable
                     ->sortable(),
 
                 TextColumn::make('days_late')
-                    ->label('Días atraso')
+                    ->label('Dias atraso')
                     ->alignCenter()
                     ->state(fn (CollectionManagement $record) => $record->days_late)
                     ->sortable(),
 
                 TextColumn::make('pending_amount')
-                    ->label('Monto pendiente')
+                    ->label('Pendiente')
                     ->money('CRC')
                     ->state(fn (CollectionManagement $record) => $record->pending_amount)
                     ->sortable(),
@@ -58,8 +55,8 @@ class CollectionManagementTable
                     ->label('Estado')
                     ->state(fn (CollectionManagement $record) => $record->status)
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'overdue' => 'Plazo Vencido',
-                        'due_soon' => 'Próximo a vencer',
+                        'overdue' => 'Vencido',
+                        'due_soon' => 'Proximo',
                         default => 'Pendiente',
                     })
                     ->colors([
@@ -69,9 +66,10 @@ class CollectionManagementTable
                     ]),
 
                 TextColumn::make('last_action')
-                    ->label('Última acción')
+                    ->label('Ultima accion')
                     ->searchable()
-                    ->placeholder('—'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('Actualizado')
@@ -79,7 +77,6 @@ class CollectionManagementTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->filters([
                 SelectFilter::make('customer_id')
                     ->label('Cliente')
@@ -90,8 +87,8 @@ class CollectionManagementTable
                 Filter::make('due_date_range')
                     ->label('Vencimiento')
                     ->form([
-                        DatePicker::make('from')->label('Desde (vencimiento)'),
-                        DatePicker::make('until')->label('Hasta (vencimiento)'),
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->whereHas('accountReceivable', function (Builder $q) use ($data) {
@@ -101,9 +98,7 @@ class CollectionManagementTable
                         });
                     }),
             ])
-
             ->recordActions([
-              
                 Action::make('pay')
                     ->label('Registrar pago')
                     ->icon('heroicon-o-banknotes')
@@ -111,28 +106,26 @@ class CollectionManagementTable
                     ->visible(fn () => Auth::user()?->can('collection_management.update'))
                     ->requiresConfirmation()
                     ->modalHeading('Registrar pago')
-                    ->modalDescription('Este pago actualizará el monto pagado de la cuenta por cobrar')
+                    ->modalDescription('Este pago actualiza el monto pagado de la cuenta por cobrar.')
                     ->form(fn (CollectionManagement $record) => [
                         TextInput::make('amount')
-                            ->label('Monto a pagar')
+                            ->label('Monto')
                             ->numeric()
                             ->minValue(0.01)
                             ->maxValue($record->pending_amount ?? 0)
                             ->required(),
-
                         DatePicker::make('paid_at')
                             ->label('Fecha de pago')
                             ->default(now())
                             ->maxDate(now())
                             ->required(),
-
                         Textarea::make('note')
-                            ->label('Nota (opcional)')
+                            ->label('Nota')
                             ->rows(3),
                     ])
-                    ->hidden(fn (CollectionManagement $record) => !$record->accountReceivable)
+                    ->hidden(fn (CollectionManagement $record) => ! $record->accountReceivable)
                     ->action(function (CollectionManagement $record, array $data) {
-                        if (!Auth::user()?->can('collection_management.update')) {
+                        if (! Auth::user()?->can('collection_management.update')) {
                             abort(403);
                         }
 
@@ -158,10 +151,7 @@ class CollectionManagementTable
                                 ->send();
                         }
                     }),
-
-               
             ])
-
             ->toolbarActions([
                 ...CrudImportExportActions::make(
                     modelClass: CollectionManagement::class,
@@ -180,9 +170,9 @@ class CollectionManagementTable
                     fieldLabels: [
                         'accountReceivable.invoice_number' => 'Factura',
                         'customer.name' => 'Cliente',
-                        'next_reminder_at' => 'Próximo Recordatorio',
-                        'reminder_attempts' => 'Intentos de Recordatorio',
-                        'last_action' => 'Última Acción',
+                        'next_reminder_at' => 'Proximo Recordatorio',
+                        'reminder_attempts' => 'Intentos',
+                        'last_action' => 'Ultima Accion',
                         'notes' => 'Notas',
                     ],
                     exportFields: [
@@ -193,9 +183,9 @@ class CollectionManagementTable
                         'last_action',
                         'notes',
                     ],
-                )
-     ])
-
+                ),
+            ])
             ->defaultSort('next_reminder_at', 'asc');
     }
 }
+

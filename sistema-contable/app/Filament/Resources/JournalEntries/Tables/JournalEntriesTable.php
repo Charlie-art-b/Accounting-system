@@ -5,18 +5,19 @@ namespace App\Filament\Resources\JournalEntries\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\JournalEntry;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class JournalEntriesTable
 {
@@ -25,8 +26,15 @@ class JournalEntriesTable
         return $table
             ->defaultSort('id', 'asc')
             ->columns([
-                TextColumn::make('id')->label('Nº de asiento')->sortable(),
-                TextColumn::make('customer.name')->label('Cliente')->searchable()->sortable(),
+                TextColumn::make('id')
+                    ->label('Asiento')
+                    ->sortable(),
+
+                TextColumn::make('customer.name')
+                    ->label('Cliente')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('journal_type')
                     ->label('Tipo')
                     ->badge()
@@ -38,12 +46,39 @@ class JournalEntriesTable
                         default => $state,
                     })
                     ->sortable(),
-                TextColumn::make('reference')->label('Referencia')->searchable(),
-                TextColumn::make('description')->label('Descripción')->limit(40)->searchable(),
-                TextColumn::make('total_debit')->label('Débitos')->numeric(decimalPlaces: 2)->sortable()->money('CRC'),
-                TextColumn::make('total_credit')->label('Créditos')->numeric(decimalPlaces: 2)->sortable()->money('CRC'),
-                TextColumn::make('posted_at')->label('Posteado')->dateTime()->sortable()->placeholder('BORRADOR'),
-                TextColumn::make('postedBy.name')->label('Posteado por')->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('montos')
+                    ->label('Montos')
+                    ->state(fn (JournalEntry $record): string => number_format((float) $record->total_debit, 2, ',', '.') . "\n" . number_format((float) $record->total_credit, 2, ',', '.'))
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$debit, $credit] = array_pad(explode("\n", $state, 2), 2, '0,00');
+
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='text-xs'>Debitos: CRC " . e($debit) . "</span><br><span class='text-xs fi-text-color-400'>Creditos: CRC " . e($credit) . '</span></div>'
+                        );
+                    })
+                    ->html(),
+
+                TextColumn::make('posted_at')
+                    ->label('Posteado')
+                    ->dateTime()
+                    ->sortable()
+                    ->placeholder('Borrador'),
+
+                TextColumn::make('reference')
+                    ->label('Referencia')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('description')
+                    ->label('Descripcion')
+                    ->limit(40)
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('postedBy.name')
+                    ->label('Posteado por')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TernaryFilter::make('posted_at')
@@ -56,7 +91,12 @@ class JournalEntriesTable
                         false: fn ($q) => $q->whereNull('posted_at'),
                         blank: fn ($q) => $q,
                     ),
-                SelectFilter::make('customer_id')->label('Cliente')->relationship('customer', 'name')->preload(),
+
+                SelectFilter::make('customer_id')
+                    ->label('Cliente')
+                    ->relationship('customer', 'name')
+                    ->preload(),
+
                 SelectFilter::make('journal_type')
                     ->label('Tipo de asiento')
                     ->options([
@@ -66,6 +106,7 @@ class JournalEntriesTable
                         'reversal' => 'Reverso',
                     ])
                     ->preload(),
+
                 Filter::make('posted_date_range')
                     ->label('Fecha de posteo')
                     ->form([
@@ -83,26 +124,30 @@ class JournalEntriesTable
             ])
             ->recordActions([
                 ViewAction::make()->visible(fn () => Auth::user()?->can('journal_entries.view')),
-                EditAction::make()->visible(fn () => Auth::user()?->can('journal_entries.update'))
+                EditAction::make()
+                    ->visible(fn () => Auth::user()?->can('journal_entries.update'))
                     ->visible(fn ($record) => $record->posted_at === null),
-                DeleteAction::make()->visible(fn () => Auth::user()?->can('journal_entries.delete'))
+                DeleteAction::make()
+                    ->visible(fn () => Auth::user()?->can('journal_entries.delete'))
                     ->visible(fn ($record) => $record->posted_at === null)
                     ->before(function ($record, DeleteAction $action) {
                         $pendingDetails = $record->details()->count();
+
                         if ($pendingDetails > 0) {
                             Notification::make()
                                 ->danger()
-                                ->title('NO SE PUEDE ELIMINAR')
-                                ->body("El asiento contable tiene {$pendingDetails} detalle(s) asociado(s).")
+                                ->title('No se puede eliminar')
+                                ->body("El asiento tiene {$pendingDetails} detalle(s) asociado(s).")
                                 ->send();
+
                             $action->halt();
                         }
                     })
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title('¡Asiento eliminado!')
-                            ->body('El asiento contable ha sido eliminado correctamente.')
+                            ->title('Asiento eliminado')
+                            ->body('El asiento contable se elimino correctamente.')
                     ),
             ])
             ->toolbarActions([
@@ -112,9 +157,19 @@ class JournalEntriesTable
                     title: 'Asientos Contables',
                     filePrefix: 'asientos-contables',
                     fields: [
-                        'customer_id','journal_type','entry_category','description','reference',
-                        'total_debit','total_credit','posted_at','posted_by','is_reversal',
-                        'reversed_entry_id','source_type','source_id',
+                        'customer_id',
+                        'journal_type',
+                        'entry_category',
+                        'description',
+                        'reference',
+                        'total_debit',
+                        'total_credit',
+                        'posted_at',
+                        'posted_by',
+                        'is_reversal',
+                        'reversed_entry_id',
+                        'source_type',
+                        'source_id',
                     ],
                     uniqueBy: ['id'],
                     defaults: [
@@ -136,11 +191,11 @@ class JournalEntriesTable
                     fieldLabels: [
                         'customer.name' => 'Cliente',
                         'journal_type' => 'Tipo de Asiento',
-                        'entry_category' => 'Categoría',
-                        'description' => 'Descripción',
+                        'entry_category' => 'Categoria',
+                        'description' => 'Descripcion',
                         'reference' => 'Referencia',
-                        'total_debit' => 'Débitos',
-                        'total_credit' => 'Créditos',
+                        'total_debit' => 'Debitos',
+                        'total_credit' => 'Creditos',
                         'posted_at' => 'Posteado',
                         'posted_by' => 'Posteado Por',
                         'is_reversal' => 'Es Reverso',
@@ -167,20 +222,20 @@ class JournalEntriesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function ($records, DeleteBulkAction $action) {
-                            $blockedCount = 0;
                             $blockedReasons = [];
+
                             foreach ($records as $entry) {
                                 $pendingDetails = $entry->details()->count();
                                 if ($pendingDetails > 0) {
-                                    $blockedCount++;
                                     $blockedReasons[] = "Asiento #{$entry->id}: {$pendingDetails} detalle(s) pendiente(s)";
                                 }
                             }
-                            if ($blockedCount > 0) {
+
+                            if ($blockedReasons !== []) {
                                 Notification::make()
                                     ->danger()
-                                    ->title('NO SE PUEDE ELIMINAR')
-                                    ->body("No se pueden eliminar {$blockedCount} asiento(s):\n\n• " . implode("\n• ", $blockedReasons))
+                                    ->title('No se puede eliminar')
+                                    ->body("No se pueden eliminar asientos:\n\n- " . implode("\n- ", $blockedReasons))
                                     ->send();
                                 $action->halt();
                             }
@@ -188,10 +243,11 @@ class JournalEntriesTable
                         ->successNotification(
                             Notification::make()
                                 ->success()
-                                ->title('¡Asientos eliminados!')
-                                ->body('Los asientos seleccionados han sido eliminados correctamente.')
+                                ->title('Asientos eliminados')
+                                ->body('Los asientos seleccionados se eliminaron correctamente.')
                         ),
                 ]),
             ]);
     }
 }
+

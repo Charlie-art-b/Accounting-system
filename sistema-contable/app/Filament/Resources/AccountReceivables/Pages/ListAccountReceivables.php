@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AccountReceivables\Pages;
 
 use App\Filament\Resources\AccountReceivables\AccountReceivableResource;
+use App\Filament\Widgets\AccountReceivableSummaryWidget;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions\Action;
@@ -10,6 +11,18 @@ use Filament\Actions\Action;
 class ListAccountReceivables extends ListRecords
 {
     protected static string $resource = AccountReceivableResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            AccountReceivableSummaryWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 1;
+    }
 
     protected function getHeaderActions(): array
     {

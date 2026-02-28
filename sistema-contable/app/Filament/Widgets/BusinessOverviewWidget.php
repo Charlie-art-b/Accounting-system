@@ -17,6 +17,8 @@ class BusinessOverviewWidget extends StatsOverviewWidget
 {
     protected static bool $isDiscovered = false;
 
+    protected int | string | array $columnSpan = 'full';
+
     protected function getStats(): array
     {
         $receivablesOpenQuery = AccountReceivable::query()

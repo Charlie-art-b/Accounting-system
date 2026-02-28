@@ -3,19 +3,20 @@
 namespace App\Filament\Resources\AccountReceivables\Tables;
 
 use App\Filament\Support\CrudImportExportActions;
+use App\Models\AccountReceivable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Filament\Forms\Components\DatePicker;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Notifications\Notification;
-use App\Models\AccountReceivable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class AccountReceivablesTable
 {
@@ -23,49 +24,45 @@ class AccountReceivablesTable
     {
         $user = Auth::user();
 
-        $canView   = $user?->can('account_receivables.view') ?? false;
+        $canView = $user?->can('account_receivables.view') ?? false;
         $canUpdate = $user?->can('account_receivables.update') ?? false;
         $canDelete = $user?->can('account_receivables.delete') ?? false;
 
         return $table
             ->columns([
-
                 TextColumn::make('customer.name')
                     ->label('Cliente')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('invoice_number')
-                    ->label('Número de factura')
-                    ->searchable(),
-
-                TextColumn::make('issue_date')
-                    ->label('Fecha de emisión')
-                    ->date()
+                    ->label('Factura')
+                    ->searchable()
                     ->sortable(),
 
-                TextColumn::make('due_date')
-                    ->label('Fecha de vencimiento')
-                    ->date()
-                    ->sortable(),
+                TextColumn::make('fechas')
+                    ->label('Fechas')
+                    ->state(fn (AccountReceivable $record): string => ($record->issue_date?->format('d/m/Y') ?? '-') . "\n" . ($record->due_date?->format('d/m/Y') ?? '-'))
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$issue, $due] = array_pad(explode("\n", $state, 2), 2, '-');
 
-                TextColumn::make('description')
-                    ->label('Descripción')
-                    ->searchable(),
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='text-xs'>Emision: " . e($issue) . "</span><br><span class='text-xs fi-text-color-400'>Vence: " . e($due) . '</span></div>'
+                        );
+                    })
+                    ->html(),
 
-                TextColumn::make('total_amount')
-                    ->label('Monto total')
-                    ->money('CRC')
-                    ->sortable(),
+                TextColumn::make('montos')
+                    ->label('Montos')
+                    ->state(fn (AccountReceivable $record): string => number_format((float) $record->total_amount, 2, ',', '.') . "\n" . number_format((float) $record->pending_amount, 2, ',', '.'))
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$total, $pending] = array_pad(explode("\n", $state, 2), 2, '0,00');
 
-                TextColumn::make('paid_amount')
-                    ->label('Monto pagado')
-                    ->money('CRC')
-                    ->sortable(),
-
-                TextColumn::make('pending_amount')
-                    ->label('Monto pendiente')
-                    ->money('CRC')
-                    ->sortable(),
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='text-xs'>Total: CRC " . e($total) . "</span><br><span class='text-xs fi-text-color-400'>Pendiente: CRC " . e($pending) . '</span></div>'
+                        );
+                    })
+                    ->html(),
 
                 TextColumn::make('status')
                     ->label('Estado')
@@ -82,6 +79,13 @@ class AccountReceivablesTable
                     ])
                     ->badge(),
 
+                TextColumn::make('description')
+                    ->label('Descripcion')
+                    ->limit(40)
+                    ->wrap()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('created_at')
                     ->label('Creado el')
                     ->dateTime()
@@ -94,15 +98,13 @@ class AccountReceivablesTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->filters([
-
                 SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
                         'pending' => 'Pendiente',
                         'partial' => 'Parcial',
-                        'paid'    => 'Pagado',
+                        'paid' => 'Pagado',
                     ]),
 
                 SelectFilter::make('customer_id')
@@ -114,10 +116,10 @@ class AccountReceivablesTable
                 Filter::make('dates')
                     ->label('Fechas')
                     ->form([
-                        DatePicker::make('issue_from')->label('Desde (emisión)'),
-                        DatePicker::make('issue_until')->label('Hasta (emisión)'),
-                        DatePicker::make('due_from')->label('Desde (vencimiento)'),
-                        DatePicker::make('due_until')->label('Hasta (vencimiento)'),
+                        DatePicker::make('issue_from')->label('Desde emision'),
+                        DatePicker::make('issue_until')->label('Hasta emision'),
+                        DatePicker::make('due_from')->label('Desde vencimiento'),
+                        DatePicker::make('due_until')->label('Hasta vencimiento'),
                     ])
                     ->columns(2)
                     ->query(function (Builder $query, array $data): Builder {
@@ -128,20 +130,11 @@ class AccountReceivablesTable
                             ->when($data['due_until'] ?? null, fn ($q, $d) => $q->whereDate('due_date', '<=', $d));
                     }),
             ])
-
             ->recordActions([
-
-                ViewAction::make()
-                    ->visible(fn () => $canView),
-
-                EditAction::make()
-                    ->visible(fn ($record) =>
-                        $canUpdate && $record->status !== 'paid'
-                    ),
+                ViewAction::make()->visible(fn () => $canView),
+                EditAction::make()->visible(fn ($record) => $canUpdate && $record->status !== 'paid'),
             ])
-
             ->toolbarActions([
-
                 ...($canView
                     ? CrudImportExportActions::make(
                         modelClass: AccountReceivable::class,
@@ -159,16 +152,13 @@ class AccountReceivablesTable
                             'status',
                         ],
                         uniqueBy: ['invoice_number'],
-                        defaults: [
-                            'paid_amount' => 0,
-                            'status' => 'pending',
-                        ],
+                        defaults: ['paid_amount' => 0, 'status' => 'pending'],
                         fieldLabels: [
                             'customer.name' => 'Cliente',
-                            'invoice_number' => 'Número de Factura',
-                            'issue_date' => 'Fecha de Emisión',
+                            'invoice_number' => 'Numero de Factura',
+                            'issue_date' => 'Fecha de Emision',
                             'due_date' => 'Fecha de Vencimiento',
-                            'description' => 'Descripción',
+                            'description' => 'Descripcion',
                             'total_amount' => 'Monto Total',
                             'paid_amount' => 'Monto Pagado',
                             'status' => 'Estado',
@@ -185,23 +175,20 @@ class AccountReceivablesTable
                         ],
                     )
                     : []),
-
                 BulkActionGroup::make([
-
                     DeleteBulkAction::make()
                         ->visible(fn () => $canDelete)
                         ->before(function ($records, DeleteBulkAction $action) {
-
                             foreach ($records as $account) {
                                 if (in_array($account->status, ['pending', 'partial'], true)) {
-
                                     Notification::make()
                                         ->danger()
-                                        ->title('NO SE PUEDE ELIMINAR')
-                                        ->body('Solo se pueden eliminar cuentas ya Pagadas.')
+                                        ->title('No se puede eliminar')
+                                        ->body('Solo se pueden eliminar cuentas pagadas.')
                                         ->send();
 
                                     $action->halt();
+
                                     return;
                                 }
                             }
@@ -210,3 +197,4 @@ class AccountReceivablesTable
             ]);
     }
 }
+

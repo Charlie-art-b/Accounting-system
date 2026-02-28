@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
+use App\Filament\Widgets\CustomerSummaryWidget;
 use App\Models\Supplier;
 use Filament\Actions\BulkAction;
 use Filament\Actions\CreateAction;
@@ -13,6 +14,18 @@ use Filament\Notifications\Notification;
 class ListCustomers extends ListRecords
 {
     protected static string $resource = CustomerResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            CustomerSummaryWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 1;
+    }
 
     protected function getHeaderActions(): array
     {

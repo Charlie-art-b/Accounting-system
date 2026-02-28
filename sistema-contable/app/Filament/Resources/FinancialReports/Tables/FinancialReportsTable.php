@@ -16,25 +16,34 @@ class FinancialReportsTable
         return $table
             ->columns([
                 TextColumn::make('customer.name')
-                    ->searchable(),
+                    ->label('Cliente')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('report_type')
+                    ->label('Tipo reporte')
                     ->searchable(),
-                TextColumn::make('fecha_inicio')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('fecha_fin')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('tasa_impuestos')
-                    ->numeric()
-                    ->sortable(),
+
+                TextColumn::make('rango')
+                    ->label('Rango')
+                    ->state(fn ($record): string => ($record->fecha_inicio?->format('d/m/Y') ?? '-') . ' - ' . ($record->fecha_fin?->format('d/m/Y') ?? '-')),
+
                 TextColumn::make('generated_at')
+                    ->label('Generado')
                     ->dateTime()
                     ->sortable(),
+
+                TextColumn::make('tasa_impuestos')
+                    ->label('Impuesto')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -54,3 +63,4 @@ class FinancialReportsTable
             ]);
     }
 }
+

@@ -6,23 +6,16 @@ use App\Exports\AccountingAccountsExport;
 use App\Exports\AccountingAccountsPDF;
 use App\Models\AccountingAccount;
 use App\Models\Customer;
-use App\Services\AccountingAccountsImportService;
 use App\Services\CsvExportService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class AccountingAccountsTable
 {
@@ -30,20 +23,17 @@ class AccountingAccountsTable
     {
         return $table
             ->columns([
-                TextColumn::make('customer.name')
-                    ->label('Cliente')
-                    ->searchable()
-                    ->sortable(),
-
                 TextColumn::make('code')
                     ->label('Codigo')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->fontFamily('mono'),
 
                 TextColumn::make('name')
-                    ->label('Nombre')
+                    ->label('Cuenta')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
 
                 TextColumn::make('type')
                     ->label('Tipo')
@@ -56,20 +46,6 @@ class AccountingAccountsTable
                     ->formatStateUsing(fn ($state) => AccountingAccount::CLASSIFICATIONS[$state] ?? $state)
                     ->sortable(),
 
-                TextColumn::make('normal_balance')
-                    ->label('Naturaleza')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => $state === 'debit' ? 'Deudora' : 'Acreedora')
-                    ->color(fn ($state) => $state === 'debit' ? 'info' : 'warning'),
-
-                TextColumn::make('level')
-                    ->label('Nivel')
-                    ->sortable(),
-
-                TextColumn::make('parent.name')
-                    ->label('Cuenta Padre')
-                    ->toggleable(),
-
                 TextColumn::make('saldo')
                     ->label('Saldo')
                     ->getStateUsing(fn ($record) => $record->getSaldo())
@@ -81,17 +57,28 @@ class AccountingAccountsTable
                     ->color(fn ($state) => $state === 'Activa' ? 'success' : 'danger')
                     ->sortable(),
 
-                TextColumn::make('created_at')
-                    ->label('Creado')
-                    ->dateTime()
+                TextColumn::make('customer.name')
+                    ->label('Cliente')
+                    ->searchable()
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('updated_at')
-                    ->label('Actualizado')
-                    ->dateTime()
+                TextColumn::make('normal_balance')
+                    ->label('Naturaleza')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state === 'debit' ? 'Deudora' : 'Acreedora')
+                    ->color(fn ($state) => $state === 'debit' ? 'info' : 'warning')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('level')
+                    ->label('Nivel')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('parent.name')
+                    ->label('Cuenta Padre')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->filters([
                 SelectFilter::make('customer_id')
                     ->label('Cliente')
@@ -125,19 +112,13 @@ class AccountingAccountsTable
                         'Inactiva' => 'Inactiva',
                     ]),
             ])
-
             ->recordActions([
-                ViewAction::make()
-                    ->visible(fn () => Auth::user()?->can('accounting_accounts.view')),
-
-                EditAction::make()
-                    ->visible(fn () => Auth::user()?->can('accounting_accounts.update')),
+                ViewAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.view')),
+                EditAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.update')),
             ])
-
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
+                    DeleteBulkAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
                 ]),
 
                 Action::make('export_excel')
@@ -180,3 +161,4 @@ class AccountingAccountsTable
             ]);
     }
 }
+

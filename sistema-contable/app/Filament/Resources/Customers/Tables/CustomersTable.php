@@ -12,10 +12,11 @@ use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class CustomersTable
 {
@@ -24,26 +25,43 @@ class CustomersTable
         return $table
             ->defaultSort('name', 'asc')
             ->columns([
+                TextColumn::make('cliente')
+                    ->label('Cliente')
+                    ->state(function (Customer $record): string {
+                        $fullName = trim($record->name . ' ' . $record->first_last_name);
+                        $secondLastName = trim((string) $record->second_last_name);
 
-                TextColumn::make('name')
-                    ->label('Nombre')
-                    ->sortable()
-                    ->searchable(),
+                        return $secondLastName !== ''
+                            ? "{$fullName}\n{$secondLastName}"
+                            : $fullName;
+                    })
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$main, $secondary] = array_pad(explode("\n", $state, 2), 2, '');
 
-                TextColumn::make('first_last_name')
-                    ->label('Primer apellido')
-                    ->sortable()
-                    ->searchable(),
+                        $main = e($main);
+                        $secondary = e($secondary);
 
-                TextColumn::make('second_last_name')
-                    ->label('Segundo apellido')
-                    ->searchable(),
+                        if ($secondary === '') {
+                            return new HtmlString("<span class='font-medium'>{$main}</span>");
+                        }
+
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='font-medium'>{$main}</span><br><span class='text-xs fi-text-color-400'>{$secondary}</span></div>"
+                        );
+                    })
+                    ->html()
+                    ->searchable(query: function ($query, string $search): void {
+                        $query
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('first_last_name', 'like', "%{$search}%")
+                            ->orWhere('second_last_name', 'like', "%{$search}%");
+                    }),
 
                 TextColumn::make('id_type')
-                    ->label('Tipo de identificación')
+                    ->label('Tipo ID')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'identification' => 'Cédula',
+                        'identification' => 'Cedula',
                         'dimex' => 'DIMEX',
                         'passport' => 'Pasaporte',
                         default => $state,
@@ -51,27 +69,42 @@ class CustomersTable
                     ->searchable(),
 
                 TextColumn::make('identification')
-                    ->label('Identificación')
-                    ->searchable(),
+                    ->label('Identificacion')
+                    ->searchable()
+                    ->fontFamily('mono'),
 
-                TextColumn::make('email')
-                    ->label('Correo electrónico')
-                    ->searchable(),
+                TextColumn::make('contacto')
+                    ->label('Contacto')
+                    ->state(fn (Customer $record): string => trim((string) $record->email) . "\n" . trim((string) $record->phone))
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$email, $phone] = array_pad(explode("\n", $state, 2), 2, '');
 
-                TextColumn::make('phone')
-                    ->label('Teléfono')
-                    ->searchable(),
+                        $email = e($email);
+                        $phone = e($phone);
+
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='text-xs'>{$email}</span><br><span class='text-xs fi-text-color-400'>{$phone}</span></div>"
+                        );
+                    })
+                    ->html()
+                    ->searchable(query: function ($query, string $search): void {
+                        $query
+                            ->where('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    }),
 
                 TextColumn::make('address')
-                    ->label('Dirección')
-                    ->searchable(),
+                    ->label('Ubicacion')
+                    ->searchable()
+                    ->wrap()
+                    ->limit(34),
 
                 TextColumn::make('customer_type')
-                    ->label('Tipo de cliente')
+                    ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'individual' => 'Persona física',
-                        'legal_person' => 'Persona jurídica',
+                        'individual' => 'Persona fisica',
+                        'legal_person' => 'Persona juridica',
                         default => $state,
                     }),
 
@@ -85,7 +118,7 @@ class CustomersTable
                     ->badge()
                     ->color('success')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
                     ->label('Creado en')
@@ -99,14 +132,12 @@ class CustomersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->filters([
-
                 SelectFilter::make('customer_type')
                     ->label('Tipo de cliente')
                     ->options([
-                        'individual' => 'Persona física',
-                        'legal_person' => 'Persona jurídica',
+                        'individual' => 'Persona fisica',
+                        'legal_person' => 'Persona juridica',
                     ]),
 
                 TernaryFilter::make('status')
@@ -118,9 +149,7 @@ class CustomersTable
                     ->relationship('suppliers', 'nombre_razon_social')
                     ->label('Proveedor'),
             ])
-
             ->recordActions([
-
                 ViewAction::make()
                     ->visible(fn () => Auth::user()?->can('customers.view')),
 
@@ -130,7 +159,6 @@ class CustomersTable
                 DeleteAction::make()
                     ->visible(fn () => Auth::user()?->can('customers.delete'))
                     ->before(function ($record, DeleteAction $action) {
-
                         $pendingAccounts = $record->accountReceivables()
                             ->whereIn('status', ['pending', 'partial'])
                             ->count();
@@ -138,7 +166,7 @@ class CustomersTable
                         if ($pendingAccounts > 0) {
                             Notification::make()
                                 ->danger()
-                                ->title('NO SE PUEDE ELIMINAR')
+                                ->title('No se puede eliminar')
                                 ->body("Este cliente tiene {$pendingAccounts} cuenta(s) por cobrar pendiente(s).")
                                 ->send();
 
@@ -148,13 +176,11 @@ class CustomersTable
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title('¡Cliente eliminado!')
+                            ->title('Cliente eliminado')
                             ->body('El cliente ha sido eliminado correctamente.')
                     ),
             ])
-
             ->toolbarActions([
-
                 ...CrudImportExportActions::make(
                     modelClass: Customer::class,
                     module: 'customers',
@@ -188,11 +214,11 @@ class CustomersTable
                         'name' => 'Nombre',
                         'first_last_name' => 'Primer Apellido',
                         'second_last_name' => 'Segundo Apellido',
-                        'id_type' => 'Tipo de Identificación',
-                        'identification' => 'Identificación',
-                        'email' => 'Correo Electrónico',
-                        'phone' => 'Teléfono',
-                        'address' => 'Dirección',
+                        'id_type' => 'Tipo de Identificacion',
+                        'identification' => 'Identificacion',
+                        'email' => 'Correo Electronico',
+                        'phone' => 'Telefono',
+                        'address' => 'Direccion',
                         'customer_type' => 'Tipo de Cliente',
                         'status' => 'Estado',
                         'notes' => 'Notas',
@@ -203,12 +229,10 @@ class CustomersTable
                     DeleteBulkAction::make()
                         ->visible(fn () => Auth::user()?->can('customers.delete'))
                         ->before(function ($records, DeleteBulkAction $action) {
-
                             $blockedCount = 0;
                             $blockedReasons = [];
 
                             foreach ($records as $customer) {
-
                                 $pendingAccounts = $customer->accountReceivables()
                                     ->whereIn('status', ['pending', 'partial'])
                                     ->count();
@@ -221,13 +245,12 @@ class CustomersTable
                             }
 
                             if ($blockedCount > 0) {
-
-                                $reasonsList = implode("\n• ", $blockedReasons);
+                                $reasonsList = implode("\n- ", $blockedReasons);
 
                                 Notification::make()
                                     ->danger()
-                                    ->title('NO SE PUEDE ELIMINAR')
-                                    ->body("No se pueden eliminar {$blockedCount} cliente(s):\n\n• {$reasonsList}")
+                                    ->title('No se puede eliminar')
+                                    ->body("No se pueden eliminar {$blockedCount} cliente(s):\n\n- {$reasonsList}")
                                     ->send();
 
                                 $action->halt();
@@ -236,10 +259,11 @@ class CustomersTable
                         ->successNotification(
                             Notification::make()
                                 ->success()
-                                ->title('¡Clientes eliminados!')
+                                ->title('Clientes eliminados')
                                 ->body('Los clientes seleccionados han sido eliminados correctamente.')
                         ),
                 ]),
             ]);
     }
 }
+
