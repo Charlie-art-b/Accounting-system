@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Auth\Notifications\ResetPassword;
+
 
 class User extends Authenticatable
 {
@@ -23,6 +25,10 @@ class User extends Authenticatable
         'email',
         'password',
     ];
+    public function sendPasswordResetNotification($token): void
+{
+    $this->notify(new ResetPassword($token));
+}
 
     /**
      * The attributes that should be hidden for serialization.

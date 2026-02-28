@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth(Width::Full)
             ->login()
+            ->passwordReset()
             ->authGuard('web')
             ->authPasswordBroker('users')
             ->userMenuItems([
