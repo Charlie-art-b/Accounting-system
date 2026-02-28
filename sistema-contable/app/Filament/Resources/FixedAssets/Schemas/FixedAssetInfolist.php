@@ -33,9 +33,19 @@ class FixedAssetInfolist
 
                         TextEntry::make('status')
                             ->label('Estado')
-                            ->formatStateUsing(fn ($state) => $state === 'disposed' ? 'Dado de Baja' : 'Activo')
+                            ->formatStateUsing(fn ($state) => match ($state) {
+                                'active' => 'Activo',
+                                'disposed' => 'Dado de baja',
+                                'under_maintenance' => 'En mantenimiento',
+                            
+                        default => $state,
+                    })
                             ->badge()
-                            ->color(fn ($state) => $state === 'disposed' ? 'danger' : 'success'),
+                            ->color(fn ($state) => match ($state) {
+                                'disposed' => 'danger',
+                                'under_maintenance' => 'warning',
+                                default => 'success',
+                            }),
                     ]),
 
                 Section::make('Valores y Depreciación')
