@@ -47,6 +47,7 @@ class CreateCustomer extends CreateRecord
     {
         return [
             Action::make('back')
+                ->label('')
                 ->icon('heroicon-o-x-mark')
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index'))

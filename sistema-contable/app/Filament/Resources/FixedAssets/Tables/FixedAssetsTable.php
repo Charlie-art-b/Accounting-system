@@ -29,7 +29,18 @@ class FixedAssetsTable
 
                 TextColumn::make('status')
                     ->label('Estado')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'active' => 'Activo',
+                        'disposed' => 'Dado de baja',
+                        'under_maintenance' => 'En mantenimiento',
+                        default => $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        'active' => 'success',
+                        'disposed' => 'danger',
+                        'under_maintenance' => 'warning',
+                    }),
 
                 TextColumn::make('acquisition_date')
                     ->label('Adquisicion')
@@ -39,11 +50,13 @@ class FixedAssetsTable
                 TextColumn::make('acquisition_value')
                     ->label('Valor adquisicion')
                     ->numeric()
+                    ->money('CRC')
                     ->sortable(),
 
                 TextColumn::make('net_value')
                     ->label('Valor neto')
                     ->numeric()
+                    ->money('CRC')
                     ->sortable(),
 
                 TextColumn::make('accumulated_depreciation')

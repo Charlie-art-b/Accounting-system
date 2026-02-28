@@ -108,9 +108,11 @@ class CustomersTable
                         default => $state,
                     }),
 
-                IconColumn::make('status')
+                TextColumn::make('status')
                     ->label('Estado')
-                    ->boolean(),
+                    ->formatStateUsing(fn ($state) => $state ? 'Activo' : 'Inactivo')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'success' : 'danger'),
 
                 TextColumn::make('suppliers_count')
                     ->label('Proveedores')

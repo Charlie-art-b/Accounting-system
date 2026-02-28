@@ -72,9 +72,11 @@ class CustomerInfolist
                                 'legal_person' => 'Persona jurídica',
                                 default => $state,
                             }),
-                        IconEntry::make('status')
+                        TextEntry::make('status')
                             ->label('Estado')
-                            ->boolean(),
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => $state ? 'Activo' : 'Inactivo')
+                            ->color(fn ($state) => $state ? 'success' : 'danger'),
                     ])
                     ->columns(2),
 
