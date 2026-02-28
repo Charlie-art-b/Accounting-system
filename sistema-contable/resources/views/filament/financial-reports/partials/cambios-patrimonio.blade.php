@@ -5,52 +5,98 @@
     $utilidad = $p['utilidad_periodo'] ?? 0;
     $patrimonioFinal = $p['patrimonio_final'] ?? 0;
     $cambioNeto = $p['cambio_neto'] ?? 0;
+
+    $colorCapital = $capitalInicial < 0 ? '#dc2626' : '#111827';
+    $colorFinal = $patrimonioFinal < 0 ? '#dc2626' : '#111827';
+    $colorCambio = $cambioNeto < 0 ? '#dc2626' : '#16a34a';
 @endphp
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <x-filament::card>
-        <div class="text-sm text-gray-500">Capital Inicial</div>
-        <div class="text-2xl font-bold">{{ number_format($capitalInicial, 2) }}</div>
-    </x-filament::card>
+{{-- RESUMEN --}}
+<div style="display:grid; grid-template-columns: 1fr; gap:14px; margin-bottom:18px;">
+    <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px;">
+        {{-- Capital inicial --}}
+        <div style="border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px; background:white;">
+            <div style="font-size:12px; color:#6b7280; margin-bottom:6px;">Capital Inicial</div>
+            <div style="font-size:24px; font-weight:800; color: {{ $colorCapital }}; font-variant-numeric: tabular-nums;">
+                {{ number_format($capitalInicial, 2) }}
+            </div>
+        </div>
 
-    <x-filament::card>
-        <div class="text-sm text-gray-500">Patrimonio Final</div>
-        <div class="text-2xl font-bold">{{ number_format($patrimonioFinal, 2) }}</div>
-    </x-filament::card>
+        {{-- Patrimonio final --}}
+        <div style="border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px; background:white;">
+            <div style="font-size:12px; color:#6b7280; margin-bottom:6px;">Patrimonio Final</div>
+            <div style="font-size:24px; font-weight:800; color: {{ $colorFinal }}; font-variant-numeric: tabular-nums;">
+                {{ number_format($patrimonioFinal, 2) }}
+            </div>
+        </div>
 
-    <x-filament::card>
-        <div class="text-sm text-gray-500">Cambio Neto</div>
-        <div class="text-2xl font-bold">{{ number_format($cambioNeto, 2) }}</div>
-    </x-filament::card>
+        {{-- Cambio neto --}}
+        <div style="border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px; background:white;">
+            <div style="font-size:12px; color:#6b7280; margin-bottom:6px;">Cambio Neto</div>
+            <div style="font-size:24px; font-weight:800; color: {{ $colorCambio }}; font-variant-numeric: tabular-nums;">
+                {{ number_format($cambioNeto, 2) }}
+            </div>
+        </div>
+    </div>
 </div>
 
+{{-- DETALLE --}}
 <x-filament::section heading="Detalle de cambios en el patrimonio">
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead class="text-left text-gray-500">
-                <tr>
-                    <th class="py-2 pr-4">Concepto</th>
-                    <th class="py-2 pr-4">Monto</th>
+
+    <div style="overflow-x:auto; border:1px solid #e5e7eb; border-radius:14px; background:white;">
+
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+
+            <thead>
+                <tr style="background:#f9fafb;">
+                    <th style="text-align:left; padding:14px 18px; font-weight:600; color:#374151;">
+                        Concepto
+                    </th>
+                    <th style="text-align:right; padding:14px 18px; font-weight:600; color:#374151;">
+                        Monto
+                    </th>
                 </tr>
             </thead>
+
             <tbody>
-                <tr class="border-t">
-                    <td class="py-2 pr-4">Aportes</td>
-                    <td class="py-2 pr-4">{{ number_format($aportes, 2) }}</td>
+
+                <tr style="border-top:1px solid #e5e7eb;"
+                    onmouseover="this.style.background='#f9fafb'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding:14px 18px;">Aportes</td>
+                    <td style="padding:14px 18px; text-align:right; font-variant-numeric: tabular-nums; color: {{ $aportes < 0 ? '#dc2626' : '#111827' }};">
+                        {{ number_format($aportes, 2) }}
+                    </td>
                 </tr>
-                <tr class="border-t">
-                    <td class="py-2 pr-4">Retiros</td>
-                    <td class="py-2 pr-4">{{ number_format($retiros, 2) }}</td>
+
+                <tr style="border-top:1px solid #e5e7eb;"
+                    onmouseover="this.style.background='#f9fafb'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding:14px 18px;">Retiros</td>
+                    <td style="padding:14px 18px; text-align:right; font-variant-numeric: tabular-nums; color: {{ $retiros < 0 ? '#dc2626' : '#111827' }};">
+                        {{ number_format($retiros, 2) }}
+                    </td>
                 </tr>
-                <tr class="border-t">
-                    <td class="py-2 pr-4">Utilidad del período</td>
-                    <td class="py-2 pr-4">{{ number_format($utilidad, 2) }}</td>
+
+                <tr style="border-top:1px solid #e5e7eb;"
+                    onmouseover="this.style.background='#f9fafb'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding:14px 18px;">Utilidad del período</td>
+                    <td style="padding:14px 18px; text-align:right; font-variant-numeric: tabular-nums; color: {{ $utilidad < 0 ? '#dc2626' : '#111827' }};">
+                        {{ number_format($utilidad, 2) }}
+                    </td>
                 </tr>
-                <tr class="border-t font-semibold">
-                    <td class="py-2 pr-4">Patrimonio final</td>
-                    <td class="py-2 pr-4">{{ number_format($patrimonioFinal, 2) }}</td>
+
+                <tr style="border-top:2px solid #d1d5db; background:#f9fafb; font-weight:700;">
+                    <td style="padding:16px 18px;">Patrimonio final</td>
+                    <td style="padding:16px 18px; text-align:right; font-variant-numeric: tabular-nums; font-size:15px; color: {{ $patrimonioFinal < 0 ? '#dc2626' : '#16a34a' }};">
+                        {{ number_format($patrimonioFinal, 2) }}
+                    </td>
                 </tr>
+
             </tbody>
+
         </table>
     </div>
+
 </x-filament::section>

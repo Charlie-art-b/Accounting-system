@@ -10,6 +10,11 @@ class ViewFinancialReport extends ViewRecord
 {
     protected static string $resource = FinancialReportResource::class;
 
+     public function getTitle(): string
+    {
+        return 'Detalle del Reporte #' . $this->record->id;
+    }
+
      protected function getHeaderActions(): array
     {
         return [

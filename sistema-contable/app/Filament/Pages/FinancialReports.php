@@ -26,7 +26,7 @@ class FinancialReports extends Page implements HasForms
 
     protected string $view = 'filament.pages.financial-reports';
 
-    //aparece en el menú
+    //aparece en el menu
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationLabel = 'Reportes financieros';
     protected static ?string $title = 'Reportes financieros';
@@ -75,7 +75,7 @@ class FinancialReports extends Page implements HasForms
                             Select::make('customer_id')
                                 ->label('Cliente')
                                 ->options(Customer::query()->orderBy('name')->pluck('name', 'id'))
-                                ->searchable()
+                                //->searchable()
                                 ->required()
                                 ->columnSpan(6),
 
