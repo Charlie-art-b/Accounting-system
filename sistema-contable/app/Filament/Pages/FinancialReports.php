@@ -93,12 +93,12 @@ class FinancialReports extends Page implements HasForms
                                 ->columnSpan(6),
 
                             DatePicker::make('fecha_inicio')
-                                ->label('Fecha inicio')
+                                ->label('Fecha inicio (Desde)')
                                 ->required()
                                 ->columnSpan(4),
 
                             DatePicker::make('fecha_fin')
-                                ->label('Fecha fin')
+                                ->label('Fecha fin (Hasta)')
                                 ->required()
                                 ->afterOrEqual('fecha_inicio')
                                 ->columnSpan(4),
