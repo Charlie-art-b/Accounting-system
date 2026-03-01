@@ -6,7 +6,10 @@ use App\Filament\Support\CrudImportExportActions;
 use App\Models\CollectionManagement;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -22,6 +25,10 @@ class CollectionManagementTable
 {
     public static function configure(Table $table): Table
     {
+        $canView = Auth::user()?->can('collection_management.view') ?? false;
+        $canUpdate = Auth::user()?->can('collection_management.update') ?? false;
+        $canDelete = Auth::user()?->can('collection_management.delete') ?? false;
+
         return $table
             ->columns([
                 TextColumn::make('accountReceivable.invoice_number')
@@ -99,11 +106,57 @@ class CollectionManagementTable
                     }),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->visible(fn () => $canView),
+
+                Action::make('edit_collection')
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->visible(fn () => $canUpdate)
+                    ->form([
+                        DateTimePicker::make('next_reminder_at')
+                            ->label('Proximo recordatorio'),
+                        TextInput::make('reminder_attempts')
+                            ->label('Intentos')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0),
+                        TextInput::make('last_action')
+                            ->label('Ultima accion')
+                            ->maxLength(255),
+                        Textarea::make('notes')
+                            ->label('Notas')
+                            ->rows(3),
+                    ])
+                    ->fillForm(fn (CollectionManagement $record): array => [
+                        'next_reminder_at' => $record->next_reminder_at,
+                        'reminder_attempts' => $record->reminder_attempts,
+                        'last_action' => $record->last_action,
+                        'notes' => $record->notes,
+                    ])
+                    ->action(function (CollectionManagement $record, array $data): void {
+                        $record->update([
+                            'next_reminder_at' => $data['next_reminder_at'] ?? null,
+                            'reminder_attempts' => $data['reminder_attempts'] ?? 0,
+                            'last_action' => $data['last_action'] ?? null,
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Gestion actualizada')
+                            ->send();
+                    }),
+
+                DeleteAction::make()
+                    ->visible(fn () => $canDelete),
+
                 Action::make('pay')
                     ->label('Registrar pago')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->visible(fn () => Auth::user()?->can('collection_management.update'))
+                    ->visible(fn () => $canUpdate)
                     ->requiresConfirmation()
                     ->modalHeading('Registrar pago')
                     ->modalDescription('Este pago actualiza el monto pagado de la cuenta por cobrar.')
@@ -188,4 +241,3 @@ class CollectionManagementTable
             ->defaultSort('next_reminder_at', 'asc');
     }
 }
-

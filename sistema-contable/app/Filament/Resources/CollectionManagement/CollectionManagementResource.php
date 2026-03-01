@@ -62,17 +62,17 @@ class CollectionManagementResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return false;
+        return Auth::user()?->can('collection_management.update') ?? false;
     }
 
     public static function canDelete($record): bool
     {
-        return false;
+        return Auth::user()?->can('collection_management.delete') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return false;
+        return Auth::user()?->can('collection_management.delete') ?? false;
     }
 
     public static function getRelations(): array
