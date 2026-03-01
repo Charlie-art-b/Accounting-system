@@ -21,54 +21,14 @@ class ViewUser extends ViewRecord
         return [
 
             Action::make('volver')
-                ->label('Volver')
-                ->icon('heroicon-o-arrow-left')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
                 ->color('gray')
                 ->url(UserResource::getUrl('index')),
 
             EditAction::make()
                 ->label('Editar')
                 ->visible(fn () => auth()->user()?->can('users.update')),
-
-            DeleteAction::make()
-                ->label('Eliminar')
-                ->visible(fn () => auth()->user()?->can('users.delete'))
-                ->requiresConfirmation()
-                ->before(function (User $record, DeleteAction $action) {
-
-                    $currentUser = auth()->user();
-
-                    if ($record->id === $currentUser->id) {
-                        Notification::make()
-                            ->danger()
-                            ->title('No permitido')
-                            ->body('No puedes eliminar tu propio usuario.')
-                            ->send();
-
-                        $action->halt();
-                    }
-
-                    if ($record->hasRole('administrador')) {
-
-                        $adminsCount = User::role('administrador')->count();
-
-                        if ($adminsCount <= 1) {
-                            Notification::make()
-                                ->danger()
-                                ->title('No permitido')
-                                ->body('No puedes eliminar el último administrador del sistema.')
-                                ->send();
-
-                            $action->halt();
-                        }
-                    }
-                })
-                ->successNotification(
-                    Notification::make()
-                        ->success()
-                        ->title('Usuario eliminado')
-                        ->body('El usuario fue eliminado correctamente.')
-                ),
         ];
     }
 }

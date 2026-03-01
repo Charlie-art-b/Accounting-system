@@ -8,52 +8,96 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 use Throwable;
+use Filament\Actions\Action;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
 
-  protected function beforeCreate(): void
-{
-    $currentUser = auth()->user();
-
-    if (!$currentUser->can('users.create')) {
-
-        Notification::make()
-            ->danger()
-            ->title('Acción no autorizada')
-            ->body('No tienes permiso para crear usuarios.')
-            ->persistent()
-            ->send();
-
-        $this->halt();
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('¡Usuario creado!')
+            ->body('El usuario se ha creado correctamente.');
     }
 
-    $rolesIds = $this->data['roles'] ?? [];
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('create')
+                ->label('Crear')
+                ->keyBindings(['mod+s'])
+                ->requiresConfirmation()
+                ->modalHeading('Confirmar creación')
+                ->modalDescription('¿Deseas registrar este usuario? Revisa los datos antes de confirmar.')
+                ->modalSubmitActionLabel('Sí, crear')
+                ->modalCancelActionLabel('No, cancelar')
+                ->visible(fn () => auth()->user()->can('users.create'))
+                ->action(fn () => $this->create()),
 
-    if (!is_array($rolesIds)) {
-        $rolesIds = [$rolesIds];
+            Action::make('cancel')
+                ->label('Cancelar')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
+        ];
     }
 
-    $roles = Role::whereIn('id', $rolesIds)->get();
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->tooltip('Volver a la lista'),
+        ];
+    }
+    
+    protected function beforeCreate(): void
+    {
+        $currentUser = auth()->user();
 
-    foreach ($roles as $role) {
-        foreach ($role->permissions as $permission) {
+        if (!$currentUser->can('users.create')) {
 
-            if (!$currentUser->can($permission->name)) {
+            Notification::make()
+                ->danger()
+                ->title('Acción no autorizada')
+                ->body('No tienes permiso para crear usuarios.')
+                ->persistent()
+                ->send();
 
-                Notification::make()
-                    ->danger()
-                    ->title('Rol no permitido')
-                    ->body("No puedes asignar el rol '{$role->name}' porque contiene permisos superiores a los tuyos.")
-                    ->persistent()
-                    ->send();
+            $this->halt();
+        }
 
-                $this->halt();
+        $rolesIds = $this->data['roles'] ?? [];
+
+        if (!is_array($rolesIds)) {
+            $rolesIds = [$rolesIds];
+        }
+
+        $roles = Role::whereIn('id', $rolesIds)->get();
+
+        foreach ($roles as $role) {
+            foreach ($role->permissions as $permission) {
+
+                if (!$currentUser->can($permission->name)) {
+
+                    Notification::make()
+                        ->danger()
+                        ->title('Rol no permitido')
+                        ->body("No puedes asignar el rol '{$role->name}' porque contiene permisos superiores a los tuyos.")
+                        ->persistent()
+                        ->send();
+
+                    $this->halt();
+                }
             }
         }
     }
-}
+    
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         if (empty($data['password'])) {
@@ -67,8 +111,7 @@ class CreateUser extends CreateRecord
         return $data;
     }
 
-
-    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
+    protected function handleRecordCreation(array $data):Model
     {
         try {
             return parent::handleRecordCreation($data);
@@ -85,28 +128,24 @@ class CreateUser extends CreateRecord
         }
     }
     protected function afterCreate(): void
-{
-    $rolesIds = $this->data['roles'] ?? [];
+    {
+        $rolesIds = $this->data['roles'] ?? [];
+        if (empty($rolesIds)) {
 
-    // Si no seleccionaron rol → asignar el más básico
-    if (empty($rolesIds)) {
+            $basicRole = Role::where('name', 'asistente')->first();
 
-        $basicRole = Role::where('name', 'asistente')->first();
+            if ($basicRole) {
+                $this->record->assignRole($basicRole);
+            }
 
-        if ($basicRole) {
-            $this->record->assignRole($basicRole);
+            return;
+        }
+        if (!is_array($rolesIds)) {
+            $rolesIds = [$rolesIds];
         }
 
-        return;
+        $roles = Role::whereIn('id', $rolesIds)->pluck('name')->toArray();
+        $this->record->syncRoles($roles);
     }
 
-    // Si seleccionaron rol → asignarlo normalmente
-    if (!is_array($rolesIds)) {
-        $rolesIds = [$rolesIds];
-    }
-
-    $roles = Role::whereIn('id', $rolesIds)->pluck('name')->toArray();
-
-    $this->record->syncRoles($roles);
-}
 }
