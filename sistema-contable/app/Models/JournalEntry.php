@@ -97,6 +97,8 @@ class JournalEntry extends Model
     {
         static::saving(function (self $entry) {
 
+            $entry->calculateTotals();
+
             if (! is_null($entry->posted_at)) {
 
                 $totals = $entry->lines()
