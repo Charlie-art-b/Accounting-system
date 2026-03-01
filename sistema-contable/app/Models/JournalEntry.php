@@ -124,6 +124,9 @@ class JournalEntry extends Model
    
     public function post($user = null): void
     {
+
+        $this->calculateTotals();
+        
         if (! $this->isBalanced()) {
             throw ValidationException::withMessages([
                 'entry' => 'El asiento no está balanceado.',

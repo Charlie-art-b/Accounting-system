@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             CollectionManagementSeeder::class,
             FixedAssetsSeeder::class,
             AccountingAccountSeeder::class,
+            JournalDemoSeeder::class,
         ]);
     }
 }
