@@ -40,9 +40,9 @@ class EditAccountPayable extends EditRecord
                 ->before(function (DeleteAction $action) {
                     if (!in_array($this->record->status, ['voided', 'paid'])) {
                         Notification::make()
-                            ->title('NO SE PUEDE ELIMINAR')
-                            ->body('Solo se pueden eliminar cuentas en estado Pagado o Anulado.')
                             ->danger()
+                            ->title('No se puede eliminar')
+                            ->body('Esta cuenta debe estar en estado Pagado o Anulado.')
                             ->send();
 
                         $action->halt();
@@ -51,7 +51,7 @@ class EditAccountPayable extends EditRecord
                 ->successNotification(
                     Notification::make()
                         ->success()
-                        ->title('¡Cuenta eliminada!')
+                        ->title('Cuenta eliminada')
                         ->body('La cuenta por pagar ha sido eliminada correctamente.')
                 )
                 ->after(function () {
@@ -61,7 +61,8 @@ class EditAccountPayable extends EditRecord
     }
 
     protected function getFormActions(): array
-    {        return [
+    {        
+        return [
             Action::make('save')
                 ->label('Guardar cambios')
                 ->requiresConfirmation()

@@ -12,7 +12,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -129,13 +129,80 @@ class AccountingAccountsTable
                     }),
             ])
             ->recordActions([
-                ViewAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.view')),
                 EditAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.update')),
-                DeleteAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
+                DeleteAction::make()
+                    ->visible(fn () => Auth::user()?->can('accounting_accounts.delete'))
+                    ->requiresConfirmation()
+                    ->before(function (AccountingAccount $record, DeleteAction $action) {
+                        if ($record->journalLines()->exists()) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Esta cuenta tiene movimientos contables asociados.')
+                                ->send();
+
+                            $action->halt();
+                        }
+
+                        if ($record->children()->exists()) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Esta cuenta tiene subcuentas asignadas.')
+                                ->send();
+
+                            $action->halt();
+                        }
+                    })
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Cuenta eliminada')
+                            ->body('La cuenta contable ha sido eliminada correctamente.')
+                    ),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('accounting_accounts.delete'))
+                        ->requiresConfirmation()
+                        ->before(function ($records, DeleteBulkAction $action) {
+                            $blocked = [];
+                            $deletable = [];
+
+                            foreach ($records as $record) {
+                                if ($record->journalLines()->exists()) {
+                                    $blocked[] = $record;
+                                    continue;
+                                }
+
+                                if ($record->children()->exists()) {
+                                    $blocked[] = $record;
+                                    continue;
+                                }
+
+                                $deletable[] = $record->id;
+                            }
+
+                            if (!empty($blocked)) {
+                                Notification::make()
+                                    ->warning()
+                                    ->title('No se pueden eliminar algunas cuentas')
+                                    ->body('Una o más cuentas seleccionadas tienen movimientos contables o subcuentas asignadas.')
+                                    ->persistent()
+                                    ->send();
+
+                                if (empty($deletable)) {
+                                    $action->halt();
+                                }
+                            }
+                        })
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Cuentas eliminadas')
+                                ->body('Las cuentas contables han sido eliminadas correctamente.')
+                        ),
                 ]),
 
                 Action::make('export_excel')
