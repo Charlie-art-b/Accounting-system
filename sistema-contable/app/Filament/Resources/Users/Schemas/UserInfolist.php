@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -12,43 +13,55 @@ class UserInfolist
         return $schema
             ->components([
 
-                TextEntry::make('name')
-                    ->label('Nombre completo'),
+                Section::make('Información Personal')
+                    ->description('Datos básicos del usuario')
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Nombre completo'),
 
-                TextEntry::make('email')
-                    ->label('Correo electrónico'),
+                        TextEntry::make('email')
+                            ->label('Correo electrónico'),
+                    ]),
 
-                TextEntry::make('roles.name')
-                    ->label('Rol(es)')
-                    ->badge()
-                    ->separator(', ')
-                    ->placeholder('Sin rol'),
+                Section::make('Seguridad y Roles')
+                    ->description('Permisos y validación de seguridad')
+                    ->schema([
+                        TextEntry::make('email_verified_at')
+                            ->label('Correo verificado en')
+                            ->dateTime()
+                            ->placeholder('-'),
 
-                TextEntry::make('permissions')
-                    ->label('Permisos')
-                    ->state(function ($record) {
-                        return $record->getAllPermissions()
-                            ->pluck('name')
-                            ->toArray();
-                    })
-                    ->badge()
-                    ->separator(', ')
-                    ->placeholder('Sin permisos'),
+                        TextEntry::make('roles.name')
+                            ->label('Rol(es)')
+                            ->badge()
+                            ->separator(', ')
+                            ->placeholder('Sin rol'),
 
-                TextEntry::make('email_verified_at')
-                    ->label('Correo verificado en')
-                    ->dateTime()
-                    ->placeholder('-'),
+                        TextEntry::make('permissions')
+                            ->label('Permisos')
+                            ->state(function ($record) {
+                                return $record->getAllPermissions()
+                                    ->pluck('name')
+                                    ->toArray();
+                            })
+                            ->badge()
+                            ->separator(', ')
+                            ->placeholder('Sin permisos'),
+                    ]),
 
-                TextEntry::make('created_at')
-                    ->label('Creado en')
-                    ->dateTime()
-                    ->placeholder('-'),
+                Section::make('Auditoría')
+                    ->description('Registro de cambios')
+                    ->schema([
+                        TextEntry::make('created_at')
+                            ->label('Creado en')
+                            ->dateTime()
+                            ->placeholder('-'),
 
-                TextEntry::make('updated_at')
-                    ->label('Última actualización')
-                    ->dateTime()
-                    ->placeholder('-'),
+                        TextEntry::make('updated_at')
+                            ->label('Última actualización')
+                            ->dateTime()
+                            ->placeholder('-'),
+                    ]),
             ]);
     }
 }
