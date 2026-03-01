@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AccountReceivables\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\AccountReceivable;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -133,6 +134,19 @@ class AccountReceivablesTable
             ->recordActions([
                 ViewAction::make()->visible(fn () => $canView),
                 EditAction::make()->visible(fn ($record) => $canUpdate && $record->status !== 'paid'),
+                DeleteAction::make()
+                    ->visible(fn ($record) => $canDelete && ! in_array($record->status, ['pending', 'partial'], true))
+                    ->before(function (AccountReceivable $record, DeleteAction $action) {
+                        if (in_array($record->status, ['pending', 'partial'], true)) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Solo se pueden eliminar cuentas pagadas.')
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
             ])
             ->toolbarActions([
                 ...($canView
@@ -197,4 +211,3 @@ class AccountReceivablesTable
             ]);
     }
 }
-

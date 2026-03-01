@@ -5,12 +5,16 @@ namespace App\Filament\Resources\InventoryProducts\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\InventoryProduct;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class InventoryProductsTable
@@ -27,6 +31,9 @@ class InventoryProductsTable
         }
         if ($canEdit) {
             $recordActions[] = EditAction::make();
+        }
+        if ($canDelete) {
+            $recordActions[] = DeleteAction::make();
         }
 
         $bulkActions = [];
@@ -89,6 +96,19 @@ class InventoryProductsTable
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload(),
+
+                Filter::make('existence_range')
+                    ->label('Rango de existencia')
+                    ->form([
+                        TextInput::make('min')->label('Minimo')->numeric(),
+                        TextInput::make('max')->label('Maximo')->numeric(),
+                    ])
+                    ->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['min'] ?? null, fn (Builder $q, $min) => $q->whereRaw('(stock_initial + entries - exits) >= ?', [$min]))
+                            ->when($data['max'] ?? null, fn (Builder $q, $max) => $q->whereRaw('(stock_initial + entries - exits) <= ?', [$max]));
+                    }),
             ])
             ->defaultSort('inventory.name', 'asc')
             ->recordActions($recordActions)
@@ -131,4 +151,3 @@ class InventoryProductsTable
             ]);
     }
 }
-

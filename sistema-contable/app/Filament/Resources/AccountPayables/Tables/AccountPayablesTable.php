@@ -7,6 +7,7 @@ use App\Models\AccountPayable;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -97,12 +99,43 @@ class AccountPayablesTable
                         'partial' => 'Parcial',
                         'paid' => 'Pagado',
                     ]),
+
+                Filter::make('dates')
+                    ->label('Fechas')
+                    ->form([
+                        DatePicker::make('issue_from')->label('Desde emision'),
+                        DatePicker::make('issue_until')->label('Hasta emision'),
+                        DatePicker::make('due_from')->label('Desde vencimiento'),
+                        DatePicker::make('due_until')->label('Hasta vencimiento'),
+                    ])
+                    ->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['issue_from'] ?? null, fn ($q, $d) => $q->whereDate('issue_date', '>=', $d))
+                            ->when($data['issue_until'] ?? null, fn ($q, $d) => $q->whereDate('issue_date', '<=', $d))
+                            ->when($data['due_from'] ?? null, fn ($q, $d) => $q->whereDate('due_date', '>=', $d))
+                            ->when($data['due_until'] ?? null, fn ($q, $d) => $q->whereDate('due_date', '<=', $d));
+                    }),
             ])
             ->recordActions([
                 ViewAction::make()->visible(fn () => $canView),
 
                 EditAction::make()
                     ->visible(fn ($record) => $canUpdate && $record->status !== 'paid'),
+
+                DeleteAction::make()
+                    ->visible(fn ($record) => $canDelete && in_array($record->status, ['voided', 'paid'], true))
+                    ->before(function (AccountPayable $record, DeleteAction $action) {
+                        if (! in_array($record->status, ['voided', 'paid'], true)) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Solo cuentas pagadas o anuladas pueden eliminarse.')
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
 
                 Action::make('pay')
                     ->label('Registrar pago')
@@ -199,4 +232,3 @@ class AccountPayablesTable
             ->paginated([10, 25, 50, 100]);
     }
 }
-

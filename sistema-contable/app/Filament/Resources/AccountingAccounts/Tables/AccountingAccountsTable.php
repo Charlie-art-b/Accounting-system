@@ -9,12 +9,16 @@ use App\Models\Customer;
 use App\Services\CsvExportService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class AccountingAccountsTable
@@ -111,10 +115,23 @@ class AccountingAccountsTable
                         'Activa' => 'Activa',
                         'Inactiva' => 'Inactiva',
                     ]),
+
+                Filter::make('created_at')
+                    ->label('Fecha de creacion')
+                    ->form([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date));
+                    }),
             ])
             ->recordActions([
                 ViewAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.view')),
                 EditAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.update')),
+                DeleteAction::make()->visible(fn () => Auth::user()?->can('accounting_accounts.delete')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -161,4 +178,3 @@ class AccountingAccountsTable
             ]);
     }
 }
-

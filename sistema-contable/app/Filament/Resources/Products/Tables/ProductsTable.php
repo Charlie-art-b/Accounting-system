@@ -5,12 +5,17 @@ namespace App\Filament\Resources\Products\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
@@ -54,11 +59,41 @@ class ProductsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('supplier_id')
+                    ->label('Proveedor')
+                    ->relationship('supplier', 'nombre_razon_social')
+                    ->searchable()
+                    ->preload(),
+
+                Filter::make('created_at')
+                    ->label('Fecha de creacion')
+                    ->form([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date));
+                    }),
             ])
             ->recordActions([
                 $canView ? ViewAction::make() : null,
                 $canEdit ? EditAction::make() : null,
+                $canDelete ? DeleteAction::make()
+                    ->before(function (Product $record, DeleteAction $action) {
+                        $inventoryCount = $record->inventoryProduct()->count();
+
+                        if ($inventoryCount > 0) {
+                            Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Este producto esta asociado a inventario. Eliminalo del inventario primero.')
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }) : null,
             ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(

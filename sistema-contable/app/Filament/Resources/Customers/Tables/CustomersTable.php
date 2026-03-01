@@ -9,12 +9,15 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
@@ -150,6 +153,18 @@ class CustomersTable
                 SelectFilter::make('suppliers')
                     ->relationship('suppliers', 'nombre_razon_social')
                     ->label('Proveedor'),
+
+                Filter::make('created_at')
+                    ->label('Fecha de creacion')
+                    ->form([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date));
+                    }),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -268,4 +283,3 @@ class CustomersTable
             ]);
     }
 }
-

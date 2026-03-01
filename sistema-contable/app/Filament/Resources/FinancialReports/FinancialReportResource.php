@@ -2,24 +2,25 @@
 
 namespace App\Filament\Resources\FinancialReports;
 
-use BackedEnum;
 use App\Filament\Resources\FinancialReports\Pages;
+use App\Filament\Resources\FinancialReports\Schemas\FinancialReportInfolist;
 use App\Models\FinancialReport;
+use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Panel;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
-use Filament\Panel;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-use Filament\Forms\Components\DatePicker;
-use App\Models\Customer;
-use Filament\Schemas\Schema;
-
-use App\Filament\Resources\FinancialReports\Pages\ViewFinancialReport;
-use App\Filament\Resources\FinancialReports\Schemas\FinancialReportInfolist;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class FinancialReportResource extends Resource
 {
@@ -28,7 +29,9 @@ class FinancialReportResource extends Resource
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-archive-box';
 
     protected static ?string $navigationLabel = 'Historial de reportes';
+
     protected static ?string $modelLabel = 'Historial de reportes';
+
     protected static ?string $pluralModelLabel = 'Historial de reportes';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -56,16 +59,22 @@ class FinancialReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('generated_at', 'desc')
+            ->defaultPaginationPageOption(10)
+            ->paginated([10, 25, 50, 100])
             ->columns([
                 TextColumn::make('id')
-                    ->label('Nº de Reporte')
+                    ->label('N. de reporte')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->badge()
+                    ->color('gray'),
 
                 TextColumn::make('customer.name')
                     ->label('Cliente')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->limit(30),
 
                 TextColumn::make('report_type')
                     ->label('Tipo')
@@ -73,7 +82,7 @@ class FinancialReportResource extends Resource
                     ->formatStateUsing(fn (string $state) => match ($state) {
                         'balance_general' => 'Balance General',
                         'estado_resultados' => 'Estado de Resultados',
-                        'balance_comprobacion' => 'Balance de Comprobación',
+                        'balance_comprobacion' => 'Balance de Comprobacion',
                         'flujo_efectivo' => 'Flujo de Efectivo',
                         'cambios_patrimonio' => 'Cambios Patrimonio',
                         'estado_resultados_integral' => 'Estado Resultados Integral',
@@ -81,25 +90,41 @@ class FinancialReportResource extends Resource
                     })
                     ->sortable(),
 
-                TextColumn::make('fecha_inicio')
-                    ->label('Desde')
-                    ->date()
-                    ->sortable(),
+                TextColumn::make('periodo')
+                    ->label('Periodo')
+                    ->state(
+                        fn (FinancialReport $record): string => ($record->fecha_inicio?->format('d/m/Y') ?? '-') . "\n" . ($record->fecha_fin?->format('d/m/Y') ?? '-')
+                    )
+                    ->formatStateUsing(function (string $state): HtmlString {
+                        [$from, $to] = array_pad(explode("\n", $state, 2), 2, '-');
 
-                TextColumn::make('fecha_fin')
-                    ->label('Hasta')
-                    ->date()
-                    ->sortable(),
-
-                TextColumn::make('tasa_impuestos')
-                    ->label('Impuestos')
-                    ->formatStateUsing(fn ($state) => rtrim(rtrim(number_format((float) $state, 4, '.', ''), '0'), '.'))
-                    ->toggleable(),
+                        return new HtmlString(
+                            "<div class='leading-tight'><span class='text-xs'>Desde: " . e($from) . "</span><br><span class='text-xs fi-text-color-400'>Hasta: " . e($to) . '</span></div>'
+                        );
+                    })
+                    ->html(),
 
                 TextColumn::make('generated_at')
                     ->label('Generado')
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
+
+                TextColumn::make('tasa_impuestos')
+                    ->label('Impuestos')
+                    ->formatStateUsing(fn ($state) => rtrim(rtrim(number_format((float) $state, 4, '.', ''), '0'), '.'))
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('fecha_inicio')
+                    ->label('Desde')
+                    ->date()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('fecha_fin')
+                    ->label('Hasta')
+                    ->date()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('customer_id')
@@ -113,12 +138,11 @@ class FinancialReportResource extends Resource
                     ->options([
                         'balance_general' => 'Balance General',
                         'estado_resultados' => 'Estado de Resultados',
-                        'balance_comprobacion' => 'Balance de Comprobación',
+                        'balance_comprobacion' => 'Balance de Comprobacion',
                         'flujo_efectivo' => 'Flujo de Efectivo',
                         'cambios_patrimonio' => 'Cambios Patrimonio',
                         'estado_resultados_integral' => 'Estado Resultados Integral',
                     ]),
-
 
                 Filter::make('fecha_inicio')
                     ->label('Fecha de Inicio')
@@ -130,14 +154,66 @@ class FinancialReportResource extends Resource
                         if ($data['from']) {
                             $query->whereDate('fecha_inicio', '>=', $data['from']);
                         }
+
                         if ($data['to']) {
                             $query->whereDate('fecha_inicio', '<=', $data['to']);
                         }
                     }),
             ])
-
             ->actions([
                 ViewAction::make(),
+
+                Action::make('edit')
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->form([
+                        Select::make('customer_id')
+                            ->label('Cliente')
+                            ->relationship('customer', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Select::make('report_type')
+                            ->label('Tipo')
+                            ->options([
+                                'balance_general' => 'Balance General',
+                                'estado_resultados' => 'Estado de Resultados',
+                                'balance_comprobacion' => 'Balance de Comprobacion',
+                                'flujo_efectivo' => 'Flujo de Efectivo',
+                                'cambios_patrimonio' => 'Cambios Patrimonio',
+                                'estado_resultados_integral' => 'Estado Resultados Integral',
+                            ])
+                            ->required(),
+                        DatePicker::make('fecha_inicio')
+                            ->label('Desde')
+                            ->required(),
+                        DatePicker::make('fecha_fin')
+                            ->label('Hasta')
+                            ->required(),
+                        TextInput::make('tasa_impuestos')
+                            ->label('Impuestos')
+                            ->numeric()
+                            ->required(),
+                    ])
+                    ->fillForm(fn (FinancialReport $record): array => [
+                        'customer_id' => $record->customer_id,
+                        'report_type' => $record->report_type,
+                        'fecha_inicio' => $record->fecha_inicio,
+                        'fecha_fin' => $record->fecha_fin,
+                        'tasa_impuestos' => $record->tasa_impuestos,
+                    ])
+                    ->action(function (FinancialReport $record, array $data): void {
+                        $record->update([
+                            'customer_id' => $data['customer_id'],
+                            'report_type' => $data['report_type'],
+                            'fecha_inicio' => $data['fecha_inicio'],
+                            'fecha_fin' => $data['fecha_fin'],
+                            'tasa_impuestos' => $data['tasa_impuestos'],
+                        ]);
+                    }),
+
+                DeleteAction::make(),
 
                 Action::make('pdf')
                     ->label('PDF')
@@ -152,9 +228,8 @@ class FinancialReportResource extends Resource
                     ->url(fn (FinancialReport $record) => url("/api/financial-reports/{$record->id}/excel"))
                     ->openUrlInNewTab(),
             ])
-            ->bulkActions([]); //sin acciones masivas
+            ->bulkActions([]);
     }
-
 
     public static function pdfUrl(FinancialReport $record): ?string
     {

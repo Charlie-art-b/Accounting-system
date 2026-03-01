@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FixedAssets\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\FixedAsset;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -130,6 +131,23 @@ class FixedAssetsTable
             ->recordActions([
                 ViewAction::make()->visible(fn () => Auth::user()?->can('fixed_assets.view') ?? false),
                 EditAction::make()->visible(fn () => Auth::user()?->can('fixed_assets.update') ?? false),
+                DeleteAction::make()
+                    ->visible(fn () => Auth::user()?->can('fixed_assets.delete') ?? false)
+                    ->before(function (FixedAsset $record, DeleteAction $action) {
+                        $hasDepreciation = (float) $record->accumulated_depreciation > 0;
+                        $isDisposed = $record->status === 'disposed' || $record->disposal_date || $record->disposal_reason;
+
+                        if ($isDisposed || $hasDepreciation) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('No se puede eliminar')
+                                ->body('Solo se pueden eliminar activos activos sin depreciacion registrada.')
+                                ->persistent()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
             ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(
@@ -213,4 +231,3 @@ class FixedAssetsTable
             ]);
     }
 }
-
