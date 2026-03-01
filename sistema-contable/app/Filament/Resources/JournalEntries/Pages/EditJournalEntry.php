@@ -11,6 +11,7 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Filament\Facades\Filament;
 
 class EditJournalEntry extends EditRecord
 {
@@ -124,8 +125,9 @@ class EditJournalEntry extends EditRecord
                         $this->save();
 
                         $record = $this->record->fresh(['lines']);
-                    
-                        $ledger->postJournalEntry($record, null);
+
+                        $user = Filament::auth()->user(); 
+                        $ledger->postJournalEntry($record, $user);
 
                         Notification::make()
                             ->title('Asiento posteado')

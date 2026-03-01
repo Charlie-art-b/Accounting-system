@@ -35,6 +35,12 @@ class JournalEntriesTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('description')
+                    ->label('Descripcion')
+                    ->limit(40)
+                    ->searchable(),
+                    //->toggleable(isToggledHiddenByDefault: true),
+                    
                 TextColumn::make('journal_type')
                     ->label('Tipo')
                     ->badge()
@@ -70,11 +76,6 @@ class JournalEntriesTable
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('description')
-                    ->label('Descripcion')
-                    ->limit(40)
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('postedBy.name')
                     ->label('Posteado por')

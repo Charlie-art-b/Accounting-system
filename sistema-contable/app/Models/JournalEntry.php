@@ -97,6 +97,8 @@ class JournalEntry extends Model
     {
         static::saving(function (self $entry) {
 
+            $entry->calculateTotals();
+
             if (! is_null($entry->posted_at)) {
 
                 $totals = $entry->lines()
@@ -124,6 +126,9 @@ class JournalEntry extends Model
    
     public function post($user = null): void
     {
+
+        $this->calculateTotals();
+        
         if (! $this->isBalanced()) {
             throw ValidationException::withMessages([
                 'entry' => 'El asiento no está balanceado.',

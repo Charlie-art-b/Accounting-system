@@ -1,185 +1,448 @@
 <x-filament::page>
 
-    {{-- FORM --}}
-    <div class="space-y-4">
-        {{ $this->form }}
+    {{-- ESTILOS SOLO PARA ESTA VISTA --}}
+    <style>
+        .report-wrap{
+            max-width: 1200px;
+            /*margin: 0 auto;*/
+        }
 
-        <div class="flex flex-wrap gap-2">
-            <x-filament::button
-                wire:click="generateReport"
-                icon="heroicon-o-play"
-            >
-                Generar reporte
-            </x-filament::button>
+        .report-panel{
+            background: #ffffff;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(2, 6, 23, .06);
+        }
 
-            @php($pdfUrl = $this->getPdfUrl())
+        .report-panel__header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
 
-            <x-filament::button
-                tag="a"
-                :href="$pdfUrl"
-                target="_blank"
-                icon="heroicon-o-arrow-down-tray"
-                color="gray"
-                :disabled="! $generated || ! $pdfUrl"
-            >
-                Exportar PDF
-            </x-filament::button>
+        .report-title{
+            display:flex;
+            flex-direction:column;
+            gap: 2px;
+        }
+        .report-title h2{
+            margin:0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .report-title p{
+            margin:0;
+            font-size: 12px;
+            color: rgba(15, 23, 42, .60);
+        }
 
-            {{-- Excel lo conectamos en el paso 4 --}}
-            @php($excelUrl = $this->getExcelUrl())
-            <x-filament::button
-                tag="a"
-                :href="$excelUrl"
-                icon="heroicon-o-table-cells"
-                color="gray"
-                :disabled="! $generated || ! $excelUrl"
-            >
-                Exportar Excel
-            </x-filament::button>
-        </div>
-    </div>
+        .actions-bar{
+            display:flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 12px;
+            margin-top: 12px;
+            border-top: 1px dashed rgba(15, 23, 42, .12);
+        }
 
-    {{-- RESULTADOS --}}
-    @if ($generated)
+        .results-section{
+            margin-top: 18px;
+        }
 
-        <x-filament::section class="mt-6" heading="Resultado">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        .cards-grid{
+            display:grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        @media (max-width: 1024px){
+            .cards-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px){
+            .cards-grid{ grid-template-columns: 1fr; }
+        }
 
-                @if ($report_type === 'balance_general')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Activos</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['total_activos'] ?? 0, 2) }}</div>
-                    </x-filament::card>
+        .stat-card{
+            border-radius: 16px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: linear-gradient(180deg, rgba(248, 250, 252, 1) 0%, rgba(255, 255, 255, 1) 100%);
+            padding: 14px 14px 12px;
+            box-shadow: 0 10px 25px rgba(2, 6, 23, .05);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:before{
+            content:"";
+            position:absolute;
+            inset: -40% -40% auto auto;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, .22), transparent 60%);
+            transform: rotate(12deg);
+            pointer-events:none;
+        }
 
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Pasivo + Patrimonio</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['total_pasivos_patrimonio'] ?? 0, 2) }}</div>
-                    </x-filament::card>
+        .stat-top{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
 
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Balanceado</div>
-                        <div class="text-2xl font-bold">
-                            {{ ($result['ecuacion_balanceada'] ?? false) ? 'Sí' : 'No' }}
-                        </div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            Diferencia: {{ number_format($result['diferencia'] ?? 0, 2) }}
-                        </div>
-                    </x-filament::card>
-                @endif
+        .stat-label{
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(15, 23, 42, .70);
+            margin: 0;
+        }
 
-                @if ($report_type === 'estado_resultados')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Ingresos</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['ingresos']['total'] ?? 0, 2) }}</div>
-                    </x-filament::card>
+        .stat-value{
+            margin-top: 6px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+        }
 
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Gastos</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['gastos']['total'] ?? 0, 2) }}</div>
-                    </x-filament::card>
+        .stat-sub{
+            margin-top: 6px;
+            font-size: 12px;
+            color: rgba(15, 23, 42, .60);
+        }
 
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Utilidad Neta</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            Margen: {{ number_format($result['margen_neto'] ?? 0, 2) }}%
-                        </div>
-                    </x-filament::card>
-                @endif
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(15, 23, 42, .10);
+            background: rgba(255,255,255,.75);
+            backdrop-filter: blur(6px);
+            user-select:none;
+            white-space: nowrap;
+        }
+        .badge--ok{ color: #166534; border-color: rgba(22, 101, 52, .25); background: rgba(34, 197, 94, .10); }
+        .badge--bad{ color: #991b1b; border-color: rgba(153, 27, 27, .25); background: rgba(239, 68, 68, .10); }
 
-                @if ($report_type === 'balance_comprobacion')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Debe</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['total_debe'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Total Haber</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['total_haber'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Balanceado</div>
-                        <div class="text-2xl font-bold">{{ ($result['balanceado'] ?? false) ? 'Sí' : 'No' }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            Diferencia: {{ number_format($result['diferencia'] ?? 0, 2) }}
-                        </div>
-                    </x-filament::card>
-                @endif
+        .table-wrap{
+            margin-top: 16px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(2, 6, 23, .05);
+        }
 
-                @if ($report_type === 'flujo_efectivo')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Utilidad Neta</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Flujo Operativo</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['flujo_operativo'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Efectivo Final</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['efectivo_final'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                @endif
+        .nice-table{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .nice-table thead th{
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: rgba(15, 23, 42, .75);
+            text-align: left;
+            font-weight: 800;
+            padding: 12px 12px;
+            border-bottom: 1px solid rgba(15, 23, 42, .08);
+        }
+        .nice-table tbody td{
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(15, 23, 42, .06);
+            color: rgba(15, 23, 42, .86);
+            vertical-align: top;
+        }
+        .nice-table tbody tr:nth-child(even){
+            background: rgba(248, 250, 252, .55);
+        }
+        .nice-table tbody tr:hover{
+            background: rgba(59, 130, 246, .06);
+        }
 
-                @if ($report_type === 'cambios_patrimonio')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Capital Inicial</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['capital_inicial'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Utilidad del Período</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['utilidad_periodo'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Patrimonio Final</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['patrimonio_final'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                @endif
+        .td-right{ text-align:right; font-variant-numeric: tabular-nums; }
+        .code-pill{
+            display:inline-block;
+            padding: 4px 8px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, .06);
+            border: 1px solid rgba(15, 23, 42, .08);
+            font-weight: 700;
+            font-size: 12px;
+        }
+    </style>
 
-                @if ($report_type === 'estado_resultados_integral')
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Ingresos</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['ingresos'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Gastos Operativos</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['gastos_operativos'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                    <x-filament::card>
-                        <div class="text-sm text-gray-500">Utilidad Neta</div>
-                        <div class="text-2xl font-bold">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
-                    </x-filament::card>
-                @endif
+    <div class="report-wrap">
 
+        {{-- PANEL FORM --}}
+        <div class="report-panel">
+            
+
+            {{ $this->form }}
+
+            <div class="actions-bar">
+                <x-filament::button
+                    wire:click="generateReport"
+                    icon="heroicon-o-play"
+                >
+                    Generar reporte
+                </x-filament::button>
+
+                @php($pdfUrl = $this->getPdfUrl())
+
+                <x-filament::button
+                    tag="a"
+                    :href="$pdfUrl"
+                    target="_blank"
+                    icon="heroicon-o-arrow-down-tray"
+                    color="gray"
+                    :disabled="! $generated || ! $pdfUrl"
+                >
+                    Exportar PDF
+                </x-filament::button>
+
+                @php($excelUrl = $this->getExcelUrl())
+
+                <x-filament::button
+                    tag="a"
+                    :href="$excelUrl"
+                    icon="heroicon-o-table-cells"
+                    color="gray"
+                    :disabled="! $generated || ! $excelUrl"
+                >
+                    Exportar Excel
+                </x-filament::button>
             </div>
+        </div>
 
-            {{-- Tabla simple de detalles (si existe) --}}
-            @if (!empty($result['detalles']))
-                <div class="mt-6 overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="text-left text-gray-500">
-                            <tr>
-                                <th class="py-2 pr-4">Código</th>
-                                <th class="py-2 pr-4">Cuenta</th>
-                                <th class="py-2 pr-4">Clasificación</th>
-                                <th class="py-2 pr-4">Saldo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($result['detalles'] as $row)
-                                <tr class="border-t">
-                                    <td class="py-2 pr-4">{{ $row['codigo'] ?? '' }}</td>
-                                    <td class="py-2 pr-4">{{ $row['nombre'] ?? '' }}</td>
-                                    <td class="py-2 pr-4">{{ $row['clasificacion'] ?? '' }}</td>
-                                    <td class="py-2 pr-4">{{ number_format($row['saldo'] ?? 0, 2) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+        {{-- RESULTADOS --}}
+        @if ($generated)
+            <div class="results-section">
+                <x-filament::section heading="Resumen del Reporte">
+                    <div class="cards-grid">
 
-        </x-filament::section>
+                        @if ($report_type === 'balance_general')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Activos</p>
+                                    <span class="badge">📌 Balance</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['total_activos'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Suma de activos corrientes y no corrientes.</div>
+                            </div>
 
-    @endif
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Pasivo + Patrimonio</p>
+                                    <span class="badge">📌 Balance</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['total_pasivos_patrimonio'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Obligaciones + capital contable.</div>
+                            </div>
 
+                            @php($ok = (bool) ($result['ecuacion_balanceada'] ?? false))
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Ecuación contable</p>
+                                    <span class="badge {{ $ok ? 'badge--ok' : 'badge--bad' }}">
+                                        {{ $ok ? '✅ Balanceado' : '⚠️ No balancea' }}
+                                    </span>
+                                </div>
+                                <div class="stat-value">{{ $ok ? 'Sí' : 'No' }}</div>
+                                <div class="stat-sub">Diferencia: <strong>{{ number_format($result['diferencia'] ?? 0, 2) }}</strong></div>
+                            </div>
+                        @endif
+
+                        @if ($report_type === 'estado_resultados')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Ingresos</p>
+                                    <span class="badge">💰 ER</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['ingresos']['total'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Ingresos del período.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Gastos</p>
+                                    <span class="badge">🧾 ER</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['gastos']['total'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Gastos y costos del período.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Utilidad Neta</p>
+                                    <span class="badge">📈 ER</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Margen: <strong>{{ number_format($result['margen_neto'] ?? 0, 2) }}%</strong></div>
+                            </div>
+                        @endif
+
+                        @if ($report_type === 'balance_comprobacion')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Debe</p>
+                                    <span class="badge">📚 BC</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['total_debe'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Sumatoria de débitos.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Total Haber</p>
+                                    <span class="badge">📚 BC</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['total_haber'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Sumatoria de créditos.</div>
+                            </div>
+
+                            @php($ok = (bool) ($result['balanceado'] ?? false))
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Cuadre</p>
+                                    <span class="badge {{ $ok ? 'badge--ok' : 'badge--bad' }}">
+                                        {{ $ok ? '✅ Balanceado' : '⚠️ No balancea' }}
+                                    </span>
+                                </div>
+                                <div class="stat-value">{{ $ok ? 'Sí' : 'No' }}</div>
+                                <div class="stat-sub">Diferencia: <strong>{{ number_format($result['diferencia'] ?? 0, 2) }}</strong></div>
+                            </div>
+                        @endif
+
+                        @if ($report_type === 'flujo_efectivo')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Utilidad Neta</p>
+                                    <span class="badge">💧 FE</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Base del flujo (según método).</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Flujo Operativo</p>
+                                    <span class="badge">💧 FE</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['flujo_operativo'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Operación del período.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Efectivo Final</p>
+                                    <span class="badge">💧 FE</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['efectivo_final'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Saldo final de caja/bancos.</div>
+                            </div>
+                        @endif
+
+                        @if ($report_type === 'cambios_patrimonio')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Capital Inicial</p>
+                                    <span class="badge">🏛️ CP</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['capital_inicial'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Patrimonio al inicio.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Utilidad del Período</p>
+                                    <span class="badge">🏛️ CP</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['utilidad_periodo'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Resultado del período.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Patrimonio Final</p>
+                                    <span class="badge">🏛️ CP</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['patrimonio_final'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Patrimonio al cierre.</div>
+                            </div>
+                        @endif
+
+                        @if ($report_type === 'estado_resultados_integral')
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Ingresos</p>
+                                    <span class="badge">🧩 ERI</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['ingresos'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Ingresos del período.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Gastos Operativos</p>
+                                    <span class="badge">🧩 ERI</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['gastos_operativos'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Gastos operativos.</div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-top">
+                                    <p class="stat-label">Utilidad Neta</p>
+                                    <span class="badge">🧩 ERI</span>
+                                </div>
+                                <div class="stat-value">{{ number_format($result['utilidad_neta'] ?? 0, 2) }}</div>
+                                <div class="stat-sub">Resultado neto final.</div>
+                            </div>
+                        @endif
+
+                    </div>
+
+                    {{-- Tabla de detalles --}}
+                    @if (!empty($result['detalles']))
+                        <div class="table-wrap">
+                            <div style="overflow:auto; max-height: 520px;">
+                                <table class="nice-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 140px;">Código</th>
+                                            <th>Cuenta</th>
+                                            <th style="width: 220px;">Clasificación</th>
+                                            <th style="width: 170px; text-align:right;">Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($result['detalles'] as $row)
+                                            <tr>
+                                                <td><span class="code-pill">{{ $row['codigo'] ?? '' }}</span></td>
+                                                <td>{{ $row['nombre'] ?? '' }}</td>
+                                                <td>{{ $row['clasificacion'] ?? '' }}</td>
+                                                <td class="td-right">{{ number_format($row['saldo'] ?? 0, 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+
+                </x-filament::section>
+            </div>
+        @endif
+
+    </div>
 </x-filament::page>
