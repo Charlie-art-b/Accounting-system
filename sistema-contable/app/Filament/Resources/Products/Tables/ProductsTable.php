@@ -16,22 +16,12 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ProductsTable
 {
-    /**
-     * Configura la tabla de productos.
-     *
-     * @param Table $table
-     * @param array $permissions ['canView' => bool, 'canEdit' => bool, 'canDelete' => bool]
-     * @return Table
-     */
-    public static function configure(Table $table, array $permissions = []): Table
+    public static function configure(Table $table): Table
     {
-        $canView = $permissions['canView'] ?? true;
-        $canEdit = $permissions['canEdit'] ?? true;
-        $canDelete = $permissions['canDelete'] ?? true;
-
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -58,6 +48,7 @@ class ProductsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
                 SelectFilter::make('supplier_id')
                     ->label('Proveedor')
@@ -66,36 +57,58 @@ class ProductsTable
                     ->preload(),
 
                 Filter::make('created_at')
-                    ->label('Fecha de creacion')
+                    ->label('Fecha de creación')
                     ->form([
                         DatePicker::make('from')->label('Desde'),
                         DatePicker::make('until')->label('Hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date))
-                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date));
+                            ->when(
+                                $data['from'] ?? null,
+                                fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date)
+                            )
+                            ->when(
+                                $data['until'] ?? null,
+                                fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date)
+                            );
                     }),
             ])
+
             ->recordActions([
-                $canView ? ViewAction::make() : null,
-                $canEdit ? EditAction::make() : null,
-                $canDelete ? DeleteAction::make()
+
+                ViewAction::make()
+                    ->visible(fn () => Auth::user()?->can('products.view')),
+
+                EditAction::make()
+                    ->visible(fn () => Auth::user()?->can('products.update')),
+
+                DeleteAction::make()
+                    ->visible(fn () => Auth::user()?->can('products.delete'))
                     ->before(function (Product $record, DeleteAction $action) {
+
                         $inventoryCount = $record->inventoryProduct()->count();
 
                         if ($inventoryCount > 0) {
                             Notification::make()
                                 ->danger()
                                 ->title('No se puede eliminar')
-                                ->body('Este producto esta asociado a inventario. Eliminalo del inventario primero.')
+                                ->body('Este producto está asociado a inventario. Elimínalo del inventario primero.')
                                 ->send();
 
                             $action->halt();
                         }
-                    }) : null,
+                    })
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Producto eliminado')
+                            ->body('El producto ha sido eliminado correctamente.')
+                    ),
             ])
+
             ->toolbarActions([
+
                 ...CrudImportExportActions::make(
                     modelClass: Product::class,
                     module: 'products',
@@ -119,26 +132,34 @@ class ProductsTable
                         'supplier.nombre_razon_social',
                     ],
                 ),
-                $canDelete ? BulkActionGroup::make([
+
+                BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('products.delete'))
                         ->before(function ($records, DeleteBulkAction $action) {
+
                             $blockedCount = 0;
                             $blockedReasons = [];
 
                             foreach ($records as $product) {
+
                                 $inventoryCount = $product->inventoryProduct()->count();
+
                                 if ($inventoryCount > 0) {
                                     $blockedCount++;
-                                    $blockedReasons[] = "{$product->name}: Está en inventario";
+                                    $blockedReasons[] =
+                                        "{$product->name}: Está en inventario";
                                 }
                             }
 
                             if ($blockedCount > 0) {
-                                $reasonsList = implode("\n• ", $blockedReasons);
+
+                                $reasonsList = implode("\n- ", $blockedReasons);
+
                                 Notification::make()
                                     ->danger()
                                     ->title('NO SE PUEDE ELIMINAR')
-                                    ->body("No se pueden eliminar {$blockedCount} producto(s):\n\n• {$reasonsList}\n\nElimínalos del inventario primero.")
+                                    ->body("No se pueden eliminar {$blockedCount} producto(s):\n\n- {$reasonsList}")
                                     ->send();
 
                                 $action->halt();
@@ -150,7 +171,7 @@ class ProductsTable
                                 ->title('¡Producto(s) eliminado(s)!')
                                 ->body('Los productos seleccionados han sido eliminados correctamente.')
                         ),
-                ]) : null,
+                ]),
             ]);
     }
 }

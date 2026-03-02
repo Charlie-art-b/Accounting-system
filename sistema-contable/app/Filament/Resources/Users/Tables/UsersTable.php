@@ -96,7 +96,7 @@ class UsersTable
                             $action->halt();
                         }
 
-                        // 🔹 No eliminar último administrador
+                
                         if ($record->hasRole('administrador')) {
 
                             $adminsCount = User::role('administrador')->count();
@@ -112,7 +112,6 @@ class UsersTable
                             }
                         }
 
-                        // 🔹 No eliminar usuario con permisos superiores
                         foreach ($record->getAllPermissions() as $permission) {
                             if (!$currentUser->can($permission->name)) {
 
