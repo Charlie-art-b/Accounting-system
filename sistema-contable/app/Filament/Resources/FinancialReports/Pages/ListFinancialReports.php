@@ -27,10 +27,8 @@ class ListFinancialReports extends ListRecords
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver al inicio')
                 ->color('gray')
-                ->tooltip('Volver')
                 ->url(url('/admin/financial-reports')),
         ];
     }
