@@ -41,6 +41,16 @@ class CreateInventory extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
+        ];
     }
 }

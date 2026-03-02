@@ -126,19 +126,18 @@ class JournalEntriesTable
             ->recordActions([
                 ViewAction::make()->visible(fn () => Auth::user()?->can('journal_entries.view')),
                 EditAction::make()
-                    ->visible(fn () => Auth::user()?->can('journal_entries.update'))
-                    ->visible(fn ($record) => $record->posted_at === null),
+                    ->visible(fn ($record) => Auth::user()?->can('journal_entries.update') && $record->posted_at === null),
                 DeleteAction::make()
                     ->visible(fn () => Auth::user()?->can('journal_entries.delete'))
                     ->visible(fn ($record) => $record->posted_at === null)
                     ->before(function ($record, DeleteAction $action) {
-                        $pendingDetails = $record->details()->count();
+                        $pendingLines = $record->lines()->count();
 
-                        if ($pendingDetails > 0) {
+                        if ($pendingLines > 0) {
                             Notification::make()
                                 ->danger()
                                 ->title('No se puede eliminar')
-                                ->body("El asiento tiene {$pendingDetails} detalle(s) asociado(s).")
+                                ->body("El asiento tiene {$pendingLines} línea(s) asociada(s).")
                                 ->send();
 
                             $action->halt();
@@ -222,13 +221,18 @@ class JournalEntriesTable
                 ),
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('journal_entries.delete'))
                         ->before(function ($records, DeleteBulkAction $action) {
                             $blockedReasons = [];
 
                             foreach ($records as $entry) {
-                                $pendingDetails = $entry->details()->count();
-                                if ($pendingDetails > 0) {
-                                    $blockedReasons[] = "Asiento #{$entry->id}: {$pendingDetails} detalle(s) pendiente(s)";
+                                if ($entry->posted_at !== null) {
+                                    $blockedReasons[] = "Asiento #{$entry->id}: asiento publicado";
+                                } else {
+                                    $pendingLines = $entry->lines()->count();
+                                    if ($pendingLines > 0) {
+                                        $blockedReasons[] = "Asiento #{$entry->id}: {$pendingLines} línea(s)";
+                                    }
                                 }
                             }
 

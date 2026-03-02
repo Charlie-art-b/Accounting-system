@@ -8,6 +8,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Filament\Actions\ViewAction;
 
 class EditAccountingAccount extends EditRecord
 {
@@ -23,20 +24,20 @@ class EditAccountingAccount extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return AccountingAccountResource::getUrl('index');
+        return AccountingAccountResource::getUrl('view', ['record' => $this->record]);
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Action::make('back')
-            ->label('') 
-            ->icon('heroicon-o-x-mark')
-            ->color('gray')
-            ->url($this->getResource()::getUrl('index'))
-            ->tooltip('Volver a la lista'),
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
 
+            ViewAction::make(),
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('accounting_accounts.delete'))
                 ->requiresConfirmation()
                 ->before(function (AccountingAccount $record, DeleteAction $action) {
                     if ($record->journalLines()->exists()) {

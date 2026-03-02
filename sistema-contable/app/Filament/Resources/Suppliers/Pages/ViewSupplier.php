@@ -15,12 +15,12 @@ class ViewSupplier extends ViewRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
-            EditAction::make(),
+                ->url($this->getResource()::getUrl('index')),
+                
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('suppliers.update')),
         ];
     }
 }

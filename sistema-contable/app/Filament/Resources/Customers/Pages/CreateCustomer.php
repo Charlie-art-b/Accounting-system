@@ -21,6 +21,11 @@ class CreateCustomer extends CreateRecord
             ->body('El cliente se ha creado correctamente.');
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
     protected function getFormActions(): array
     {
         return [
@@ -47,11 +52,9 @@ class CreateCustomer extends CreateRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista')
                 ->visible(fn () => Auth::user()?->can('customers.view')),
         ];
     }

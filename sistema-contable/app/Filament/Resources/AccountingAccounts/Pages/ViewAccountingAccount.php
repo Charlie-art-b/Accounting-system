@@ -1,20 +1,24 @@
 <?php
 
-namespace App\Filament\Resources\Users\Pages;
+namespace App\Filament\Resources\AccountingAccounts\Pages;
 
-use App\Filament\Resources\Users\UserResource;
-use App\Models\User;
+use App\Filament\Resources\AccountingAccounts\AccountingAccountResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewUser extends ViewRecord
+class ViewAccountingAccount extends ViewRecord
 {
-    protected static string $resource = UserResource::class;
+    protected static string $resource = AccountingAccountResource::class;
 
-    protected static ?string $title = 'Detalles del usuario';
+    protected static ?string $title = 'Detalles de la Cuenta Contable';
+
+    public function getTitle(): string
+    {
+        return $this->record->name ?? 'Detalles';
+    }
 
     protected function getHeaderActions(): array
     {
@@ -26,7 +30,7 @@ class ViewUser extends ViewRecord
 
             EditAction::make()
                 ->label('Editar')
-                ->visible(fn () => auth()->user()?->can('users.update')),
+                ->visible(fn () => auth()->user()?->can('accounting_accounts.update')),
         ];
     }
 }

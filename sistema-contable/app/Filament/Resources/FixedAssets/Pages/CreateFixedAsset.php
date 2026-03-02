@@ -23,11 +23,9 @@ class CreateFixedAsset extends CreateRecord
     {
         return [
             Action::make('back')
-            ->label('')
-            ->icon('heroicon-o-x-mark')
-            ->color('gray')
-            ->url($this->getResource()::getUrl('index'))
-            ->tooltip('Volver a la lista'),     
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),    
         ];
     }
 
@@ -46,8 +44,12 @@ class CreateFixedAsset extends CreateRecord
             Action::make('cancel')
                 ->label('Cancelar')
                 ->color('gray') 
-                ->url($this->getResource()::getUrl('index')),  
-
+                ->url($this->getResource()::getUrl('index')),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 }

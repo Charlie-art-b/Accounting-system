@@ -12,7 +12,6 @@ class CollectionManagementInfolist
     {
         return $schema
             ->components([
-                // SECCIÓN: INFORMACIÓN DE LA FACTURA
                 Section::make('Información de la Factura')
                     ->description('Datos de la cuenta por cobrar')
                     ->schema([
@@ -45,7 +44,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: INFORMACIÓN DEL CLIENTE
                 Section::make('Cliente')
                     ->schema([
                         TextEntry::make('customer.name')
@@ -64,7 +62,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: MONTOS Y ESTADO
                 Section::make('Información Financiera')
                     ->schema([
                         TextEntry::make('accountReceivable.total_amount')
@@ -117,7 +114,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: GESTIÓN DE COBROS
                 Section::make('Gestión de Cobros')
                     ->description('Información sobre recordatorios y acciones')
                     ->schema([
@@ -169,7 +165,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: METADATA
                 Section::make('Información del Registro')
                     ->schema([
                         TextEntry::make('created_at')

@@ -106,7 +106,7 @@ class InventoriesTable
                     ),
             ])
             ->toolbarActions([
-                ...CrudImportExportActions::make(
+                ...array_filter(CrudImportExportActions::make(
                     modelClass: Inventory::class,
                     module: 'inventories',
                     title: 'Inventarios',
@@ -124,10 +124,13 @@ class InventoriesTable
                         'customer.name',
                         'name',
                     ],
-                ),
+                ), function ($action) {
+                    return !in_array($action->getName(), ['import_excel', 'import_pdf']);
+                }),
 
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->can('inventories.delete'))
                         ->modalHeading('Eliminar inventarios')
                         ->modalDescription('Solo se eliminarán inventarios vacíos y sin movimientos. Esta acción no se puede deshacer.')
                         ->modalSubmitActionLabel('Sí, eliminar')

@@ -9,6 +9,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Illuminate\Validation\ValidationException;
 
 class ViewJournalEntry extends ViewRecord
 {
@@ -22,13 +24,15 @@ class ViewJournalEntry extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back')
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
 
-            // Edit solo si NO está posteado
-            Actions\EditAction::make()
-                ->visible(fn () => $this->record->posted_at === null),
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('journal_entries.update') && $this->record->posted_at === null),
 
-            //Revertir solo si está posteado
-            Actions\Action::make('reverse')
+            Action::make('reverse')
                 ->label('Revertir')
                 ->color('warning')
                 ->icon('heroicon-o-arrow-uturn-left')
@@ -54,13 +58,6 @@ class ViewJournalEntry extends ViewRecord
 
                     $this->redirect(JournalEntryResource::getUrl('index'));
                 }),
-
-                Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
         ];
     }
 }
