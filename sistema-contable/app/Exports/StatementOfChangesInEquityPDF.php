@@ -40,6 +40,21 @@ class StatementOfChangesInEquityPDF
         );
     }
 
+    public function download(?string $fileName = null)
+    {
+        $base = $fileName
+            ? pathinfo($fileName, PATHINFO_FILENAME)
+            : pathinfo($this->fileName(), PATHINFO_FILENAME);
+
+        return app(PdfFallbackService::class)->download(
+            view: 'exports.statement-of-changes-in-equity-pdf',
+            data: $this->viewData(),
+            baseFileName: $base,
+            paper: 'a4',
+            orientation: 'portrait',
+        );
+    }
+
     protected function fileName(): string
     {
         return 'Statement_Of_Changes_In_Equity_' . now()->format('Y-m-d_H-i-s');
