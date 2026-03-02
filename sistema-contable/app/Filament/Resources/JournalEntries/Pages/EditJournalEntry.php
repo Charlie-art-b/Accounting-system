@@ -6,6 +6,7 @@ use App\Filament\Resources\JournalEntries\JournalEntryResource;
 use App\Services\LedgerService;
 use Filament\Actions\Action;
 use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Exceptions\Halt;
@@ -29,6 +30,26 @@ class EditJournalEntry extends EditRecord
                 ->url($this->getResource()::getUrl('index')),
 
             ViewAction::make(),
+
+            DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('journal_entries.delete'))
+                ->before(function (DeleteAction $action) {
+                    if ($this->record->posted_at !== null) {
+                        Notification::make()
+                            ->title('NO SE PUEDE ELIMINAR')
+                            ->body('Este asiento ya ha sido publicado. No se puede eliminar asientos publicados.')
+                            ->danger()
+                            ->send();
+
+                        throw new Halt();
+                    }
+                })
+                ->successNotification(
+                    Notification::make()
+                        ->success()
+                        ->title('¡Asiento eliminado!')
+                        ->body('El asiento ha sido eliminado correctamente.')
+                ),
         ];
     }
 

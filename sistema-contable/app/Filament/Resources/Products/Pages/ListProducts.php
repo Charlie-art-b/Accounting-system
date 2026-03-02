@@ -32,7 +32,8 @@ class ListProducts extends ListRecords
                 ->label('Crear producto')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->keyBindings(['mod+n']),
+                ->keyBindings(['mod+n'])
+                ->visible(fn () => auth()->user()?->can('products.create')),
             Action::make('inventories')
                 ->label('Ver inventarios')
                 ->icon('heroicon-o-archive-box')

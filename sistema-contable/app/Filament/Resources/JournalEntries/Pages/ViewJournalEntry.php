@@ -30,7 +30,7 @@ class ViewJournalEntry extends ViewRecord
                 ->url($this->getResource()::getUrl('index')),
 
             EditAction::make()
-                ->visible(fn () => $this->record->posted_at === null),
+                ->visible(fn () => auth()->user()?->can('journal_entries.update') && $this->record->posted_at === null),
 
             Action::make('reverse')
                 ->label('Revertir')

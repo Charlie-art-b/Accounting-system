@@ -111,7 +111,7 @@ class CollectionManagementTable
                     ->label('Registrar pago')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->visible(fn () => $canUpdate)
+                    ->visible(fn (CollectionManagement $record) => $canUpdate && $record->accountReceivable && $record->pending_amount > 0)
                     ->requiresConfirmation()
                     ->modalHeading('Registrar pago')
                     ->modalDescription('Este pago actualiza el monto pagado de la cuenta por cobrar.')
@@ -126,12 +126,13 @@ class CollectionManagementTable
                             ->label('Fecha de pago')
                             ->default(now())
                             ->maxDate(now())
+                            ->displayFormat('d/m/Y')
+                            ->native(false)
                             ->required(),
                         Textarea::make('note')
                             ->label('Nota')
                             ->rows(3),
                     ])
-                    ->hidden(fn (CollectionManagement $record) => ! $record->accountReceivable)
                     ->action(function (CollectionManagement $record, array $data) {
                         if (! Auth::user()?->can('collection_management.update')) {
                             abort(403);

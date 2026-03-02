@@ -23,7 +23,7 @@ class ViewAccountReceivable extends ViewRecord
                 ->label('Editar')
                 ->color('primary')
                 ->keyBindings(['mod+e'])
-                ->visible(fn () => $this->record->status !== 'paid'),
+                ->visible(fn () => auth()->user()?->can('account_receivables.update') && $this->record->status !== 'paid'),
         ];
     }
 }

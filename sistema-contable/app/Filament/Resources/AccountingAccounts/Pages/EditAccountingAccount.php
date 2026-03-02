@@ -37,6 +37,7 @@ class EditAccountingAccount extends EditRecord
 
             ViewAction::make(),
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('accounting_accounts.delete'))
                 ->requiresConfirmation()
                 ->before(function (AccountingAccount $record, DeleteAction $action) {
                     if ($record->journalLines()->exists()) {

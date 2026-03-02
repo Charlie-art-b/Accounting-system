@@ -36,6 +36,7 @@ class EditFixedAsset extends EditRecord
         
             ViewAction::make(),
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('fixed_assets.delete'))
                 ->modalHeading('Eliminar activo fijo')
                 ->modalDescription('Solo se pueden eliminar activos activos sin depreciación registrada. Esta acción no se puede deshacer.')
                 ->modalSubmitActionLabel('Sí, eliminar')
