@@ -1,0 +1,35 @@
+import { test, expect } from '@playwright/test';
+
+test('Crear cuenta contable', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8000/admin/login');
+  await page.getByRole('textbox', { name: 'Correo electrónico*' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico*' }).fill('admin@sistema.com');
+  await page.getByRole('textbox', { name: 'Contraseña*' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña*' }).fill('1234');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.getByRole('link', { name: 'Cuentas Contables' }).click();
+  await page.goto('http://127.0.0.1:8000/admin/accounting-accounts');
+  await page.getByRole('link', { name: 'Crear cuenta contable' }).click();
+  await page.getByLabel('Cliente*').selectOption('2');
+  await page.getByLabel('Tipo*').selectOption('Pasivo');
+  await page.getByRole('textbox', { name: 'Código*' }).click();
+  await page.getByRole('textbox', { name: 'Código*' }).fill('121265');
+  await page.locator('[id="form.clasificacion::data::section"]').getByRole('button', { name: 'Seleccione una opción' }).click();
+  await page.getByRole('option', { name: 'Activo Corriente' }).click();
+  await page.getByRole('textbox', { name: 'Nombre*' }).click();
+  await page.getByRole('textbox', { name: 'Nombre*' }).press('CapsLock');
+  await page.getByRole('textbox', { name: 'Nombre*' }).click();
+  await page.getByRole('textbox', { name: 'Nombre*' }).fill('C');
+  await page.getByRole('textbox', { name: 'Nombre*' }).press('CapsLock');
+  await page.getByRole('textbox', { name: 'Nombre*' }).fill('Carro prestamo');
+  await page.getByRole('textbox', { name: 'Sección del Reporte' }).click();
+  await page.getByRole('textbox', { name: 'Sección del Reporte' }).click();
+  await page.getByRole('textbox', { name: 'Sección del Reporte' }).click();
+  await page.getByRole('textbox', { name: 'Sección del Reporte' }).fill('12');
+  await page.getByRole('button', { name: 'Seleccione una opción' }).click();
+  await page.getByRole('button', { name: 'Seleccione una opción' }).click();
+  await page.getByLabel('Naturaleza*').selectOption('debit');
+  await page.getByRole('button', { name: 'Crear' }).click();
+  await page.getByRole('button', { name: 'Sí, crear' }).click();
+  await page.locator('.fi-icon-btn.fi-no-notification-close-btn').click();
+});
