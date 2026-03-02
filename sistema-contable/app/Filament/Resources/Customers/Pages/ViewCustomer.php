@@ -19,7 +19,8 @@ class ViewCustomer extends ViewRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
 
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('customers.update')),
         ];
     }
 }

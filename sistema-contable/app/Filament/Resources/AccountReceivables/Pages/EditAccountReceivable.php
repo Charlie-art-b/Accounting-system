@@ -37,6 +37,7 @@ class EditAccountReceivable extends EditRecord
             ViewAction::make(),
 
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('account_receivables.delete'))
                 ->before(function (DeleteAction $action) {
                     if (in_array($this->record->status, ['pending', 'partial'], true)) {
                         Notification::make()

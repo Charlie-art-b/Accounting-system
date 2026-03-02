@@ -32,6 +32,7 @@ class EditInventory extends EditRecord
             ViewAction::make(),
 
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('inventories.delete'))
                 ->modalHeading(fn ($record) => "Eliminar inventario '{$record->name}'")
                 ->modalDescription('¿Estás seguro de que deseas eliminar este inventario? Solo se puede eliminar si está vacío y sin movimientos. Esta acción no se puede deshacer.')
                 ->modalSubmitActionLabel('Sí, eliminar')

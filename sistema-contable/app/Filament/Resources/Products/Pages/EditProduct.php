@@ -24,6 +24,7 @@ class EditProduct extends EditRecord
             
             ViewAction::make(),
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('products.delete'))
                 ->before(function (DeleteAction $action) {
                     $inventoryCount = $this->record->inventoryProduct()->count();
 

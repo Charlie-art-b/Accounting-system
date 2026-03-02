@@ -21,7 +21,8 @@ class ViewProduct extends ViewRecord
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
 
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('products.update')),
         ];
     }
 }

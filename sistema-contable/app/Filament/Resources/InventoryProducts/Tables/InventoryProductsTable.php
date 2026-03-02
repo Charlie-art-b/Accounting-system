@@ -5,46 +5,17 @@ namespace App\Filament\Resources\InventoryProducts\Tables;
 use App\Filament\Support\CrudImportExportActions;
 use App\Models\InventoryProduct;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\HtmlString;
 
 class InventoryProductsTable
 {
-    public static function configure(Table $table, array $permissions = []): Table
+    public static function configure(Table $table): Table
     {
-        $canView = $permissions['canView'] ?? true;
-        $canEdit = $permissions['canEdit'] ?? true;
-        $canDelete = $permissions['canDelete'] ?? true;
-
-        $recordActions = [];
-        if ($canView) {
-            $recordActions[] = ViewAction::make();
-        }
-        if ($canEdit) {
-            $recordActions[] = EditAction::make();
-        }
-        if ($canDelete) {
-            $recordActions[] = DeleteAction::make();
-        }
-
-        $bulkActions = [];
-        if ($canDelete) {
-            $bulkActions[] = DeleteBulkAction::make()
-                ->modalHeading('Eliminar productos del inventario')
-                ->modalDescription('Estas seguro de eliminar los productos seleccionados?')
-                ->modalSubmitActionLabel('Si, eliminar')
-                ->successNotificationTitle('Productos eliminados correctamente');
-        }
-
         return $table
             ->columns([
                 TextColumn::make('inventory.name')
@@ -54,68 +25,70 @@ class InventoryProductsTable
                     ->color('info')
                     ->weight('bold'),
 
+                TextColumn::make('inventory.customer_full_name')
+                    ->label('Cliente')
+                    ->state(fn ($record) =>
+                        $record->inventory->customer
+                            ? "{$record->inventory->customer->name} {$record->inventory->customer->first_last_name}"
+                            : '-'
+                    )
+                    ->sortable(),
+
                 TextColumn::make('product.name')
                     ->label('Producto')
                     ->sortable()
                     ->weight('bold'),
 
-                TextColumn::make('movimiento')
-                    ->label('Stock')
-                    ->state(fn (InventoryProduct $record): string => (int) $record->stock_initial . "\n" . (int) $record->entries . "\n" . (int) $record->exits)
-                    ->formatStateUsing(function (string $state): HtmlString {
-                        [$initial, $entries, $exits] = array_pad(explode("\n", $state, 3), 3, '0');
+                TextColumn::make('stock_initial')
+                    ->label('Stock Inicial')
+                    ->alignment('center')
+                    ->badge()
+                    ->color('gray'),
 
-                        return new HtmlString(
-                            "<div class='leading-tight'><span class='text-xs'>Ini: " . e($initial) . "</span><br><span class='text-xs fi-text-color-400'>Ent: " . e($entries) . " | Sal: " . e($exits) . '</span></div>'
-                        );
-                    })
-                    ->html(),
+                TextColumn::make('entries')
+                    ->label('Entradas')
+                    ->alignment('center')
+                    ->badge()
+                    ->color('success'),
+
+                TextColumn::make('exits')
+                    ->label('Salidas')
+                    ->alignment('center')
+                    ->badge()
+                    ->color('danger'),
 
                 TextColumn::make('existence')
                     ->label('Existencia')
                     ->alignment('center')
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state ?? 0)
-                    ->color(fn ($record) => ($record->stock_initial + $record->entries - $record->exits) < 10 ? 'warning' : 'success'),
-
-                TextColumn::make('inventory.customer_full_name')
-                    ->label('Cliente')
-                    ->state(fn ($record) => $record->inventory->customer ? "{$record->inventory->customer->name} {$record->inventory->customer->first_last_name}" : '-')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->color(fn ($record) => 
+                        ($record->stock_initial + $record->entries - $record->exits) < 10 
+                            ? 'warning' 
+                            : 'success'
+                    ),
             ])
             ->filters([
                 SelectFilter::make('inventory_id')
-                    ->label('Inventario')
+                    ->label('Filtrar por Inventario')
                     ->relationship('inventory', 'name')
                     ->searchable()
                     ->preload(),
-
+                    
                 SelectFilter::make('product_id')
-                    ->label('Producto')
+                    ->label('Filtrar por Producto')
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload(),
-
-                Filter::make('existence_range')
-                    ->label('Rango de existencia')
-                    ->form([
-                        TextInput::make('min')->label('Minimo')->numeric(),
-                        TextInput::make('max')->label('Maximo')->numeric(),
-                    ])
-                    ->columns(2)
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['min'] ?? null, fn (Builder $q, $min) => $q->whereRaw('(stock_initial + entries - exits) >= ?', [$min]))
-                            ->when($data['max'] ?? null, fn (Builder $q, $max) => $q->whereRaw('(stock_initial + entries - exits) <= ?', [$max]));
-                    }),
             ])
             ->defaultSort('inventory.name', 'asc')
-            ->recordActions($recordActions)
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+            ])
             ->toolbarActions([
                 ...CrudImportExportActions::make(
                     modelClass: InventoryProduct::class,
-                    module: 'inventory_products',
                     title: 'Productos por Inventario',
                     filePrefix: 'inventario-productos',
                     fields: [
@@ -147,7 +120,9 @@ class InventoryProductsTable
                         'exits',
                     ],
                 ),
-                BulkActionGroup::make($bulkActions),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

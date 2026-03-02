@@ -37,6 +37,7 @@ class EditAccountPayable extends EditRecord
             ViewAction::make(),
 
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('account_payables.delete'))
                 ->before(function (DeleteAction $action) {
                     if (!in_array($this->record->status, ['voided', 'paid'])) {
                         Notification::make()
