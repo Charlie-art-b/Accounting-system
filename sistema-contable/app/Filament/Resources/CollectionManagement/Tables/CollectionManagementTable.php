@@ -2,14 +2,13 @@
 
 namespace App\Filament\Resources\CollectionManagement\Tables;
 
-use App\Filament\Support\CrudImportExportActions;
 use App\Models\CollectionManagement;
+use App\Models\Payment;
 use App\Services\PaymentService;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -27,7 +26,6 @@ class CollectionManagementTable
     {
         $canView = Auth::user()?->can('collection_management.view') ?? false;
         $canUpdate = Auth::user()?->can('collection_management.update') ?? false;
-        $canDelete = Auth::user()?->can('collection_management.delete') ?? false;
 
         return $table
             ->columns([
@@ -109,49 +107,6 @@ class CollectionManagementTable
                 ViewAction::make()
                     ->visible(fn () => $canView),
 
-                Action::make('edit_collection')
-                    ->label('Editar')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('warning')
-                    ->visible(fn () => $canUpdate)
-                    ->form([
-                        DateTimePicker::make('next_reminder_at')
-                            ->label('Proximo recordatorio'),
-                        TextInput::make('reminder_attempts')
-                            ->label('Intentos')
-                            ->numeric()
-                            ->minValue(0)
-                            ->default(0),
-                        TextInput::make('last_action')
-                            ->label('Ultima accion')
-                            ->maxLength(255),
-                        Textarea::make('notes')
-                            ->label('Notas')
-                            ->rows(3),
-                    ])
-                    ->fillForm(fn (CollectionManagement $record): array => [
-                        'next_reminder_at' => $record->next_reminder_at,
-                        'reminder_attempts' => $record->reminder_attempts,
-                        'last_action' => $record->last_action,
-                        'notes' => $record->notes,
-                    ])
-                    ->action(function (CollectionManagement $record, array $data): void {
-                        $record->update([
-                            'next_reminder_at' => $data['next_reminder_at'] ?? null,
-                            'reminder_attempts' => $data['reminder_attempts'] ?? 0,
-                            'last_action' => $data['last_action'] ?? null,
-                            'notes' => $data['notes'] ?? null,
-                        ]);
-
-                        Notification::make()
-                            ->success()
-                            ->title('Gestion actualizada')
-                            ->send();
-                    }),
-
-                DeleteAction::make()
-                    ->visible(fn () => $canDelete),
-
                 Action::make('pay')
                     ->label('Registrar pago')
                     ->icon('heroicon-o-banknotes')
@@ -204,39 +159,77 @@ class CollectionManagementTable
                                 ->send();
                         }
                     }),
-            ])
-            ->toolbarActions([
-                ...CrudImportExportActions::make(
-                    modelClass: CollectionManagement::class,
-                    module: 'collection_management',
-                    title: 'Gestion de Cobro',
-                    filePrefix: 'gestion-cobro',
-                    fields: [
-                        'account_receivable_id',
-                        'customer_id',
-                        'next_reminder_at',
-                        'reminder_attempts',
-                        'last_action',
-                        'notes',
-                    ],
-                    uniqueBy: ['account_receivable_id'],
-                    fieldLabels: [
-                        'accountReceivable.invoice_number' => 'Factura',
-                        'customer.name' => 'Cliente',
-                        'next_reminder_at' => 'Proximo Recordatorio',
-                        'reminder_attempts' => 'Intentos',
-                        'last_action' => 'Ultima Accion',
-                        'notes' => 'Notas',
-                    ],
-                    exportFields: [
-                        'accountReceivable.invoice_number',
-                        'customer.name',
-                        'next_reminder_at',
-                        'reminder_attempts',
-                        'last_action',
-                        'notes',
-                    ],
-                ),
+
+                Action::make('reverse_payment')
+                    ->label('Revertir pago')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('danger')
+                    ->visible(fn (CollectionManagement $record) => $canUpdate && $record->accountReceivable && $record->accountReceivable->payments()->where('is_reversal', false)->whereDoesntHave('reversal')->exists())
+                    ->requiresConfirmation()
+                    ->modalHeading('Revertir pago')
+                    ->modalDescription('Selecciona el pago que deseas revertir. Esta acción creará un registro de reverso y actualizará el monto pagado.')
+                    ->modalSubmitActionLabel('Revertir')
+                    ->form(fn (CollectionManagement $record) => [
+                        Select::make('payment_id')
+                            ->label('Pago a revertir')
+                            ->options(function () use ($record) {
+                                if (!$record->accountReceivable) return [];
+                                
+                                return $record->accountReceivable->payments()
+                                    ->where('is_reversal', false)
+                                    ->whereDoesntHave('reversal')
+                                    ->orderBy('paid_at', 'desc')
+                                    ->get()
+                                    ->mapWithKeys(function ($payment) {
+                                        return [
+                                            $payment->id => sprintf(
+                                                '%s - ₡%s - %s',
+                                                $payment->paid_at->format('d/m/Y H:i'),
+                                                number_format($payment->amount, 2),
+                                                $payment->note ?? 'Sin nota'
+                                            ),
+                                        ];
+                                    })
+                                    ->toArray();
+                            })
+                            ->required()
+                            ->searchable()
+                            ->native(false)
+                            ->placeholder('Selecciona un pago'),
+                    ])
+                    ->action(function (CollectionManagement $record, array $data) {
+                        if (! Auth::user()?->can('collection_management.update')) {
+                            abort(403);
+                        }
+
+                        try {
+                            $payment = Payment::findOrFail($data['payment_id']);
+                            
+                            // Verificar que el pago pertenece a esta cuenta por cobrar
+                            if ($payment->payable_id !== $record->account_receivable_id) {
+                                throw new \Exception('El pago seleccionado no pertenece a esta cuenta por cobrar.');
+                            }
+
+                            $service = new PaymentService();
+                            $reversal = $service->reversePayment($payment, Auth::id());
+
+                            Notification::make()
+                                ->title('Pago revertido exitosamente')
+                                ->body(sprintf(
+                                    'Se revirtió el pago de ₡%s del %s',
+                                    number_format($payment->amount, 2),
+                                    $payment->paid_at->format('d/m/Y')
+                                ))
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error al revertir el pago')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->defaultSort('next_reminder_at', 'asc');
     }

@@ -14,18 +14,16 @@ class ViewAccountReceivable extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back')
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
+                
             EditAction::make()
                 ->label('Editar')
-                ->icon('heroicon-o-pencil-square')
                 ->color('primary')
                 ->keyBindings(['mod+e'])
                 ->visible(fn () => $this->record->status !== 'paid'),
-            Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
         ];
     }
 }

@@ -36,6 +36,11 @@ class EditCustomer extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+             Action::make('back')
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index'))
+                ->visible(fn () => Auth::user()?->can('customers.view')),
 
             ViewAction::make()
                 ->visible(fn () => Auth::user()?->can('customers.view')),
@@ -66,15 +71,6 @@ class EditCustomer extends EditRecord
                 ->after(fn () => redirect()->to(
                     $this->getResource()::getUrl('index')
                 )),
-
-
-            Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista')
-                ->visible(fn () => Auth::user()?->can('customers.view')),
         ];
     }
 

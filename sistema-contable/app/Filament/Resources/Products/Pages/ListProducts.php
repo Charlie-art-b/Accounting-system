@@ -29,10 +29,15 @@ class ListProducts extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Crear cliente')
+                ->label('Crear producto')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->keyBindings(['mod+n']),
+            Action::make('inventories')
+                ->label('Ver inventarios')
+                ->icon('heroicon-o-archive-box')
+                ->color('primary')
+                ->url(InventoryResource::getUrl('index')),
         ];
     }
 }

@@ -25,19 +25,18 @@ class EditInventory extends EditRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
+
             ViewAction::make(),
+
             DeleteAction::make()
                 ->modalHeading(fn ($record) => "Eliminar inventario '{$record->name}'")
                 ->modalDescription('¿Estás seguro de que deseas eliminar este inventario? Solo se puede eliminar si está vacío y sin movimientos. Esta acción no se puede deshacer.')
                 ->modalSubmitActionLabel('Sí, eliminar')
                 ->successNotificationTitle('Inventario eliminado')
                 ->before(function ($action, $record) {
-                    // Verificar productos con existencias
                     $productsWithStock = $record->inventoryProducts()
                         ->get()
                         ->filter(function ($product) {
@@ -55,8 +54,6 @@ class EditInventory extends EditRecord
                         
                         $action->halt();
                     }
-
-                    // Verificar productos con movimientos
                     $productsWithMovements = $record->inventoryProducts()
                         ->where(function ($query) {
                             $query->where('entries', '>', 0)
@@ -99,6 +96,6 @@ class EditInventory extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 }

@@ -5,7 +5,9 @@ namespace App\Filament\Resources\AccountingAccounts;
 use App\Filament\Resources\AccountingAccounts\Pages\CreateAccountingAccount;
 use App\Filament\Resources\AccountingAccounts\Pages\EditAccountingAccount;
 use App\Filament\Resources\AccountingAccounts\Pages\ListAccountingAccounts;
+use App\Filament\Resources\AccountingAccounts\Pages\ViewAccountingAccount;
 use App\Filament\Resources\AccountingAccounts\Schemas\AccountingAccountForm;
+use App\Filament\Resources\AccountingAccounts\Schemas\AccountingAccountInfolist;
 use App\Filament\Resources\AccountingAccounts\Tables\AccountingAccountsTable;
 use App\Models\AccountingAccount;
 use BackedEnum;
@@ -43,6 +45,11 @@ class AccountingAccountResource extends Resource
         return Auth::user()?->can('accounting_accounts.view') ?? false;
     }
 
+    public static function canView($record): bool
+    {
+        return Auth::user()?->can('accounting_accounts.view') ?? false;
+    }
+
     public static function canCreate(): bool
     {
         return Auth::user()?->can('accounting_accounts.create') ?? false;
@@ -65,6 +72,11 @@ class AccountingAccountResource extends Resource
         return AccountingAccountForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return AccountingAccountInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return AccountingAccountsTable::configure($table);
@@ -84,6 +96,7 @@ class AccountingAccountResource extends Resource
         return [
             'index' => ListAccountingAccounts::route('/'),
             'create' => CreateAccountingAccount::route('/create'),
+            'view' => ViewAccountingAccount::route('/{record}'),
             'edit' => EditAccountingAccount::route('/{record}/edit'),
         ];
     }

@@ -43,16 +43,14 @@ class CreateAccountingAccount extends CreateRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
         ];
     }
     
     protected function getRedirectUrl(): string
     {
-        return AccountingAccountResource::getUrl('index');
+        return AccountingAccountResource::getUrl('view', ['record' => $this->record]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CollectionManagement\Schemas;
 
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Schema;
 
 class CollectionManagementInfolist
@@ -12,7 +13,6 @@ class CollectionManagementInfolist
     {
         return $schema
             ->components([
-                // SECCIÓN: INFORMACIÓN DE LA FACTURA
                 Section::make('Información de la Factura')
                     ->description('Datos de la cuenta por cobrar')
                     ->schema([
@@ -45,7 +45,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: INFORMACIÓN DEL CLIENTE
                 Section::make('Cliente')
                     ->schema([
                         TextEntry::make('customer.name')
@@ -64,7 +63,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: MONTOS Y ESTADO
                 Section::make('Información Financiera')
                     ->schema([
                         TextEntry::make('accountReceivable.total_amount')
@@ -117,7 +115,6 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: GESTIÓN DE COBROS
                 Section::make('Gestión de Cobros')
                     ->description('Información sobre recordatorios y acciones')
                     ->schema([
@@ -169,7 +166,41 @@ class CollectionManagementInfolist
                     ])
                     ->columns(2),
 
-                // SECCIÓN: METADATA
+                // SECCIÓN: HISTORIAL DE PAGOS
+                Section::make('Historial de Pagos')
+                    ->description('Pagos registrados para esta cuenta por cobrar')
+                    ->schema([
+                        RepeatableEntry::make('accountReceivable.payments')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('paid_at')
+                                    ->label('Fecha de pago')
+                                    ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y H:i') : '—')
+                                    ->icon('heroicon-o-calendar'),
+
+                                TextEntry::make('amount')
+                                    ->label('Monto')
+                                    ->money('CRC')
+                                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                                    ->color(fn ($state) => $state < 0 ? 'danger' : 'success'),
+
+                                TextEntry::make('is_reversal')
+                                    ->label('Tipo')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state) => $state ? 'Reverso' : 'Pago')
+                                    ->color(fn ($state) => $state ? 'danger' : 'success'),
+
+                                TextEntry::make('note')
+                                    ->label('Nota')
+                                    ->placeholder('Sin nota')
+                                    ->limit(50),
+                            ])
+                            ->columns(4)
+                            ->hidden(fn ($record) => !$record->accountReceivable || $record->accountReceivable->payments->isEmpty()),
+                    ])
+                    ->collapsed()
+                    ->hidden(fn ($record) => !$record->accountReceivable || $record->accountReceivable->payments->isEmpty()),
+
                 Section::make('Información del Registro')
                     ->schema([
                         TextEntry::make('created_at')

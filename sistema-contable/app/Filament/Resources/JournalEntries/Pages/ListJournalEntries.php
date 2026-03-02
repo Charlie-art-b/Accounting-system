@@ -28,8 +28,9 @@ class ListJournalEntries extends ListRecords
         return [
             CreateAction::make()
                 ->label('Crear asiento')
+                ->color('primary')
+                ->icon('heroicon-o-plus')
                 ->visible(fn () => auth()->user()?->can('journal_entries.create') ?? false),
-                //->preload(),
         ];
     }
 }
