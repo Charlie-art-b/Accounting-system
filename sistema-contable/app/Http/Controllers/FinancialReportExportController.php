@@ -3,32 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Exports\FinancialStatementsExport;
+use App\Exports\BalanceComprobacionExport;
+use App\Exports\EstadoResultadosExport;
+use App\Exports\BalanceGeneralExport;
+use App\Exports\FlujoEfectivoExport;
+use App\Exports\CambiosPatrimonioExport;
+use App\Exports\EstadoResultadosIntegralExport;
 use App\Models\FinancialReport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FinancialReportExportController extends Controller
 {
     public function excel(int $reportId)
-    {
-        $report = FinancialReport::with('customer')->findOrFail($reportId);
+{
+    $report = FinancialReport::with('customer')->findOrFail($reportId);
+    $payload = $report->payload;
 
-        $payload = $report->payload;
+    $fileName = 'Reporte_' . $report->report_type . '_' . now()->format('Y-m-d') . '.xlsx';
 
-        $balance = $payload['balance_general'] ?? ($report->report_type === 'balance_general' ? $payload : []);
-        $estadoResultados = $payload['estado_resultados'] ?? ($report->report_type === 'estado_resultados' ? $payload : []);
+    $export = match ($report->report_type) {
+        'balance_general' => new BalanceGeneralExport($report->customer, $payload, $report->fecha_fin),
+        'estado_resultados' => new EstadoResultadosExport($report->customer, $payload, $report->fecha_inicio, $report->fecha_fin),
+        'flujo_efectivo' => new FlujoEfectivoExport($report->customer, $payload, $report->fecha_inicio, $report->fecha_fin),
+        'cambios_patrimonio' => new CambiosPatrimonioExport($report->customer, $payload, $report->fecha_inicio, $report->fecha_fin),
+        'financial_statements' => new FinancialStatementsExport($report->customer, $payload['data'] ?? [], $payload['balance'] ?? [], $payload['estado_resultados'] ?? []),
+        'balance_comprobacion' => new BalanceComprobacionExport($report->customer, $payload, $report->fecha_fin),
+        'estado_resultados_integral' => new EstadoResultadosIntegralExport($report->customer, $payload, $report->fecha_inicio, $report->fecha_fin),
+        default => abort(422, 'Tipo de reporte no soportado para export Excel.'),
+    };
 
-        $data = [
-            'report_type' => $report->report_type,
-            'fecha_inicio' => optional($report->fecha_inicio)->format('Y-m-d'),
-            'fecha_fin' => optional($report->fecha_fin)->format('Y-m-d'),
-            'generated_at' => optional($report->generated_at)->format('Y-m-d H:i:s'),
-        ];
-
-        $fileName = 'Reporte_' . $report->report_type . '_' . now()->format('Y-m-d') . '.xlsx';
-
-        return Excel::download(
-            new FinancialStatementsExport($report->customer, $data, $balance, $estadoResultados),
-            $fileName
-        );
-    }
+    return Excel::download($export, $fileName);
+}
 }

@@ -1,127 +1,94 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Estado de Resultados</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        .period {
-            text-align: center;
-            font-size: 12px;
-            margin-bottom: 20px;
-            color: #666;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th {
-            background-color: #f0f0f0;
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-            font-weight: bold;
-        }
-        td {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-        }
-        .section-header {
-            background-color: #e8e8e8;
-            font-weight: bold;
-        }
-        .subtotal {
-            background-color: #f9f9f9;
-            font-weight: bold;
-        }
-        .total {
-            background-color: #d4d4d4;
-            font-weight: bold;
-        }
-        .amount {
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-    <h1>ESTADO DE RESULTADOS</h1>
-    <div class="period">
-        Del {{ \Carbon\Carbon::parse($data['start_date'] ?? now())->format('d/m/Y') }} 
-        al {{ \Carbon\Carbon::parse($data['end_date'] ?? now())->format('d/m/Y') }}
-    </div>
+@extends('pdf._layout')
 
+@section('title', 'Estado de Resultados')
+@section('report_name', 'Estado de Resultados')
+
+@php
+    use Carbon\Carbon;
+
+    // fechas vienen dentro del estadoResultados, pero también tienes $fechaInicio/$fechaFin
+    $inicioRaw = $estadoResultados['fecha_inicio'] ?? $fechaInicio ?? now();
+    $finRaw    = $estadoResultados['fecha_fin'] ?? $fechaFin ?? now();
+
+    $inicio = Carbon::parse($inicioRaw)->locale('es')->translatedFormat('d \d\e F Y');
+    $fin    = Carbon::parse($finRaw)->locale('es')->translatedFormat('d \d\e F Y');
+
+    $ingresosDetalles = $estadoResultados['ingresos']['detalles'] ?? [];
+    $ingresosTotal    = $estadoResultados['ingresos']['total'] ?? 0;
+
+    $gastosDetalles = $estadoResultados['gastos']['detalles'] ?? [];
+    $gastosTotal    = $estadoResultados['gastos']['total'] ?? 0;
+
+    $utilidadBruta = $estadoResultados['utilidad_bruta'] ?? 0;
+    $impuestos     = $estadoResultados['impuestos'] ?? 0;
+    $utilidadNeta  = $estadoResultados['utilidad_neta'] ?? 0;
+    $margenNeto    = $estadoResultados['margen_neto'] ?? 0;
+@endphp
+
+@section('report_period')
+    Del {{ strtolower($inicio) }} al {{ strtolower($fin) }}
+@endsection
+
+@section('content')
     <table>
         <thead>
             <tr>
-                <th>CONCEPTO</th>
-                <th class="amount">MONTO (₡)</th>
+                <th class="left">Concepto</th>
+                <th class="right" style="width:160px;">Monto (₡)</th>
             </tr>
         </thead>
+
         <tbody>
-            <tr class="section-header">
-                <td>INGRESOS</td>
-                <td></td>
-            </tr>
-            @if(isset($data['revenues']['details']) && is_array($data['revenues']['details']))
-                @foreach($data['revenues']['details'] as $revenue)
-                    <tr>
-                        <td>&nbsp;&nbsp;{{ $revenue['name'] }}</td>
-                        <td class="amount">{{ number_format($revenue['amount'], 2, ',', '.') }}</td>
-                    </tr>
-                @endforeach
-            @endif
+            {{-- INGRESOS --}}
+            <tr class="section-row"><td colspan="2">Ingresos</td></tr>
+
+            @foreach($ingresosDetalles as $row)
+                <tr class="data-row">
+                    <td class="left indent">{{ $row['nombre'] ?? '' }}</td>
+                    <td class="right">{{ number_format($row['monto'] ?? 0, 2, ',', '.') }}</td>
+                </tr>
+            @endforeach
+
             <tr class="subtotal">
-                <td>Total Ingresos</td>
-                <td class="amount">{{ number_format($data['revenues']['total'] ?? 0, 2, ',', '.') }}</td>
+                <td class="left">Total ingresos</td>
+                <td class="right">{{ number_format($ingresosTotal, 2, ',', '.') }}</td>
             </tr>
 
-            <tr class="section-header">
-                <td>GASTOS</td>
-                <td></td>
-            </tr>
-            @if(isset($data['expenses']['details']) && is_array($data['expenses']['details']))
-                @foreach($data['expenses']['details'] as $expense)
-                    <tr>
-                        <td>&nbsp;&nbsp;{{ $expense['name'] }}</td>
-                        <td class="amount">{{ number_format($expense['amount'], 2, ',', '.') }}</td>
-                    </tr>
-                @endforeach
-            @endif
+            {{-- GASTOS --}}
+            <tr class="section-row"><td colspan="2">Gastos</td></tr>
+
+            @foreach($gastosDetalles as $row)
+                <tr class="data-row">
+                    <td class="left indent">{{ $row['nombre'] ?? '' }}</td>
+                    <td class="right">{{ number_format($row['monto'] ?? 0, 2, ',', '.') }}</td>
+                </tr>
+            @endforeach
+
             <tr class="subtotal">
-                <td>Total Gastos</td>
-                <td class="amount">{{ number_format($data['expenses']['total'] ?? 0, 2, ',', '.') }}</td>
+                <td class="left">Total gastos</td>
+                <td class="right">{{ number_format($gastosTotal, 2, ',', '.') }}</td>
+            </tr>
+
+            {{-- RESULTADOS --}}
+            <tr class="total">
+                <td class="left">Utilidad bruta</td>
+                <td class="right">{{ number_format($utilidadBruta, 2, ',', '.') }}</td>
+            </tr>
+
+            <tr class="data-row">
+                <td class="left">Impuestos</td>
+                <td class="right">({{ number_format($impuestos, 2, ',', '.') }})</td>
             </tr>
 
             <tr class="total">
-                <td>UTILIDAD BRUTA</td>
-                <td class="amount">{{ number_format($data['gross_profit'] ?? 0, 2, ',', '.') }}</td>
+                <td class="left">Utilidad neta</td>
+                <td class="right">{{ number_format($utilidadNeta, 2, ',', '.') }}</td>
             </tr>
 
-            <tr>
-                <td>Impuestos (22%)</td>
-                <td class="amount">({{ number_format($data['taxes'] ?? 0, 2, ',', '.') }})</td>
-            </tr>
-
-            <tr class="total">
-                <td>UTILIDAD NETA</td>
-                <td class="amount">{{ number_format($data['net_income'] ?? 0, 2, ',', '.') }}</td>
-            </tr>
-
-            <tr>
-                <td>Margen Neto (%)</td>
-                <td class="amount">{{ number_format($data['net_margin'] ?? 0, 2, ',', '.') }}%</td>
+            <tr class="data-row">
+                <td class="left">Margen neto (%)</td>
+                <td class="right">{{ number_format($margenNeto, 2, ',', '.') }}%</td>
             </tr>
         </tbody>
     </table>
-</body>
-</html>
+@endsection

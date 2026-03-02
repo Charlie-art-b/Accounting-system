@@ -1,105 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Balance de Comprobación</title>
+@extends('pdf._layout')
 
-<style>
-body {
-    font-family: DejaVu Sans, sans-serif;
-    font-size: 11px;
-}
-
-.container { width: 100%; padding: 20px; }
-
-.titulo {
-    font-size: 38px;
-    font-weight: bold;
-    color: #1B1464;
-    margin: 0;
-    letter-spacing: 3px;
-}
-
-.subtitulo {
-    font-size: 22px;
-    color: #2E3192;
-    margin: 0;
-}
-
-.header {
-    text-align: center;
-    border-bottom: 1px solid #000;
-    margin-bottom: 15px;
-    padding-bottom: 8px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td { padding: 5px; }
-
-thead th {
-    border-bottom: 1px solid #000;
-}
-
-.left { text-align: left; }
-.right { text-align: right; }
-.center { text-align: center; }
-
-.total {
-    border-top: 2px solid #000;
-    font-weight: bold;
-}
-</style>
-</head>
+@section('title', 'Balance de Comprobación')
+@section('report_name', 'Balance de Comprobación')
 
 @php
-use Carbon\Carbon;
+    use Carbon\Carbon;
 
-$fechaActual = Carbon::parse($fechaFin)
-    ->locale('es')
-    ->translatedFormat('d \d\e F Y');
+    $fechaCorte = Carbon::parse($fechaFin)
+        ->locale('es')
+        ->translatedFormat('d \d\e F Y');
 @endphp
 
-<body>
-<div class="container">
+@section('report_period')
+    Al {{ strtolower($fechaCorte) }}
+@endsection
 
-<div class="header">
-    <h1 class="titulo">CAHEN</h1>
-    <h2 class="subtitulo">Servicios Contables</h2>
-    <strong>{{ strtoupper($cliente->nombre) }}</strong>
-    <strong>Cédula {{ strtoupper($cliente->identification) }}</strong>
-    <strong>BALANCE DE COMPROBACIÓN</strong>
-    <strong>AL {{ strtolower($fechaActual) }}</strong>
-</div>
+@section('content')
+    <table>
+        <thead>
+            <tr>
+                <th class="left" style="width:90px;">Código</th>
+                <th class="left">Cuenta</th>
+                <th class="left" style="width:130px;">Clasificación</th>
+                <th class="right" style="width:120px;">Débito</th>
+                <th class="right" style="width:120px;">Crédito</th>
+            </tr>
+        </thead>
 
-<table>
-<thead>
-<tr>
-    <th class="left">Cuenta</th>
-    <th class="right">Débito</th>
-    <th class="right">Crédito</th>
-</tr>
-</thead>
-<tbody>
-@foreach($data['cuentas'] ?? [] as $cuenta)
-    <tr>
-        <td>{{ $cuenta['codigo'] }}</td>
-        <td>{{ $cuenta['nombre'] }}</td>
-        <td>{{ $cuenta['clasificacion'] }}</td>
-        <td style="text-align:right;">
-            {{ number_format($cuenta['debe'], 2) }}
-        </td>
-        <td style="text-align:right;">
-            {{ number_format($cuenta['haber'], 2) }}
-        </td>
-    </tr>
-@endforeach
-</tbody>
-</table>
+        <tbody>
+            @php
+                $totalDebe = 0;
+                $totalHaber = 0;
+            @endphp
 
-</div>
-</body>
-</html>
+            @forelse(($data['cuentas'] ?? []) as $cuenta)
+                @php
+                    $debe = (float)($cuenta['debe'] ?? 0);
+                    $haber = (float)($cuenta['haber'] ?? 0);
+                    $totalDebe += $debe;
+                    $totalHaber += $haber;
+                @endphp
+
+                <tr class="data-row">
+                    <td class="left">{{ $cuenta['codigo'] ?? '' }}</td>
+                    <td class="left">{{ $cuenta['nombre'] ?? '' }}</td>
+                    <td class="left muted">{{ $cuenta['clasificacion'] ?? '' }}</td>
+                    <td class="right">{{ number_format($debe, 2, ',', '.') }}</td>
+                    <td class="right">{{ number_format($haber, 2, ',', '.') }}</td>
+                </tr>
+            @empty
+                <tr class="data-row">
+                    <td colspan="5" class="center muted" style="padding: 14px;">
+                        No hay datos para mostrar.
+                    </td>
+                </tr>
+            @endforelse
+
+            <tr class="total">
+                <td colspan="3" class="left">Totales</td>
+                <td class="right">{{ number_format($totalDebe, 2, ',', '.') }}</td>
+                <td class="right">{{ number_format($totalHaber, 2, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+@endsection

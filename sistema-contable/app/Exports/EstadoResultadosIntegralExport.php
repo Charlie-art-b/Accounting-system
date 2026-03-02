@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatting, ShouldAutoSize
+class EstadoResultadosIntegralExport implements FromArray, WithEvents, WithColumnFormatting, ShouldAutoSize
 {
     use ExcelStandardStyles;
 
@@ -25,23 +25,24 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
 
     public function array(): array
     {
-        // Prioriza fechas del payload si vienen ahí
-        $inicioRaw = $this->payload['fecha_inicio'] ?? $this->fechaInicio ?? now();
-        $finRaw    = $this->payload['fecha_fin'] ?? $this->fechaFin ?? now();
+        $inicio = Carbon::parse($this->fechaInicio ?? now())
+            ->locale('es')
+            ->translatedFormat('d \d\e F Y');
 
-        $inicio = Carbon::parse($inicioRaw)->locale('es')->translatedFormat('d \d\e F Y');
-        $fin    = Carbon::parse($finRaw)->locale('es')->translatedFormat('d \d\e F Y');
+        $fin = Carbon::parse($this->fechaFin ?? now())
+            ->locale('es')
+            ->translatedFormat('d \d\e F Y');
 
         $generatedAt = Carbon::now()->format('d/m/Y H:i');
 
         $rows = [];
 
-        // Header
+        // Header (7 + 1 blanco) -> títulos en fila 8
         $rows[] = ['CAHEN'];
         $rows[] = ['Servicios Contables'];
         $rows[] = ['Cliente:', $this->cliente->nombre ?? $this->cliente->name ?? '—'];
         $rows[] = ['Cédula:', $this->cliente->identification ?? '—'];
-        $rows[] = ['Reporte:', 'Estado de Resultados'];
+        $rows[] = ['Reporte:', 'Estado de Resultados Integral'];
         $rows[] = ['Período:', "Del {$inicio} al {$fin}"];
         $rows[] = ['Generado:', $generatedAt];
         $rows[] = [];
@@ -49,48 +50,20 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
         // Tabla
         $rows[] = ['Concepto', 'Monto'];
 
-        $ingresosDetalles = $this->payload['ingresos']['detalles'] ?? [];
-        $ingresosTotal    = (float)($this->payload['ingresos']['total'] ?? 0);
+        $rows[] = ['TOTAL INGRESOS', (float)($this->payload['ingresos'] ?? 0)];
+        $rows[] = ['GASTOS OPERATIVOS', (float)($this->payload['gastos_operativos'] ?? 0)];
 
-        $gastosDetalles = $this->payload['gastos']['detalles'] ?? [];
-        $gastosTotal    = (float)($this->payload['gastos']['total'] ?? 0);
-
-        $utilidadBruta = (float)($this->payload['utilidad_bruta'] ?? 0);
-        $impuestos     = (float)($this->payload['impuestos'] ?? 0);
-        $utilidadNeta  = (float)($this->payload['utilidad_neta'] ?? 0);
-        $margenNeto    = (float)($this->payload['margen_neto'] ?? 0);
-
-        // INGRESOS
-        $rows[] = ['INGRESOS', ''];
-
-        foreach ($ingresosDetalles as $r) {
-            $rows[] = [
-                $r['nombre'] ?? '',
-                (float)($r['monto'] ?? 0),
-            ];
-        }
-
-        $rows[] = ['TOTAL INGRESOS', $ingresosTotal];
         $rows[] = ['', ''];
 
-        // GASTOS
-        $rows[] = ['GASTOS', ''];
+        $rows[] = ['UTILIDAD OPERATIVA', (float)($this->payload['utilidad_antes_depreciacion'] ?? 0)];
+        $rows[] = ['DEPRECIACIÓN Y AMORTIZACIÓN', (float)($this->payload['depreciacion'] ?? 0)];
+        $rows[] = ['OTROS GASTOS', (float)($this->payload['otros_gastos'] ?? 0)];
 
-        foreach ($gastosDetalles as $g) {
-            $rows[] = [
-                $g['nombre'] ?? '',
-                (float)($g['monto'] ?? 0),
-            ];
-        }
-
-        $rows[] = ['TOTAL GASTOS', $gastosTotal];
         $rows[] = ['', ''];
 
-        // RESULTADOS
-        $rows[] = ['UTILIDAD BRUTA', $utilidadBruta];
-        $rows[] = ['IMPUESTOS', $impuestos];
-        $rows[] = ['UTILIDAD NETA', $utilidadNeta];
-        $rows[] = ['MARGEN NETO (%)', $margenNeto]; // porcentaje
+        $rows[] = ['UTILIDAD ANTES DE IMPUESTOS', (float)($this->payload['utilidad_antes_impuestos'] ?? 0)];
+        $rows[] = ['IMPUESTO SOBRE LA RENTA', (float)($this->payload['impuestos'] ?? 0)];
+        $rows[] = ['UTILIDAD NETA DEL PERÍODO', (float)($this->payload['utilidad_neta'] ?? 0)];
 
         return $rows;
     }
@@ -98,7 +71,7 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_NUMBER_00, // montos
+            'B' => NumberFormat::FORMAT_NUMBER_00,
         ];
     }
 
@@ -119,12 +92,11 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
 
                 // Negrita en filas clave
                 $bold = [
-                    'INGRESOS',
-                    'GASTOS',
                     'TOTAL INGRESOS',
-                    'TOTAL GASTOS',
-                    'UTILIDAD BRUTA',
-                    'UTILIDAD NETA',
+                    'GASTOS OPERATIVOS',
+                    'UTILIDAD OPERATIVA',
+                    'UTILIDAD ANTES DE IMPUESTOS',
+                    'UTILIDAD NETA DEL PERÍODO',
                 ];
 
                 for ($r = $headerRow + 1; $r <= $lastRow; $r++) {

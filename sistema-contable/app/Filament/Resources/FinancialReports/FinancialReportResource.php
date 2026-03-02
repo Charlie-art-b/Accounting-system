@@ -163,7 +163,7 @@ class FinancialReportResource extends Resource
             ->actions([
                 ViewAction::make(),
 
-                Action::make('edit')
+                /*Action::make('edit')
                     ->label('Editar')
                     ->icon('heroicon-o-pencil-square')
                     ->color('warning')
@@ -211,7 +211,7 @@ class FinancialReportResource extends Resource
                             'fecha_fin' => $data['fecha_fin'],
                             'tasa_impuestos' => $data['tasa_impuestos'],
                         ]);
-                    }),
+                    }),*/
 
                 DeleteAction::make(),
 

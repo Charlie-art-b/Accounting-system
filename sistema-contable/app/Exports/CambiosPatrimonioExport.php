@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatting, ShouldAutoSize
+class CambiosPatrimonioExport implements FromArray, WithEvents, WithColumnFormatting, ShouldAutoSize
 {
     use ExcelStandardStyles;
 
@@ -25,23 +25,24 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
 
     public function array(): array
     {
-        // Prioriza fechas del payload si vienen ahí
-        $inicioRaw = $this->payload['fecha_inicio'] ?? $this->fechaInicio ?? now();
-        $finRaw    = $this->payload['fecha_fin'] ?? $this->fechaFin ?? now();
+        $inicio = Carbon::parse($this->fechaInicio ?? now())
+            ->locale('es')
+            ->translatedFormat('d \d\e F Y');
 
-        $inicio = Carbon::parse($inicioRaw)->locale('es')->translatedFormat('d \d\e F Y');
-        $fin    = Carbon::parse($finRaw)->locale('es')->translatedFormat('d \d\e F Y');
+        $fin = Carbon::parse($this->fechaFin ?? now())
+            ->locale('es')
+            ->translatedFormat('d \d\e F Y');
 
         $generatedAt = Carbon::now()->format('d/m/Y H:i');
 
         $rows = [];
 
-        // Header
+        // Header (7 + 1 blanco) -> títulos en fila 8
         $rows[] = ['CAHEN'];
         $rows[] = ['Servicios Contables'];
         $rows[] = ['Cliente:', $this->cliente->nombre ?? $this->cliente->name ?? '—'];
         $rows[] = ['Cédula:', $this->cliente->identification ?? '—'];
-        $rows[] = ['Reporte:', 'Estado de Resultados'];
+        $rows[] = ['Reporte:', 'Estado de Cambios en el Patrimonio'];
         $rows[] = ['Período:', "Del {$inicio} al {$fin}"];
         $rows[] = ['Generado:', $generatedAt];
         $rows[] = [];
@@ -49,48 +50,15 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
         // Tabla
         $rows[] = ['Concepto', 'Monto'];
 
-        $ingresosDetalles = $this->payload['ingresos']['detalles'] ?? [];
-        $ingresosTotal    = (float)($this->payload['ingresos']['total'] ?? 0);
+        $rows[] = ['CAPITAL INICIAL', (float)($this->payload['capital_inicial'] ?? 0)];
+        $rows[] = ['Aportes del período', (float)($this->payload['aportes'] ?? 0)];
+        $rows[] = ['Retiros del período', (float)($this->payload['retiros'] ?? 0)];
+        $rows[] = ['Resultado del período', (float)($this->payload['utilidad_periodo'] ?? 0)];
 
-        $gastosDetalles = $this->payload['gastos']['detalles'] ?? [];
-        $gastosTotal    = (float)($this->payload['gastos']['total'] ?? 0);
-
-        $utilidadBruta = (float)($this->payload['utilidad_bruta'] ?? 0);
-        $impuestos     = (float)($this->payload['impuestos'] ?? 0);
-        $utilidadNeta  = (float)($this->payload['utilidad_neta'] ?? 0);
-        $margenNeto    = (float)($this->payload['margen_neto'] ?? 0);
-
-        // INGRESOS
-        $rows[] = ['INGRESOS', ''];
-
-        foreach ($ingresosDetalles as $r) {
-            $rows[] = [
-                $r['nombre'] ?? '',
-                (float)($r['monto'] ?? 0),
-            ];
-        }
-
-        $rows[] = ['TOTAL INGRESOS', $ingresosTotal];
         $rows[] = ['', ''];
 
-        // GASTOS
-        $rows[] = ['GASTOS', ''];
-
-        foreach ($gastosDetalles as $g) {
-            $rows[] = [
-                $g['nombre'] ?? '',
-                (float)($g['monto'] ?? 0),
-            ];
-        }
-
-        $rows[] = ['TOTAL GASTOS', $gastosTotal];
-        $rows[] = ['', ''];
-
-        // RESULTADOS
-        $rows[] = ['UTILIDAD BRUTA', $utilidadBruta];
-        $rows[] = ['IMPUESTOS', $impuestos];
-        $rows[] = ['UTILIDAD NETA', $utilidadNeta];
-        $rows[] = ['MARGEN NETO (%)', $margenNeto]; // porcentaje
+        $rows[] = ['PATRIMONIO FINAL', (float)($this->payload['patrimonio_final'] ?? 0)];
+        $rows[] = ['Cambio neto del patrimonio', (float)($this->payload['cambio_neto'] ?? 0)];
 
         return $rows;
     }
@@ -98,7 +66,7 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_NUMBER_00, // montos
+            'B' => NumberFormat::FORMAT_NUMBER_00,
         ];
     }
 
@@ -119,12 +87,10 @@ class EstadoResultadosExport implements FromArray, WithEvents, WithColumnFormatt
 
                 // Negrita en filas clave
                 $bold = [
-                    'INGRESOS',
-                    'GASTOS',
-                    'TOTAL INGRESOS',
-                    'TOTAL GASTOS',
-                    'UTILIDAD BRUTA',
-                    'UTILIDAD NETA',
+                    'CAPITAL INICIAL',
+                    'Resultado del período',
+                    'PATRIMONIO FINAL',
+                    'Cambio neto del patrimonio',
                 ];
 
                 for ($r = $headerRow + 1; $r <= $lastRow; $r++) {

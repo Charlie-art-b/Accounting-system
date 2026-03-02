@@ -202,7 +202,7 @@
                 <x-filament::button
                     tag="a"
                     :href="$pdfUrl"
-                    target="_blank"
+                    
                     icon="heroicon-o-arrow-down-tray"
                     color="gray"
                     :disabled="! $generated || ! $pdfUrl"
