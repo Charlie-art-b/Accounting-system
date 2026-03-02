@@ -12,6 +12,7 @@ use Filament\Support\Exceptions\Halt;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Filament\Facades\Filament;
+use Filament\Actions\ViewAction;
 
 class EditJournalEntry extends EditRecord
 {
@@ -23,17 +24,16 @@ class EditJournalEntry extends EditRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
+
+            ViewAction::make(),
         ];
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        // bloquear si está posteado
         if ($this->record->posted_at !== null) {
             throw new HttpException(403, 'No se puede editar un asiento posteado.');
         }

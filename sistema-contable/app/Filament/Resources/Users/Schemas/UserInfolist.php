@@ -8,6 +8,94 @@ use Filament\Schemas\Schema;
 
 class UserInfolist
 {
+    private static function translateRole(string $role): string
+    {
+        $roles = [
+            'administrador' => 'Administrador',
+            'gerente' => 'Gerente',
+            'sub-gerente' => 'Sub-gerente',
+            'asistente' => 'Asistente',
+        ];
+
+        return $roles[$role] ?? $role;
+    }
+
+    private static function getModuleTranslations(): array
+    {
+        return [
+            'users' => 'Usuarios',
+            'roles' => 'Roles',
+            'permissions' => 'Permisos',
+            'accounting_accounts' => 'Cuentas Contables',
+            'account_payables' => 'Cuentas por Pagar',
+            'account_receivables' => 'Cuentas por Cobrar',
+            'journal_entries' => 'Asientos Contables',
+            'customers' => 'Clientes',
+            'suppliers' => 'Proveedores',
+            'collection_management' => 'Gestión de Cobranzas',
+            'fixed_assets' => 'Activos Fijos',
+            'inventories' => 'Inventarios',
+            'inventory_products' => 'Inventario de Productos',
+            'products' => 'Productos',
+        ];
+    }
+
+    private static function getActionTranslations(): array
+    {
+        return [
+            'view' => 'Ver',
+            'create' => 'Crear',
+            'update' => 'Actualizar',
+            'delete' => 'Eliminar',
+        ];
+    }
+
+    private static function groupPermissionsByModule($record): string
+    {
+        $permissions = $record->getAllPermissions()->pluck('name');
+        $modules = self::getModuleTranslations();
+        $actions = self::getActionTranslations();
+        
+        $grouped = [];
+        
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission);
+            if (count($parts) === 2) {
+                $moduleKey = $parts[0];
+                $actionKey = $parts[1];
+                
+                if (!isset($grouped[$moduleKey])) {
+                    $grouped[$moduleKey] = [];
+                }
+                $grouped[$moduleKey][] = $actions[$actionKey] ?? $actionKey;
+            }
+        }
+        
+        if (empty($grouped)) {
+            return 'Sin permisos';
+        }
+        
+        $html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+        
+        foreach ($grouped as $moduleKey => $moduleActions) {
+            $moduleName = $modules[$moduleKey] ?? $moduleKey;
+            $html .= '<div>';
+            $html .= '<div style="font-weight: 600; color: rgb(107 114 128); margin-bottom: 0.25rem;">' . $moduleName . '</div>';
+            $html .= '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
+            
+            foreach ($moduleActions as $action) {
+                $html .= '<span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; background-color: rgb(243 244 246); color: rgb(55 65 81);">' . $action . '</span>';
+            }
+            
+            $html .= '</div>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -35,17 +123,13 @@ class UserInfolist
                             ->label('Rol(es)')
                             ->badge()
                             ->separator(', ')
-                            ->placeholder('Sin rol'),
+                            ->placeholder('Sin rol')
+                            ->formatStateUsing(fn ($state) => self::translateRole($state)),
 
                         TextEntry::make('permissions')
-                            ->label('Permisos')
-                            ->state(function ($record) {
-                                return $record->getAllPermissions()
-                                    ->pluck('name')
-                                    ->toArray();
-                            })
-                            ->badge()
-                            ->separator(', ')
+                            ->label('Permisos por Módulo')
+                            ->state(fn ($record) => self::groupPermissionsByModule($record))
+                            ->html()
                             ->placeholder('Sin permisos'),
                     ]),
 

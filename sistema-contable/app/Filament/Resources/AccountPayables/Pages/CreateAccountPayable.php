@@ -39,15 +39,18 @@ class CreateAccountPayable extends CreateRecord
         ];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
         ];
     }
 }

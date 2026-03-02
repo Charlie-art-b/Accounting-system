@@ -31,7 +31,7 @@ class ListSuppliers extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Crear cliente')
+                ->label('Crear proveedor')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->keyBindings(['mod+n'])

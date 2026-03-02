@@ -30,12 +30,12 @@ class EditAccountReceivable extends EditRecord
     {
         return [
             Action::make('back')
-            ->label('') 
-            ->icon('heroicon-o-x-mark')
-            ->color('gray')
-            ->url($this->getResource()::getUrl('index'))
-            ->tooltip('Volver a la lista'), 
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
+            
             ViewAction::make(),
+
             DeleteAction::make()
                 ->before(function (DeleteAction $action) {
                     if (in_array($this->record->status, ['pending', 'partial'], true)) {

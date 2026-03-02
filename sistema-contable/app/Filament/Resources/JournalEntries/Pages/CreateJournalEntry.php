@@ -85,22 +85,18 @@ class CreateJournalEntry extends CreateRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
         ];
     }
 
     protected function getFormActions(): array
     {
         return [
-            // Guardar borrador (create normal)
             $this->getCreateFormAction()
                 ->label('Guardar borrador'),
 
-            // Postear (solo si cumple reglas)
             Actions\Action::make('post')
                 ->label('Postear')
                 ->color('success')
@@ -108,17 +104,13 @@ class CreateJournalEntry extends CreateRecord
                 ->disabled(fn () => $this->hasNoLines() || $this->isNotBalanced() || $this->isZeroTotals())
                 ->action(function (LedgerService $ledger) {
                     try {
-                        // Validaciones UI antes de crear/postear
                         $this->validateLinesForPosting();
 
-                        // Obtener data del form y crear el asiento
                         $data = $this->form->getState();
                         $record = $this->handleRecordCreation($data);
 
-                        // Guardar relaciones (Repeater -> relationship() = lines)
                         $this->form->model($record)->saveRelationships();
 
-                        // Postear con el servicio (validación final en backend)
                         $ledger->postJournalEntry($record->fresh(['lines']), auth()->user());
 
                         Notification::make()
@@ -128,7 +120,6 @@ class CreateJournalEntry extends CreateRecord
 
                         $this->redirect(JournalEntryResource::getUrl('view', ['record' => $record]));
                     } catch (ValidationException $e) {
-                        // Mensaje claro (toma el primer error)
                         $msg = collect($e->errors())->flatten()->first() ?? 'No se pudo postear el asiento.';
 
                         Notification::make()
@@ -137,10 +128,8 @@ class CreateJournalEntry extends CreateRecord
                             ->danger()
                             ->send();
 
-                        // Importante: detener la acción sin crashear la página
                         throw new Halt();
                     } catch (Halt $e) {
-                        // Ya se notifico antes, solo detenemos.
                         throw $e;
                     } catch (\Throwable $e) {
                         Notification::make()
@@ -195,7 +184,6 @@ class CreateJournalEntry extends CreateRecord
             }
         }
 
-        // Total > 0 y balanceado
         if ($this->isZeroTotals()) {
             $msg = 'El asiento no puede postearse con totales en cero.';
             Notification::make()->title('Totales inválidos')->body($msg)->danger()->send();
