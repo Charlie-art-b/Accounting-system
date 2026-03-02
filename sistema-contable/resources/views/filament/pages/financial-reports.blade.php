@@ -8,11 +8,16 @@
         }
 
         .report-panel{
-            background: #ffffff;
-            border: 1px solid rgba(15, 23, 42, .08);
+            background: rgb(var(--primary-50));
             border-radius: 14px;
             padding: 16px;
             box-shadow: 0 10px 25px rgba(2, 6, 23, .06);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .report-panel{
+                background: rgb(var(--gray-900));
+            }
         }
 
         .report-panel__header{
@@ -32,12 +37,22 @@
             margin:0;
             font-size: 16px;
             font-weight: 700;
-            color: #0f172a;
+            color: rgb(var(--gray-950));
+        }
+        @media (prefers-color-scheme: dark) {
+            .report-title h2{
+                color: rgb(var(--gray-50));
+            }
         }
         .report-title p{
             margin:0;
             font-size: 12px;
             color: rgba(15, 23, 42, .60);
+        }
+        @media (prefers-color-scheme: dark) {
+            .report-title p{
+                color: rgb(var(--gray-400));
+            }
         }
 
         .actions-bar{
@@ -47,6 +62,11 @@
             padding-top: 12px;
             margin-top: 12px;
             border-top: 1px dashed rgba(15, 23, 42, .12);
+        }
+        @media (prefers-color-scheme: dark) {
+            .actions-bar{
+                border-color: rgb(var(--gray-700));
+            }
         }
 
         .results-section{
@@ -74,6 +94,12 @@
             position: relative;
             overflow: hidden;
         }
+        @media (prefers-color-scheme: dark) {
+            .stat-card{
+                background: linear-gradient(180deg, rgb(var(--gray-800)) 0%, rgb(var(--gray-900)) 100%);
+                border-color: rgb(var(--gray-700));
+            }
+        }
         .stat-card:before{
             content:"";
             position:absolute;
@@ -100,6 +126,11 @@
             color: rgba(15, 23, 42, .70);
             margin: 0;
         }
+        @media (prefers-color-scheme: dark) {
+            .stat-label{
+                color: rgb(var(--gray-400));
+            }
+        }
 
         .stat-value{
             margin-top: 6px;
@@ -108,11 +139,21 @@
             letter-spacing: -0.02em;
             color: #0f172a;
         }
+        @media (prefers-color-scheme: dark) {
+            .stat-value{
+                color: rgb(var(--gray-50));
+            }
+        }
 
         .stat-sub{
             margin-top: 6px;
             font-size: 12px;
             color: rgba(15, 23, 42, .60);
+        }
+        @media (prefers-color-scheme: dark) {
+            .stat-sub{
+                color: rgb(var(--gray-400));
+            }
         }
 
         .badge{
@@ -129,8 +170,19 @@
             user-select:none;
             white-space: nowrap;
         }
+        @media (prefers-color-scheme: dark) {
+            .badge{
+                background: rgba(0, 0, 0, .3);
+                border-color: rgb(var(--gray-700));
+                color: rgb(var(--gray-300));
+            }
+        }
         .badge--ok{ color: #166534; border-color: rgba(22, 101, 52, .25); background: rgba(34, 197, 94, .10); }
         .badge--bad{ color: #991b1b; border-color: rgba(153, 27, 27, .25); background: rgba(239, 68, 68, .10); }
+        @media (prefers-color-scheme: dark) {
+            .badge--ok{ color: #86efac; border-color: rgba(34, 197, 94, .4); background: rgba(34, 197, 94, .15); }
+            .badge--bad{ color: #fca5a5; border-color: rgba(239, 68, 68, .4); background: rgba(239, 68, 68, .15); }
+        }
 
         .table-wrap{
             margin-top: 16px;
@@ -139,6 +191,12 @@
             overflow: hidden;
             background: #fff;
             box-shadow: 0 10px 25px rgba(2, 6, 23, .05);
+        }
+        @media (prefers-color-scheme: dark) {
+            .table-wrap{
+                background: rgb(var(--gray-900));
+                border-color: rgb(var(--gray-800));
+            }
         }
 
         .nice-table{
@@ -156,17 +214,40 @@
             padding: 12px 12px;
             border-bottom: 1px solid rgba(15, 23, 42, .08);
         }
+        @media (prefers-color-scheme: dark) {
+            .nice-table thead th{
+                background: rgb(var(--gray-800));
+                color: rgb(var(--gray-300));
+                border-color: rgb(var(--gray-700));
+            }
+        }
         .nice-table tbody td{
             padding: 10px 12px;
             border-bottom: 1px solid rgba(15, 23, 42, .06);
             color: rgba(15, 23, 42, .86);
             vertical-align: top;
         }
+        @media (prefers-color-scheme: dark) {
+            .nice-table tbody td{
+                color: rgb(var(--gray-300));
+                border-color: rgb(var(--gray-800));
+            }
+        }
         .nice-table tbody tr:nth-child(even){
             background: rgba(248, 250, 252, .55);
         }
+        @media (prefers-color-scheme: dark) {
+            .nice-table tbody tr:nth-child(even){
+                background: rgba(0, 0, 0, .2);
+            }
+        }
         .nice-table tbody tr:hover{
             background: rgba(59, 130, 246, .06);
+        }
+        @media (prefers-color-scheme: dark) {
+            .nice-table tbody tr:hover{
+                background: rgba(59, 130, 246, .15);
+            }
         }
 
         .td-right{ text-align:right; font-variant-numeric: tabular-nums; }
@@ -178,6 +259,13 @@
             border: 1px solid rgba(15, 23, 42, .08);
             font-weight: 700;
             font-size: 12px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .code-pill{
+                background: rgb(var(--gray-800));
+                border-color: rgb(var(--gray-700));
+                color: rgb(var(--gray-300));
+            }
         }
     </style>
 

@@ -109,7 +109,7 @@ class ProductsTable
 
             ->toolbarActions([
 
-                ...CrudImportExportActions::make(
+                ...array_filter(CrudImportExportActions::make(
                     modelClass: Product::class,
                     module: 'products',
                     title: 'Productos',
@@ -131,7 +131,9 @@ class ProductsTable
                         'description',
                         'supplier.nombre_razon_social',
                     ],
-                ),
+                ), function ($action) {
+                    return !in_array($action->getName(), ['import_excel', 'import_pdf']);
+                }),
 
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

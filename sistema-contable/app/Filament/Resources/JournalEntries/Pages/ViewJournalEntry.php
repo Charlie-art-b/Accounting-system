@@ -4,6 +4,7 @@ namespace App\Filament\Resources\JournalEntries\Pages;
 
 use App\Filament\Resources\JournalEntries\JournalEntryResource;
 use App\Services\LedgerService;
+use App\Services\PdfFallbackService;
 use Filament\Actions;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -28,6 +29,24 @@ class ViewJournalEntry extends ViewRecord
                 ->label('Volver a la lista')
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
+
+            Action::make('export_pdf')
+                ->label('Exportar PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('warning')
+                ->visible(fn () => auth()->user()?->can('journal_entries.view'))
+                ->action(fn () => app(PdfFallbackService::class)->download(
+                    view: 'exports.generic-model-pdf',
+                    data: [
+                        'title' => 'Asiento Contable',
+                        'fields' => ['customer.name', 'journal_type', 'entry_category', 'description', 'reference', 'total_debit', 'total_credit', 'posted_at', 'posted_by', 'is_reversal', 'reversed_entry_id', 'source_type', 'source_id'],
+                        'displayFields' => ['Cliente', 'Tipo de Asiento', 'Categoría', 'Descripción', 'Referencia', 'Débitos', 'Créditos', 'Posteado', 'Posteado Por', 'Es Reverso', 'Asiento Revertido', 'Tipo de Origen', 'Origen'],
+                        'records' => collect([$this->record]),
+                    ],
+                    baseFileName: 'asiento_contable_' . $this->record->id . '_' . now()->format('Y-m-d_H-i-s'),
+                    paper: 'a4',
+                    orientation: 'landscape',
+                )),
 
             EditAction::make()
                 ->visible(fn () => auth()->user()?->can('journal_entries.update') && $this->record->posted_at === null),

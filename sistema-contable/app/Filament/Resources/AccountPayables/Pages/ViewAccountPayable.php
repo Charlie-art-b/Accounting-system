@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AccountPayables\Pages;
 use App\Filament\Resources\AccountPayables\AccountPayableResource;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use App\Services\PdfFallbackService;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
@@ -33,6 +34,24 @@ class ViewAccountPayable extends ViewRecord
                 ->label('Volver a la lista')
                 ->color('gray')
                 ->url($this->getResource()::getUrl('index')),
+
+            Action::make('export_pdf')
+                ->label('Exportar PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('warning')
+                ->visible(fn () => auth()->user()?->can('account_payables.view'))
+                ->action(fn () => app(PdfFallbackService::class)->download(
+                    view: 'exports.generic-model-pdf',
+                    data: [
+                        'title' => 'Cuenta por Pagar',
+                        'fields' => ['supplier.nombre_razon_social', 'document_number', 'issue_date', 'due_date', 'total_amount', 'paid_amount', 'status'],
+                        'displayFields' => ['Proveedor', 'N. Documento', 'Fecha de Emisión', 'Fecha de Vencimiento', 'Monto Total', 'Monto Pagado', 'Estado'],
+                        'records' => collect([$this->record]),
+                    ],
+                    baseFileName: 'cuenta_por_pagar_' . $this->record->id . '_' . now()->format('Y-m-d_H-i-s'),
+                    paper: 'a4',
+                    orientation: 'landscape',
+                )),
             
             EditAction::make()
                 ->visible(fn () => $canUpdate && $this->record->status !== 'paid'),
