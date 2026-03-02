@@ -2,10 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AppearanceSettings;
 use App\Filament\Widgets\AccountsStatusChartWidget;
 use App\Filament\Widgets\AccountsTrendChartWidget;
 use App\Filament\Widgets\BusinessOverviewWidget;
 use App\Filament\Pages\Dashboard;
+use App\Models\AppSetting;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -34,10 +36,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->globalSearch(false)
             ->path('admin')
-            ->brandName('CAHEN Servicios Contables')
-            ->brandLogo(asset('images/logo.png'))
+            ->brandName(fn (): string => AppSetting::companyName())
+            ->brandLogo(fn (): string => AppSetting::logoUrl())
             ->brandLogoHeight('3.5rem')
-            ->favicon(asset('images/logo.png'))
+            ->favicon(fn (): string => AppSetting::faviconUrl())
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->sidebarCollapsibleOnDesktop()
@@ -47,6 +49,10 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->authPasswordBroker('users')
             ->userMenuItems([
+                'appearance-settings' => fn (): Action => Action::make('appearance-settings')
+                    ->label('Personalizacion')
+                    ->icon('heroicon-o-photo')
+                    ->url(fn (): string => AppearanceSettings::getUrl()),
                 'logout' => fn (Action $action): Action => $action
                     ->requiresConfirmation()
                     ->modalHeading('Confirmar salida')
