@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "test:accounting-accounts": "playwright test tests/AccountingAccounts/accountingAccounts.spec.ts"
+    "test:accounting-accounts": "playwright test tests/AccountingAccounts/accountingAccounts.spec.ts",
+    "test:users": "playwright test tests/users"
   },
   "keywords": [],
   "author": "",
