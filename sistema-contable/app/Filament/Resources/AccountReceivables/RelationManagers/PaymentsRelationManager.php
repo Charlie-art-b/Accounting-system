@@ -10,6 +10,8 @@ class PaymentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'payments';
 
+    protected static ?string $title = 'Historial de Pagos';
+
     protected static ?string $recordTitleAttribute = 'paid_at';
 
     public function table(Table $table): Table

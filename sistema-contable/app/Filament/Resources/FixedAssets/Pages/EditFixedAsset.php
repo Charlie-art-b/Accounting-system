@@ -30,14 +30,13 @@ class EditFixedAsset extends EditRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),     
+                ->url($this->getResource()::getUrl('index')),    
         
             ViewAction::make(),
             DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('fixed_assets.delete'))
                 ->modalHeading('Eliminar activo fijo')
                 ->modalDescription('Solo se pueden eliminar activos activos sin depreciación registrada. Esta acción no se puede deshacer.')
                 ->modalSubmitActionLabel('Sí, eliminar')
@@ -59,7 +58,8 @@ class EditFixedAsset extends EditRecord
                 }),
         ];
     }
-     protected function getFormActions(): array
+    
+    protected function getFormActions(): array
     {
         return [    
             Action::make('save')

@@ -1,100 +1,84 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Estado de Resultados Integral</title>
+@extends('pdf._layout')
 
-<style>
-body {
-    font-family: DejaVu Sans, sans-serif;
-    font-size: 11px;
-}
+@section('title', 'Estado de Resultados Integral')
+@section('report_name', 'Estado de Resultados Integral')
 
-.container { padding: 20px; }
+@php
+    use Carbon\Carbon;
 
-.header {
-    text-align: center;
-    margin-bottom: 20px;
-}
+    $inicio = Carbon::parse($fechaInicio ?? now())
+        ->locale('es')
+        ->translatedFormat('d \d\e F Y');
 
-.title {
-    font-size: 16px;
-    font-weight: bold;
-}
+    $fin = Carbon::parse($fechaFin ?? now())
+        ->locale('es')
+        ->translatedFormat('d \d\e F Y');
+@endphp
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+@section('report_period')
+    Del {{ strtolower($inicio) }} al {{ strtolower($fin) }}
+@endsection
 
-td {
-    padding: 4px;
-}
+@section('content')
+    <table>
+        <thead>
+            <tr>
+                <th class="left">Concepto</th>
+                <th class="right" style="width:170px;">Monto (₡)</th>
+            </tr>
+        </thead>
 
-.left { text-align: left; }
-.right { text-align: right; }
+        <tbody>
 
-.total {
-    border-top: 1px solid #000;
-    font-weight: bold;
-}
-</style>
-</head>
+            {{-- INGRESOS --}}
+            <tr class="section-row"><td colspan="2">Ingresos</td></tr>
 
-<body>
-<div class="container">
+            <tr class="data-row">
+                <td class="left">Total ingresos</td>
+                <td class="right">{{ number_format($data['ingresos'] ?? 0, 2, ',', '.') }}</td>
+            </tr>
 
-<div class="header">
-    <div class="title">{{ strtoupper($cliente->name) }}</div>
-    <div>Cédula {{ $cliente->identification }}</div>
-    <div><strong>ESTADO DE RESULTADOS INTEGRAL</strong></div>
-    <div>DEL {{ $fechaInicio }} AL {{ $fechaFin }}</div>
-</div>
+            {{-- GASTOS OPERATIVOS --}}
+            <tr class="section-row"><td colspan="2">Gastos operativos</td></tr>
 
-<table>
+            <tr class="data-row">
+                <td class="left">Gastos operativos</td>
+                <td class="right">({{ number_format($data['gastos_operativos'] ?? 0, 2, ',', '.') }})</td>
+            </tr>
 
-<tr>
-    <td class="left">TOTAL INGRESOS</td>
-    <td class="right">{{ number_format($data['ingresos'],2,',','.') }}</td>
-</tr>
+            <tr class="total">
+                <td class="left">Utilidad operativa</td>
+                <td class="right">{{ number_format($data['utilidad_antes_depreciacion'] ?? 0, 2, ',', '.') }}</td>
+            </tr>
 
-<tr>
-    <td class="left">GASTOS OPERATIVOS</td>
-    <td class="right">({{ number_format($data['gastos_operativos'],2,',','.') }})</td>
-</tr>
+            {{-- AJUSTES --}}
+            <tr class="section-row"><td colspan="2">Ajustes</td></tr>
 
-<tr class="total">
-    <td class="left">UTILIDAD OPERATIVA</td>
-    <td class="right">{{ number_format($data['utilidad_antes_depreciacion'],2,',','.') }}</td>
-</tr>
+            <tr class="data-row">
+                <td class="left">Depreciación y amortización</td>
+                <td class="right">({{ number_format($data['depreciacion'] ?? 0, 2, ',', '.') }})</td>
+            </tr>
 
-<tr>
-    <td class="left">DEPRECIACIÓN Y AMORTIZACIÓN</td>
-    <td class="right">({{ number_format($data['depreciacion'],2,',','.') }})</td>
-</tr>
+            <tr class="data-row">
+                <td class="left">Otros gastos</td>
+                <td class="right">({{ number_format($data['otros_gastos'] ?? 0, 2, ',', '.') }})</td>
+            </tr>
 
-<tr>
-    <td class="left">OTROS GASTOS</td>
-    <td class="right">({{ number_format($data['otros_gastos'],2,',','.') }})</td>
-</tr>
+            <tr class="total">
+                <td class="left">Utilidad antes de impuestos</td>
+                <td class="right">{{ number_format($data['utilidad_antes_impuestos'] ?? 0, 2, ',', '.') }}</td>
+            </tr>
 
-<tr class="total">
-    <td class="left">UTILIDAD ANTES DE IMPUESTOS</td>
-    <td class="right">{{ number_format($data['utilidad_antes_impuestos'],2,',','.') }}</td>
-</tr>
+            <tr class="data-row">
+                <td class="left">Impuesto sobre la renta</td>
+                <td class="right">({{ number_format($data['impuestos'] ?? 0, 2, ',', '.') }})</td>
+            </tr>
 
-<tr>
-    <td class="left">IMPUESTO SOBRE LA RENTA</td>
-    <td class="right">({{ number_format($data['impuestos'],2,',','.') }})</td>
-</tr>
+            <tr class="total">
+                <td class="left">Utilidad neta del período</td>
+                <td class="right">{{ number_format($data['utilidad_neta'] ?? 0, 2, ',', '.') }}</td>
+            </tr>
 
-<tr class="total">
-    <td class="left">UTILIDAD NETA DEL PERÍODO</td>
-    <td class="right">{{ number_format($data['utilidad_neta'],2,',','.') }}</td>
-</tr>
-
-</table>
-
-</div>
-</body>
-</html>
+        </tbody>
+    </table>
+@endsection

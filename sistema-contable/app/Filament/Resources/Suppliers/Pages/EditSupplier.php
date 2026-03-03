@@ -25,11 +25,10 @@ class EditSupplier extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('back')
-                ->icon('heroicon-o-x-mark')
+            Action::make('Volver')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
+                ->url($this->getResource()::getUrl('index')),
 
             ViewAction::make()
                 ->visible(fn () => auth()->user()->can('suppliers.view')),
@@ -37,8 +36,6 @@ class EditSupplier extends EditRecord
             DeleteAction::make()
                 ->visible(fn () => auth()->user()->can('suppliers.delete'))
                 ->before(function (DeleteAction $action) {
-
-                    // 🔎 Validación contable 1: Cuentas por pagar pendientes
                     $pendingAccounts = $this->record->cuentasPorPagar()
                         ->whereIn('status', ['pending', 'partial'])
                         ->count();
@@ -52,10 +49,7 @@ class EditSupplier extends EditRecord
 
                         throw new Halt();
                     }
-
-                    // 🔎 Validación contable 2: Productos asociados
                     $productsCount = $this->record->productos()->count();
-
                     if ($productsCount > 0) {
                         Notification::make()
                             ->title('NO SE PUEDE ELIMINAR')
@@ -106,6 +100,6 @@ class EditSupplier extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 }

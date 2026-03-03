@@ -19,12 +19,10 @@ class ViewUser extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-
-            Action::make('volver')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+            Action::make('back')
+                ->label('Volver a la lista')
                 ->color('gray')
-                ->url(UserResource::getUrl('index')),
+                ->url($this->getResource()::getUrl('index')),
 
             EditAction::make()
                 ->label('Editar')

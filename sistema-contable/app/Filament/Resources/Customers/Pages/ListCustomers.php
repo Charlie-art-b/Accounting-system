@@ -35,8 +35,7 @@ class ListCustomers extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->keyBindings(['mod+n'])
-               ->visible(fn () => auth()->user()?->can('customers.create'))            
-,
+                ->visible(fn () => auth()->user()?->can('customers.create')),
         ];
     }
 

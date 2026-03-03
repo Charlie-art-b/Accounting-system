@@ -1,94 +1,75 @@
-<!-- filepath: resources/views/exports/balance-comprobacion-pdf.blade.php -->
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Balance de Comprobación</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        .fecha {
-            text-align: center;
-            font-size: 12px;
-            margin-bottom: 20px;
-            color: #666;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th {
-            background-color: #f0f0f0;
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-            font-weight: bold;
-        }
-        td {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-        }
-        .total {
-            background-color: #d4d4d4;
-            font-weight: bold;
-            border-top: 2px solid #333;
-        }
-        .monto {
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-    <h1>BALANCE DE COMPROBACIÓN</h1>
-    <div class="fecha">Al {{ \Carbon\Carbon::parse($data['fecha'] ?? now())->format('d de F de Y') }}</div>
+@extends('pdf._layout')
 
+@section('title', 'Balance de Comprobación')
+@section('report_name', 'Balance de Comprobación')
+
+@php
+    use Carbon\Carbon;
+
+    $fecha = Carbon::parse($data['fecha'] ?? now())
+        ->locale('es')
+        ->translatedFormat('d \d\e F \d\e Y');
+@endphp
+
+@section('report_period')
+    Al {{ strtolower($fecha) }}
+@endsection
+
+@section('content')
     <table>
         <thead>
             <tr>
-                <th>CÓDIGO</th>
-                <th>CUENTA</th>
-                <th class="monto">DÉBITO (₡)</th>
-                <th class="monto">CRÉDITO (₡)</th>
+                <th class="left" style="width:90px;">Código</th>
+                <th class="left">Cuenta</th>
+                <th class="right" style="width:120px;">Débito (₡)</th>
+                <th class="right" style="width:120px;">Crédito (₡)</th>
             </tr>
         </thead>
+
         <tbody>
             @forelse($data['cuentas'] as $cuenta)
-                <tr>
-                    <td>{{ $cuenta['codigo'] }}</td>
-                    <td>{{ $cuenta['nombre'] }}</td>
-                    <td class="monto">{{ number_format($cuenta['debe'] ?? 0, 2, ',', '.') }}</td>
-                    <td class="monto">{{ number_format($cuenta['haber'] ?? 0, 2, ',', '.') }}</td>
+                <tr class="data-row">
+                    <td class="left">{{ $cuenta['codigo'] ?? '' }}</td>
+                    <td class="left">{{ $cuenta['nombre'] ?? '' }}</td>
+                    <td class="right">{{ number_format($cuenta['debe'] ?? 0, 2, ',', '.') }}</td>
+                    <td class="right">{{ number_format($cuenta['haber'] ?? 0, 2, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="4" style="text-align: center; color: #999;">No hay datos</td>
+                <tr class="data-row">
+                    <td colspan="4" class="center muted" style="padding: 14px;">
+                        No hay datos para mostrar.
+                    </td>
                 </tr>
             @endforelse
+
             <tr class="total">
-                <td colspan="2">TOTALES</td>
-                <td class="monto">₡ {{ number_format($data['total_debe'] ?? 0, 2, ',', '.') }}</td>
-                <td class="monto">₡ {{ number_format($data['total_haber'] ?? 0, 2, ',', '.') }}</td>
+                <td colspan="2" class="left">Totales</td>
+                <td class="right">₡ {{ number_format($data['total_debe'] ?? 0, 2, ',', '.') }}</td>
+                <td class="right">₡ {{ number_format($data['total_haber'] ?? 0, 2, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
 
-    <div style="margin-top: 20px; text-align: center; font-size: 12px;">
-        @if(($data['total_debe'] ?? 0) === ($data['total_haber'] ?? 0))
-            <p style="color: green;">✓ BALANCE CORRECTO</p>
-            <p style="color: green;">Débitos = Créditos</p>
+    @php
+        $totalDebe = (float) ($data['total_debe'] ?? 0);
+        $totalHaber = (float) ($data['total_haber'] ?? 0);
+        $diferencia = abs($totalDebe - $totalHaber);
+        $balanceOk = round($totalDebe, 2) === round($totalHaber, 2);
+    @endphp
+
+    <div style="margin-top: 14px; font-size: 10px;">
+        @if($balanceOk)
+            <div style="padding: 10px; border: 1px solid #cfe9d6; background: #f3fbf6;">
+                <div style="font-weight: 800; color: #1f7a3a;">✓ Balance correcto</div>
+                <div style="color:#2b6b3d;">Débitos = Créditos</div>
+            </div>
         @else
-            <p style="color: red;">✗ BALANCE INCORRECTO</p>
-            <p style="color: red;">Diferencia: ₡{{ number_format(abs(($data['total_debe'] ?? 0) - ($data['total_haber'] ?? 0)), 2, ',', '.') }}</p>
+            <div style="padding: 10px; border: 1px solid #f2c9c9; background: #fff5f5;">
+                <div style="font-weight: 800; color: #b42318;">✗ Balance incorrecto</div>
+                <div style="color:#8a1a1a;">
+                    Diferencia: ₡ {{ number_format($diferencia, 2, ',', '.') }}
+                </div>
+            </div>
         @endif
     </div>
-</body>
-</html>
+@endsection

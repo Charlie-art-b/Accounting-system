@@ -14,7 +14,8 @@ class ViewInventoryProduct extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('inventory_products.update')),
 
             Action::make('back')
                 ->label('')

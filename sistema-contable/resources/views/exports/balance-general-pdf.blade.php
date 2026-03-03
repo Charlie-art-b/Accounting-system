@@ -1,266 +1,139 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Estado de Situación Financiera</title>
+@extends('pdf._layout')
 
-    <style>
-        
-   
-        body {
-        font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
-            color: #000;
-            
-        }
+@section('title', 'Estado de Situación Financiera')
+@section('report_name', 'Estado de Situación Financiera')
 
-        .container {
-            width: 100%;
-            padding: 20px;
-        }
-
-         .logo {
-        width: 90px;
-        margin-bottom: 10px;
-    }
-
-    .titulo {
-        font-size: 38px;
-        font-weight: bold;
-        color: #1B1464; /* Azul oscuro similar */
-        margin: 0;
-        letter-spacing: 3px;
-    }
-
-    .subtitulo {
-        font-size: 22px;
-        font-weight: normal;
-        color: #2E3192;
-        margin: 0;
-    }
-        .header {
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 8px;
-        }
-
-        .header strong {
-            display: block;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 5px;
-        }
-
-        thead th {
-            border-bottom: 1px solid #000;
-            font-weight: bold;
-        }
-
-        .left {
-            text-align: left;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        .section {
-            font-weight: bold;
-            padding-top: 8px;
-        }
-
-        .subtotal {
-            border-top: 1px solid #000;
-            font-weight: bold;
-        }
-
-        .total {
-            border-top: 2px solid #000;
-            border-bottom: 2px solid #000;
-            font-weight: bold;
-        }
-
-        .indent {
-            padding-left: 20px;
-        }
-    </style>
-</head>
 @php
     use Carbon\Carbon;
-    
-    $fechaActual = Carbon::parse($fechaFin)
-        ->locale('es')
-        ->translatedFormat('d \d\e F Y');
-
-    $fechaAnterior = Carbon::parse($fechaInicio)
-        ->locale('es')
-        ->translatedFormat('d \d\e F Y');
-         $activosCorrientes = 0;
-            $activosNoCorrientes = 0;
-            $pasivosCorrientes = 0;
-            $pasivosNoCorrientes = 0;
-            $totalPatrimonio = 0;
-
-            $activosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_corriente');
-            $activosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_no_corriente');
-            $pasivosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_corriente');
-            $pasivosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_no_corriente');
-            $patrimonioList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Patrimonio');
-
+    $fechaCorte = Carbon::parse($fechaFin)->locale('es')->translatedFormat('d \d\e F Y');
 @endphp
-<body>
-<div class="container">
 
-    <!-- ENCABEZADO -->
-    <div class="header">
-        <div class="empresa-info">
-        <h1 class="titulo">CAHEN</h1>
-        <h2 class="subtitulo">Servicios Contables</h2>
-        <strong>{{ strtoupper($cliente->nombre) }}</strong>
-        <strong>Cédula {{ strtoupper($cliente->identification ) }}</strong>
-        <strong>ESTADO DE SITUACIÓN FINANCIERA</strong>
-        <strong>AL {{ strtolower($fechaActual) }}</strong>
-        </div>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th class="left">Descripción</th>
-                <th class="center">Notas</th>
-                <th class="right">{{ strtolower($fechaAnterior) }}</th>
-                <th class="right">{{ strtolower($fechaActual) }}</th>
-            </tr>
-        </thead>
+@section('report_period')
+    Al {{ strtolower($fechaCorte) }}
+@endsection
 
-        <tbody>
+@section('content')
+@php
+    $activosCorrientes = 0;
+    $activosNoCorrientes = 0;
+    $pasivosCorrientes = 0;
+    $pasivosNoCorrientes = 0;
+    $totalPatrimonio = 0;
 
-        <tr><td colspan="4" class="section">ACTIVOS</td></tr>
-        <tr><td colspan="4" class="section">ACTIVOS CORRIENTES</td></tr>
+    $activosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_corriente');
+    $activosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Activo' && $d['clasificacion']=='activo_no_corriente');
+    $pasivosCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_corriente');
+    $pasivosNoCorrientesList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Pasivo' && $d['clasificacion']=='pasivo_no_corriente');
+    $patrimonioList = collect($data['detalles'])->filter(fn($d) => $d['tipo']=='Patrimonio');
+@endphp
 
+<table>
+    <thead>
+        <tr>
+            <th class="left">Descripción</th>
+            <th class="center" style="width:70px;">Notas</th>
+            <th class="right" style="width:140px;">Monto</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr class="section-row"><td colspan="3">Activos</td></tr>
+
+        <tr class="subsection-row"><td colspan="3">Activos corrientes</td></tr>
         @foreach($activosCorrientesList as $detalle)
-            <tr>
+            <tr class="data-row">
                 <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
-                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
-                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
-                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+                <td class="center muted">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'] ?? 0,2,',','.') }}</td>
             </tr>
-            @php $activosCorrientes += $detalle['saldo']; @endphp
+            @php $activosCorrientes += (float)($detalle['saldo'] ?? 0); @endphp
         @endforeach
 
         <tr class="subtotal">
-            <td class="left">TOTAL ACTIVOS CORRIENTES</td>
+            <td class="left">Total activos corrientes</td>
             <td></td>
             <td class="right">{{ number_format($activosCorrientes,2,',','.') }}</td>
-            <td></td>
         </tr>
 
-        <tr><td colspan="4" class="section">ACTIVOS NO CORRIENTES</td></tr>
-
+        <tr class="subsection-row"><td colspan="3">Activos no corrientes</td></tr>
         @foreach($activosNoCorrientesList as $detalle)
-            <tr>
+            <tr class="data-row">
                 <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
-                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
-                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
-                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+                <td class="center muted">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'] ?? 0,2,',','.') }}</td>
             </tr>
-            @php $activosNoCorrientes += $detalle['saldo']; @endphp
+            @php $activosNoCorrientes += (float)($detalle['saldo'] ?? 0); @endphp
         @endforeach
 
         <tr class="subtotal">
-            <td class="left">TOTAL ACTIVOS NO CORRIENTES</td>
+            <td class="left">Total activos no corrientes</td>
             <td></td>
             <td class="right">{{ number_format($activosNoCorrientes,2,',','.') }}</td>
-            <td></td>
         </tr>
 
         <tr class="total">
-            <td class="left">TOTAL ACTIVOS</td>
+            <td class="left">Total activos</td>
             <td></td>
-            <td class="right">{{ number_format($data['total_activos'],2,',','.') }}</td>
-            <td></td>
+            <td class="right">{{ number_format($data['total_activos'] ?? ($activosCorrientes + $activosNoCorrientes),2,',','.') }}</td>
         </tr>
 
-        <!-- PASIVOS -->
-        <tr><td colspan="4" class="section">PASIVOS</td></tr>
-        <tr><td colspan="4" class="section">PASIVOS CORRIENTES</td></tr>
+        <tr class="section-row"><td colspan="3">Pasivos</td></tr>
 
+        <tr class="subsection-row"><td colspan="3">Pasivos corrientes</td></tr>
         @foreach($pasivosCorrientesList as $detalle)
-            <tr>
+            <tr class="data-row">
                 <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
-                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
-                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
-                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+                <td class="center muted">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'] ?? 0,2,',','.') }}</td>
             </tr>
-            @php $pasivosCorrientes += $detalle['saldo']; @endphp
+            @php $pasivosCorrientes += (float)($detalle['saldo'] ?? 0); @endphp
         @endforeach
 
         <tr class="subtotal">
-            <td class="left">TOTAL PASIVOS CORRIENTES</td>
+            <td class="left">Total pasivos corrientes</td>
             <td></td>
             <td class="right">{{ number_format($pasivosCorrientes,2,',','.') }}</td>
-            <td></td>
         </tr>
 
-        <tr><td colspan="4" class="section">PASIVOS NO CORRIENTES</td></tr>
-
+        <tr class="subsection-row"><td colspan="3">Pasivos no corrientes</td></tr>
         @foreach($pasivosNoCorrientesList as $detalle)
-            <tr>
+            <tr class="data-row">
                 <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
-                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
-                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
-                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+                <td class="center muted">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'] ?? 0,2,',','.') }}</td>
             </tr>
-            @php $pasivosNoCorrientes += $detalle['saldo']; @endphp
+            @php $pasivosNoCorrientes += (float)($detalle['saldo'] ?? 0); @endphp
         @endforeach
 
         <tr class="subtotal">
-            <td class="left">TOTAL PASIVOS NO CORRIENTES</td>
+            <td class="left">Total pasivos no corrientes</td>
             <td></td>
             <td class="right">{{ number_format($pasivosNoCorrientes,2,',','.') }}</td>
-            <td></td>
         </tr>
 
         <tr class="total">
-            <td class="left">TOTAL PASIVOS</td>
+            <td class="left">Total pasivos</td>
             <td></td>
-            <td class="right">{{ number_format($data['pasivos']['total'],2,',','.') }}</td>
-            <td></td>
+            <td class="right">{{ number_format($data['pasivos']['total'] ?? ($pasivosCorrientes + $pasivosNoCorrientes),2,',','.') }}</td>
         </tr>
 
-        <!-- PATRIMONIO -->
-        <tr><td colspan="4" class="section">PATRIMONIO</td></tr>
+        <tr class="section-row"><td colspan="3">Patrimonio</td></tr>
 
         @foreach($patrimonioList as $detalle)
-            <tr>
+            <tr class="data-row">
                 <td class="left indent">{{ strtoupper($detalle['nombre']) }}</td>
-                <td class="center">{{ $detalle['nota'] ?? '' }}</td>
-                <td class="right">{{ number_format($detalle['saldo'],2,',','.') }}</td>
-                <td class="right">{{ number_format($detalle['saldo_anterior'] ?? 0,2,',','.') }}</td>
+                <td class="center muted">{{ $detalle['nota'] ?? '' }}</td>
+                <td class="right">{{ number_format($detalle['saldo'] ?? 0,2,',','.') }}</td>
             </tr>
-            @php $totalPatrimonio += $detalle['saldo']; @endphp
+            @php $totalPatrimonio += (float)($detalle['saldo'] ?? 0); @endphp
         @endforeach
 
         <tr class="total">
-            <td class="left">TOTAL PASIVO + PATRIMONIO</td>
+            <td class="left">Total pasivo + patrimonio</td>
             <td></td>
-            <td class="right">{{ number_format($data['total_pasivos_patrimonio'],2,',','.') }}</td>
-            <td></td>
+            <td class="right">{{ number_format($data['total_pasivos_patrimonio'] ?? (($pasivosCorrientes + $pasivosNoCorrientes) + $totalPatrimonio),2,',','.') }}</td>
         </tr>
 
-        </tbody>
-    </table>
-
-</div>
-</body>
-</html>
+    </tbody>
+</table>
+@endsection

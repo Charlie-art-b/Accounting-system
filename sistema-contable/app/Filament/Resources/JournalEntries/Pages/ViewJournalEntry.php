@@ -4,11 +4,14 @@ namespace App\Filament\Resources\JournalEntries\Pages;
 
 use App\Filament\Resources\JournalEntries\JournalEntryResource;
 use App\Services\LedgerService;
+use App\Services\PdfFallbackService;
 use Filament\Actions;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Illuminate\Validation\ValidationException;
 
 class ViewJournalEntry extends ViewRecord
 {
@@ -22,13 +25,33 @@ class ViewJournalEntry extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back')
+                ->label('Volver a la lista')
+                ->color('gray')
+                ->url($this->getResource()::getUrl('index')),
 
-            // Edit solo si NO está posteado
-            Actions\EditAction::make()
-                ->visible(fn () => $this->record->posted_at === null),
+            Action::make('export_pdf')
+                ->label('Exportar PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('warning')
+                ->visible(fn () => auth()->user()?->can('journal_entries.view'))
+                ->action(fn () => app(PdfFallbackService::class)->download(
+                    view: 'exports.generic-model-pdf',
+                    data: [
+                        'title' => 'Asiento Contable',
+                        'fields' => ['customer.name', 'journal_type', 'entry_category', 'description', 'reference', 'total_debit', 'total_credit', 'posted_at', 'posted_by', 'is_reversal', 'reversed_entry_id', 'source_type', 'source_id'],
+                        'displayFields' => ['Cliente', 'Tipo de Asiento', 'Categoría', 'Descripción', 'Referencia', 'Débitos', 'Créditos', 'Posteado', 'Posteado Por', 'Es Reverso', 'Asiento Revertido', 'Tipo de Origen', 'Origen'],
+                        'records' => collect([$this->record]),
+                    ],
+                    baseFileName: 'asiento_contable_' . $this->record->id . '_' . now()->format('Y-m-d_H-i-s'),
+                    paper: 'a4',
+                    orientation: 'landscape',
+                )),
 
-            //Revertir solo si está posteado
-            Actions\Action::make('reverse')
+            EditAction::make()
+                ->visible(fn () => auth()->user()?->can('journal_entries.update') && $this->record->posted_at === null),
+
+            Action::make('reverse')
                 ->label('Revertir')
                 ->color('warning')
                 ->icon('heroicon-o-arrow-uturn-left')
@@ -54,13 +77,6 @@ class ViewJournalEntry extends ViewRecord
 
                     $this->redirect(JournalEntryResource::getUrl('index'));
                 }),
-
-                Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
-                ->color('gray')
-                ->url($this->getResource()::getUrl('index'))
-                ->tooltip('Volver a la lista'),
         ];
     }
 }

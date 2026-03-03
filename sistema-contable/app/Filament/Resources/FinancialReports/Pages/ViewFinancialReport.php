@@ -19,10 +19,8 @@ class ViewFinancialReport extends ViewRecord
     {
         return [
             Action::make('back')
-                ->label('')
-                ->icon('heroicon-o-x-mark')
+                ->label('Volver al historial')
                 ->color('gray')
-                ->tooltip('Volver')
                 ->url($this->getResource()::getUrl('index')),
         ];
     }

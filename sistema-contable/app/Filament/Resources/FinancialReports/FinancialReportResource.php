@@ -12,6 +12,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -163,7 +164,7 @@ class FinancialReportResource extends Resource
             ->actions([
                 ViewAction::make(),
 
-                Action::make('edit')
+                /*Action::make('edit')
                     ->label('Editar')
                     ->icon('heroicon-o-pencil-square')
                     ->color('warning')
@@ -211,9 +212,18 @@ class FinancialReportResource extends Resource
                             'fecha_fin' => $data['fecha_fin'],
                             'tasa_impuestos' => $data['tasa_impuestos'],
                         ]);
-                    }),
+                    }),*/
 
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->modalHeading('Eliminar reporte')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->successNotification(
+                        Notification::make()
+                            ->title('Reporte eliminado')
+                            ->body('El reporte financiero ha sido eliminado exitosamente.')
+                            ->success()
+                    ),
 
                 Action::make('pdf')
                     ->label('PDF')

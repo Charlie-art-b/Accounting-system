@@ -40,6 +40,21 @@ class CashFlowStatementPDF
         );
     }
 
+    public function download(?string $fileName = null)
+    {
+        $base = $fileName
+            ? pathinfo($fileName, PATHINFO_FILENAME)
+            : pathinfo($this->fileName(), PATHINFO_FILENAME);
+
+        return app(PdfFallbackService::class)->download(
+            view: 'exports.cash-flow-statement-pdf',
+            data: $this->viewData(),
+            baseFileName: $base,
+            paper: 'a4',
+            orientation: 'portrait',
+        );
+    }
+
     protected function fileName(): string
     {
         return 'Cash_Flow_Statement_' . now()->format('Y-m-d_H-i-s');
