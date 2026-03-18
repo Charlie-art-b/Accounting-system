@@ -1,59 +1,204 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema Contable Web
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicacion web orientada a la administracion contable y operativa de una empresa. El sistema fue construido para resolver procesos reales de registro, control y analisis financiero mediante una interfaz administrativa centralizada.
 
-## About Laravel
+Este proyecto funciona como evidencia de conocimientos en:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- desarrollo backend con Laravel;
+- construccion de paneles administrativos con Filament;
+- modelado de entidades empresariales;
+- implementacion de reglas de negocio contables;
+- control de acceso por roles y permisos;
+- automatizacion de pruebas funcionales y de interfaz.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Resumen ejecutivo
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+El sistema integra modulos de operacion administrativa y contable en una sola plataforma. Permite registrar clientes, proveedores, productos, inventarios, cuentas por cobrar, cuentas por pagar, activos fijos y asientos contables, y a partir de esa informacion genera reportes financieros exportables.
 
-## Learning Laravel
+Desde una perspectiva empresarial, el valor del proyecto esta en que traduce procesos contables a componentes de software auditables, reutilizables y escalables.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Problema que resuelve
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Muchas operaciones de pequenas organizaciones se manejan en archivos dispersos o procesos manuales, lo que dificulta:
 
-## Laravel Sponsors
+- consolidar informacion financiera;
+- controlar saldos pendientes;
+- mantener trazabilidad de pagos y cobros;
+- generar reportes con consistencia;
+- restringir accesos segun perfil del usuario.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Este sistema centraliza esos procesos y aplica validaciones para reducir errores operativos.
 
-### Premium Partners
+## Modulos implementados
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Administracion y seguridad
 
-## Contributing
+- gestion de usuarios;
+- roles y permisos con `spatie/laravel-permission`;
+- panel administrativo con autenticacion y recuperacion de contrasena.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Operacion comercial
 
-## Code of Conduct
+- gestion de clientes;
+- gestion de proveedores;
+- gestion de productos;
+- gestion de inventarios;
+- relacion inventario-producto.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Contabilidad
 
-## Security Vulnerabilities
+- catalogo de cuentas contables;
+- registro de asientos contables;
+- validacion de partida doble;
+- posteo de asientos;
+- reverso de asientos contables.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Gestion financiera
 
-## License
+- cuentas por cobrar;
+- cuentas por pagar;
+- gestion de cobros;
+- registro y reverso de pagos;
+- activos fijos.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Reporteria y analisis
+
+- balance general;
+- estado de resultados;
+- balance de comprobacion;
+- flujo de efectivo;
+- cambios en el patrimonio;
+- estado de resultados integral;
+- exportacion a PDF y Excel;
+- historial de reportes generados.
+
+## Evidencia de logica contable implementada
+
+El proyecto no se limita a formularios CRUD. Incluye reglas contables y financieras concretas:
+
+- el servicio `LedgerService` valida que un asiento tenga montos mayores a cero y que el total del debe sea igual al total del haber antes de postearlo;
+- el servicio `PaymentService` controla fechas de pago, evita sobrepagos, impide duplicados exactos y soporta reversos;
+- el servicio `EstadoFinancieroService` calcula saldos contables por cuenta y genera estados financieros a partir de movimientos registrados;
+- el observador `AccountReceivableObserver` crea automaticamente el seguimiento de cobro cuando nace una cuenta por cobrar;
+- el sistema contempla clasificacion de cuentas para activos, pasivos, patrimonio, ingresos y gastos.
+
+## Caracteristicas tecnicas destacables
+
+- arquitectura MVC sobre Laravel 12;
+- servicios de dominio para encapsular reglas de negocio;
+- recursos administrativos con Filament 4;
+- carga inicial de datos mediante seeders;
+- importacion y exportacion de datos en Excel, CSV y PDF;
+- uso de transacciones y `lockForUpdate()` en operaciones sensibles;
+- soporte de permisos por modulo y accion;
+- pruebas feature con PHPUnit;
+- pruebas de interfaz con Playwright.
+
+## Tecnologias utilizadas
+
+- PHP 8.2
+- Laravel 12
+- Filament 4
+- Tailwind CSS 4
+- Vite 7
+- SQLite por defecto
+- compatibilidad configurable con MySQL, MariaDB, PostgreSQL y SQL Server
+- PHPUnit 11
+- Playwright
+- Laravel DOMPDF
+- Laravel Excel
+
+## Arquitectura funcional resumida
+
+La aplicacion concentra su interfaz en el panel `/admin`, construido con Filament. La logica de negocio sensible se delega a servicios, entre ellos:
+
+- `app/Services/EstadoFinancieroService.php`
+- `app/Services/LedgerService.php`
+- `app/Services/PaymentService.php`
+- `app/Services/GenericModelImportService.php`
+- `app/Services/ExportacionesService.php`
+
+Los modulos administrativos se organizan en recursos de Filament dentro de `app/Filament/Resources`, lo que facilita mantenimiento, escalabilidad y consistencia visual.
+
+## Pruebas y calidad
+
+El repositorio contiene pruebas automatizadas para modulos como:
+
+- clientes;
+- proveedores;
+- productos;
+- inventarios;
+- inventario por producto;
+- cuentas por cobrar;
+- cuentas por pagar;
+- gestion de cobros;
+- activos fijos;
+- asientos contables;
+- estados financieros.
+
+Tambien incluye pruebas de interfaz en `proyecto-playwright/tests` para flujos como login, usuarios, productos, inventarios, cuentas contables y gestion de cobros.
+
+Ademas, el repositorio principal conserva evidencia documental del proceso de calidad:
+
+- casos de prueba manuales;
+- reportes Daily Scrum;
+- actas de aceptacion por sprint.
+
+## Estructura base del proyecto
+
+```text
+sistema-contable/
+|-- app/
+|   |-- Filament/
+|   |-- Observers/
+|   `-- Services/
+|-- database/
+|   |-- migrations/
+|   |-- factories/
+|   `-- seeders/
+|-- proyecto-playwright/
+|-- resources/
+|-- routes/
+`-- tests/
+```
+
+## Ejecucion local
+
+### Requisitos
+
+- PHP 8.2 o superior
+- Composer
+- Node.js y npm
+- extensiones necesarias para Laravel y SQLite o el motor de base de datos elegido
+
+### Instalacion
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm install
+npm run build
+php artisan serve
+```
+
+Si prefieres usar el script definido en Composer:
+
+```bash
+composer run setup
+composer run dev
+```
+
+## Acceso inicial
+
+Los seeders crean usuarios base para pruebas funcionales:
+
+- administrador: `admin@sistema.com` / `1234`
+- gerente: `gerente@sistema.com` / `1234`
+
+## Rutas y uso general
+
+- la raiz `/` redirige al login administrativo en `/admin/login`;
+- desde el panel se accede a los modulos CRUD y a la pagina de reportes financieros;
+- el sistema incluye endpoints de exportacion de reportes financieros en PDF y Excel.
