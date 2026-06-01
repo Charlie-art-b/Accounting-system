@@ -44,8 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->defaultThemeMode(ThemeMode::Dark)
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth(Width::Full)
-            ->login()
-            ->passwordReset()
+            ->login(\App\Filament\Auth\Pages\Login::class)          ->passwordReset()
             ->authGuard('web')
             ->authPasswordBroker('users')
             ->userMenuItems([

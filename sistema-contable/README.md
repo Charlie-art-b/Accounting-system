@@ -11,6 +11,19 @@ Este proyecto funciona como evidencia de conocimientos en:
 - control de acceso por roles y permisos;
 - automatizacion de pruebas funcionales y de interfaz.
 
+## 🚀 Despliegue en Producción
+
+> **Este proyecto está 100% listo para despliegue en producción con SQLite.**
+
+Para información sobre cómo desplegar la aplicación, consultar:
+
+- **[QUICK_START.md](QUICK_START.md)** - Guía rápida (15-20 minutos)
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Guía completa con todos los detalles
+- **[PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)** - Checklist de seguridad pre-deploy
+- **[PRODUCTION_CHANGES.md](PRODUCTION_CHANGES.md)** - Resumen de cambios realizados
+
+**Base de datos:** SQLite (single-file deployment, sin dependencias externas)
+
 ## Resumen ejecutivo
 
 El sistema integra modulos de operacion administrativa y contable en una sola plataforma. Permite registrar clientes, proveedores, productos, inventarios, cuentas por cobrar, cuentas por pagar, activos fijos y asientos contables, y a partir de esa informacion genera reportes financieros exportables.

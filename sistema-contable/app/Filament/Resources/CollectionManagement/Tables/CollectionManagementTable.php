@@ -135,6 +135,7 @@ class CollectionManagementTable
                     ])
                     ->action(function (CollectionManagement $record, array $data) {
                         if (! Auth::user()?->can('collection_management.update')) {
+                            \Log::warning('User ' . auth()->id() . ' attempted to register payment without permission');
                             abort(403);
                         }
 
